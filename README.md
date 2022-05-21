@@ -1,1 +1,3 @@
-##A helpful module
+# CLUMPPLING
+
+How to set up
