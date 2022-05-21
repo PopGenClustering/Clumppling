@@ -8,14 +8,14 @@ from collections import defaultdict
 from scipy import special
 
 # from cdlib import algorithms, evaluation
-import community as community_louvain
+# import community as community_louvain
 import networkx as nx
 # import markov_clustering as mc # MCL for mode detection
 
 # import networkx.algorithms.community as nx_comm
 # import markov_clustering as mc # MCL for mode detection
 
-# import community.community_louvain
+import community.community_louvain as community_louvain
 
 from scipy.spatial.distance import cdist
 import cvxpy as cp
