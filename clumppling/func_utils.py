@@ -8,6 +8,7 @@ Created on Mon Apr 25 15:25:05 2022
 import numpy as np
 import pandas as pd
 import os
+import sys
 # import matplotlib.pyplot as plt
 import time
 from itertools import product,combinations_with_replacement
@@ -95,6 +96,11 @@ def recode_struture_files(data_path,recode_path):
 def recode_faststruture_files(data_path,recode_path):
     files = os.listdir(data_path)  
     Q_files = [i for i in files if i.endswith('.meanQ')]
+    
+    if len(Q_files)==0:
+        # sanity check if data directory is empty
+        sys.exit("ERROR: no Q files detected. Please double check input_path and prj_type.")
+        
     R = len(Q_files)
     for r in range(R):
         Q_file = Q_files[r]
@@ -108,14 +114,38 @@ def recode_faststruture_files(data_path,recode_path):
         # write to file
         np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
         
+def recode_admixture_files(data_path,recode_path):
+    files = os.listdir(data_path)  
+    Q_files = [i for i in files if i.endswith('.Q')]
     
-def load_Q(recode_path):
+    if len(Q_files)==0:
+        # sanity check if data directory is empty
+        sys.exit("ERROR: no Q files detected. Please double check input_path and prj_type.")
+        
+    R = len(Q_files)
+    for r in range(R):
+        Q_file = Q_files[r]
+        with open(os.path.join(data_path,Q_file)) as file:
+            lines = file.readlines()
+            
+        # extract membership matrix
+        Q = [[float(i) for i in l.split()] for l in lines]
+        Q = np.array(Q)
+        
+        # write to file
+        np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
+    
+def load_Q(recode_path,reorder_inds=False):
 
     Q_list = list()
     K_list = list()
-    pop_n_ind = None
+    # pop_n_ind = None
     
     Q_files = [i for i in os.listdir(recode_path) if i.endswith('.Q')]
+    
+    if len(Q_files)==0:
+        # sanity check if data directory is empty
+        sys.exit("ERROR: no Q files detected. Please double check input_path and prj_type.")
     
     R = len(Q_files)
 
@@ -128,11 +158,6 @@ def load_Q(recode_path):
         else:
             assert(Q.shape[0]==N)
             
-        # if reorder_inds:
-        #     if r==0:
-        #         reorder_idx = reorder_Q_inds(Q)
-        #     Q = Q[reorder_idx,:]
-            
         Q_list.append(Q)
         K_list.append(K)
      
@@ -140,6 +165,11 @@ def load_Q(recode_path):
     sored_idx = list(np.argsort(K_list))
     K_list = [K_list[i] for i in sored_idx]
     Q_list = [Q_list[i] for i in sored_idx]
+                   
+    if reorder_inds:
+        reorder_idx = reorder_Q_inds(Q_list[-1])
+        for r in range(R):
+            Q_list[r] = Q_list[r][reorder_idx,:]
     
     N = Q.shape[0]
     
@@ -242,6 +272,7 @@ def get_theoretical_cost(Q,pop_n_ind,ind2pop):
 
     return theo_cost_ws
 
+#%% Mode Detection Helpers
 def get_adj_mat(cost_mat):
     adj_mat = 1-cost_mat/np.nanmax(cost_mat)
     adj_mat = np.nan_to_num(adj_mat,copy=True,nan=0)

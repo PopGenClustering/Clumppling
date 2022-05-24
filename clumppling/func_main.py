@@ -198,7 +198,7 @@ def cd_custom(G):
     partition_map = {i:0 for i in range(G.number_of_nodes())} 
     return partition_map
 
-def detect_modes(cost_ILP_res,K_range,default_cd_flag,cd_modthre, draw_communities=False, save_path=None, cd_func=cd_default):
+def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, draw_communities=False, save_path=None, cd_func=cd_default):
 
     modes_allK_list = dict()
     # adj_mat_allK_list = dict()
@@ -214,29 +214,36 @@ def detect_modes(cost_ILP_res,K_range,default_cd_flag,cd_modthre, draw_communiti
     
         # normalize cost matrix and obtain adjacency matrix
         cost_mat = np.array(cost_ILP_res[K])
-        adj_mat = get_adj_mat(cost_mat)
-        # adj_mat_allK_list[K] = adj_mat
-        
-        # create graph
-        G = nx.from_numpy_matrix(adj_mat)
+        if np.nanmean(cost_mat)<1e-6:
+            # create graph
+            G = nx.from_numpy_matrix(np.zeros(cost_mat.shape))           
+        else:
+            adj_mat = get_adj_mat(cost_mat)
+            # create graph
+            G = nx.from_numpy_matrix(adj_mat)
+            
         G.remove_edges_from(nx.selfloop_edges(G))
         pos = nx.spring_layout(G)
-        
-        
+            
+        # adj_mat_allK_list[K] = adj_mat
+             
         ########################################
         # community detection to find modes
         ########################################
-        if default_cd_flag:
-            partition_map = cd_func(G)
-            # print("Running default Louvain for mode detection.")
+        if np.nanmean(cost_mat)<1e-6:
+            partition_map = {i:0 for i in range(G.number_of_nodes())} 
         else:
-            partition_map = cd_custom(G)
-            # print("Running customized community detection.")
-        if cd_modthre is not None:
-            mod_res = community_louvain.modularity(partition_map, G)
-            if mod_res<cd_modthre: # quality of community detection is low --> no community structure
-                print("K={}: low community detection quality, set to single mode.".format(K))
-                partition_map = {i:0 for i in range(G.number_of_nodes())} 
+            if default_cd:
+                partition_map = cd_func(G)
+                # print("Running default Louvain for mode detection.")
+            else:
+                partition_map = cd_custom(G)
+                # print("Running customized community detection.")
+            if cd_mod_thre is not None:
+                mod_res = community_louvain.modularity(partition_map, G)
+                if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
+                    print("K={}: low community detection quality, set to single mode.".format(K))
+                    partition_map = {i:0 for i in range(G.number_of_nodes())} 
         
         
         # if method_name=="louvain":

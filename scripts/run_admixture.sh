@@ -1,0 +1,1 @@
+python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/AdmixtureHuman/HGDP_snps" --output_path="G:/My Drive/Projects/ImprClsAlign/output/Li2008" --prj_type="admixture" --reorder_inds=True

@@ -21,8 +21,8 @@ class Params:
         
         
         # mode detection parameters
-        self.default_cd_flag = True
-        self.cd_modthre = None
+        self.default_cd = True
+        self.cd_mod_thre = None
         self.lc_flag = False     
         self.adaptive_thre_flag = True
         self.lc_cost_thre = 0
@@ -37,11 +37,12 @@ class Params:
         
         # other parameters
         self.Qbar_flag = False
+        self.reorder_inds = False
         
         
       
-# default_cd_flag = True
-# cd_modthre = 0.0
+# default_cd = True
+# cd_mod_thre = 0.0
 # # method=("louvain",1.0,0.0)
 
 # # method=("mcl",2)

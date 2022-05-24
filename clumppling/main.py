@@ -9,7 +9,7 @@ Created on Sat Mar 12 19:29:46 2022
 import numpy as np
 # import pandas as pd
 import os
-# import sys
+import sys
 # import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import time
@@ -49,12 +49,26 @@ def main(args):
     input_path = args.input_path
     output_path = args.output_path
     prj_type = args.prj_type
+    
+    if not prj_type in ["structure","fastStructure","admixture","generalQ"]:
+        sys.exit("ERROR: Input project type isn't supported. \nPlease specify prj_type as one of the following: structure, admixture, fastStructure, and generalQ.")
+    
   
     params = Params(input_path,output_path,prj_type)
     
-    shutil.unpack_archive(params.input_path+".zip",params.input_path)
+    if args.default_cd:
+        params.default_cd = args.default_cd
+    if args.cd_mod_thre:
+        params.cd_mod_thre = args.cd_mod_thre
+    if args.reorder_inds:
+        params.reorder_inds = args.reorder_inds
     
-    #%% Set-up #TODO
+    if os.path.exists(params.input_path+".zip"):
+        shutil.unpack_archive(params.input_path+".zip",params.input_path)
+    if not os.path.exists(params.input_path):
+        sys.exit("Input file doesn't exist.")
+    
+    #%% Set-up 
     tot_tic = time.time()
     
     cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
@@ -66,7 +80,7 @@ def main(args):
     if params.lc_flag:
         md_method = "LC_{}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre) 
     else:
-        md_method = "{}_{}".format("default" if params.default_cd_flag else "custom",params.cd_modthre)
+        md_method = "{}_{}".format("default" if params.default_cd else "custom",params.cd_mod_thre)
     
     if params.Qbar_flag:
         save_path = os.path.join(params.output_path, "Qbar_"+md_method) 
@@ -82,14 +96,22 @@ def main(args):
     logging.getLogger('matplotlib.pyplot').disabled = True
 
     recode_path = os.path.join(params.output_path,"data")
-    if not os.path.exists(recode_path):
+    if not os.path.exists(recode_path) or len(os.listdir(recode_path))==0:
+        # remove empty directory if exist
+        if os.path.exists(recode_path):
+            os.rmdir(recode_path)
+        
         os.makedirs(recode_path) 
         tic = time.time()
         
         if params.prj_type =="structure":
             recode_struture_files(params.input_path,recode_path)
-        else:
+        elif params.prj_type =="fastStructure":
             recode_faststruture_files(params.input_path,recode_path)
+        elif params.prj_type =="admixture" or params.prj_type =="generalQ":
+            recode_admixture_files(params.input_path,recode_path)
+        else:
+            sys.exit("Input project type isn't supported. Please specify one of the following: structure, admixture, fastStructure, and generalQ.")
         
         toc = time.time()
         logging.info("time to recode structure files: %s",toc-tic)
@@ -98,9 +120,11 @@ def main(args):
     #%% Loading membership data
     tic = time.time()
     
-    N, R, Q_list, K_list = load_Q(recode_path)
+    N, R, Q_list, K_list = load_Q(recode_path,reorder_inds=params.reorder_inds)
     if prj_type == "structure":
         ind2pop, pop_n_ind = load_ind(recode_path)
+    else:
+        ind2pop = None
     
     K_list = np.array(K_list)
     K_range = np.sort(np.unique(K_list))
@@ -149,7 +173,7 @@ def main(args):
         align_ILP_res, cost_ILP_res = load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2idxinK,get_cost=True)
         
         ## Mode detection 
-        modes_allK_list = detect_modes(cost_ILP_res,K_range,params.default_cd_flag,params.cd_modthre,draw_communities=params.plot_flag_community_detection, save_path=save_path)
+        modes_allK_list = detect_modes(cost_ILP_res,K_range,params.default_cd,params.cd_mod_thre,draw_communities=params.plot_flag_community_detection, save_path=save_path)
            
         # extract representative/consensus replicates
         rep_modes,repQ_modes,meanQ_modes,average_stats = extract_modes(Q_list,modes_allK_list,align_ILP_res,cost_ILP_res,K_range,N,k2ids,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
@@ -253,5 +277,8 @@ if __name__ == "__main__":
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
     parser.add_argument('--prj_type', type=str, required=True)
+    parser.add_argument('--default_cd', type=bool, required=False)
+    parser.add_argument('--cd_mod_thre', type=float, required=False)
+    parser.add_argument('--reorder_inds', type=bool, required=False)
     args = parser.parse_args()
     main(args)
