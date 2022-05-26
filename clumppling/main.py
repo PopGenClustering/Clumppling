@@ -144,8 +144,8 @@ def main(args):
         cmap = cm.colors.ListedColormap(params.cmap)
         logging.info("using custom cmap ...")
     else:
-        np.random.seed(999)
-        cmap = cm.get_cmap('turbo') # colormap for plotting clusters
+        np.random.seed(9999)
+        cmap = cm.get_cmap('nipy_spectral') # colormap for plotting clusters
         cmap = cmap(np.linspace(0, 1, max_K))
         np.random.shuffle(cmap)
         cmap = cm.colors.ListedColormap(cmap)
