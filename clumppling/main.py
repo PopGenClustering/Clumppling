@@ -15,6 +15,7 @@ import matplotlib.cm as cm
 import time
 import logging
 import shutil
+import builtins
    
 # from itertools import product,combinations_with_replacement
 # from collections import defaultdict
@@ -62,6 +63,9 @@ def main(args):
         params.cd_mod_thre = args.cd_mod_thre
     if args.reorder_inds:
         params.reorder_inds = args.reorder_inds
+    if args.custom_cmap:
+        params.custom_cmap = args.custom_cmap
+        params.cmap = args.cmap.split()
     
     if os.path.exists(params.input_path+".zip"):
         shutil.unpack_archive(params.input_path+".zip",params.input_path)
@@ -71,8 +75,8 @@ def main(args):
     #%% Set-up 
     tot_tic = time.time()
     
-    cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
-    cmap_modes = cm.get_cmap('tab10') # colormap for plotting mode network
+    # cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
+    # cmap_modes = cm.get_cmap('tab10') # colormap for plotting mode network
     
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -132,7 +136,22 @@ def main(args):
     k2ids = {k:np.where(K_list==k)[0] for k in K_range}
     idx2idxinK = [i-np.where(K_list==K)[0][0] for i,K in enumerate(K_list)]
     
+    # colormap
+    if params.custom_cmap:
+        if len(params.cmap) < max_K:
+            logging.info("The provided colormap does not have enough colors for all clusters. Colors are recycled.")
+            params.cmap.extend(params.cmap)
+        cmap = cm.colors.ListedColormap(params.cmap)
+        logging.info("using custom cmap ...")
+    else:
+        np.random.seed(999)
+        cmap = cm.get_cmap('turbo') # colormap for plotting clusters
+        cmap = cmap(np.linspace(0, 1, max_K))
+        np.random.shuffle(cmap)
+        cmap = cm.colors.ListedColormap(cmap)
+    
     # color of mode network layers
+    cmap_modes = cm.get_cmap('tab10') # colormap for plotting mode network
     layer_color = {K:cmap_modes(i) for i,K in enumerate(K_range)}
     
     toc = time.time()
@@ -277,8 +296,19 @@ if __name__ == "__main__":
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
     parser.add_argument('--prj_type', type=str, required=True)
-    parser.add_argument('--default_cd', type=bool, required=False)
-    parser.add_argument('--cd_mod_thre', type=float, required=False)
-    parser.add_argument('--reorder_inds', type=bool, required=False)
+    
+    optional_arguments = [['default_cd','bool','whether to use default community detection method (Louvain) to detect modes'],
+                          ['cd_mod_thre','float','the modularity threshold for community detection'],
+                          ['reorder_inds','bool','whether to reorder individuals based on memberships from the last Q with largest K'],
+                           ['custom_cmap','bool','whether to use customized colormap'],
+                           ['cmap','str','user-specified colormap as a list of colors (in hex code) in a space-delimited string']]
+    
+    for opt_arg in optional_arguments: 
+        parser.add_argument('--{}'.format(opt_arg[0]), type=getattr(builtins, opt_arg[1]), required=False, help=opt_arg[2])
+
+    
+    # parser.add_argument('--default_cd', type=bool, required=False)
+    # parser.add_argument('--cd_mod_thre', type=float, required=False)
+    # parser.add_argument('--reorder_inds', type=bool, required=False)
     args = parser.parse_args()
     main(args)

@@ -28,6 +28,8 @@ class Params:
         self.lc_cost_thre = 0
         
         # plotting parameters
+        self.custom_cmap = False
+        self.cmap = ""
         self.plot_flag_community_detection = False
         self.plot_flag_all_modes = True
         self.plot_flag_all_within_mode = False
