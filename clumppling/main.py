@@ -81,23 +81,32 @@ def main(args):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     
-    if params.lc_flag:
-        md_method = "LC_{}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre) 
-    else:
-        md_method = "{}_{}".format("default" if params.default_cd else "custom",params.cd_mod_thre)
+    # if params.lc_flag:
+    #     md_method = "LC_{}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre) 
+    # else:
+    #     md_method = "{}_{}".format("default" if params.default_cd else "custom",params.cd_mod_thre)
     
-    if params.Qbar_flag:
-        save_path = os.path.join(params.output_path, "Qbar_"+md_method) 
-    else:
-        save_path = os.path.join(params.output_path, md_method)
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+    save_path = output_path
+    
+    # save_path = os.path.join(params.output_path, md_method)
+    # if not os.path.exists(save_path):
+    #     os.makedirs(save_path)
+        
+    if not os.path.exists(os.path.join(save_path,"modes_Q")):
+        os.makedirs(os.path.join(save_path,"modes_Q"))
     
     output_f = os.path.join(save_path,'output.txt')
     handlers = [logging.FileHandler(output_f, 'w'), logging.StreamHandler()]
     logging.basicConfig(level=logging.INFO, format='', handlers = handlers)
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
+    
+    logging.info("Running clumppling ...")
+    if params.lc_flag:
+        logging.info("---Mode detection method: LC \n---LC cost threshold: {}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre))
+    else:
+        logging.info("---Mode detection method: {} \n---Modularity threshold for mode detection: {}".format("default" if params.default_cd else "custom",params.cd_mod_thre))
+    
 
     recode_path = os.path.join(params.output_path,"data")
     if not os.path.exists(recode_path) or len(os.listdir(recode_path))==0:
@@ -174,20 +183,20 @@ def main(args):
         # write to file then load from file
         ILP_withinK_filename = "ILPaligned.txt"
         
-        if params.Qbar_flag:
-            ind2pop, pop_n_ind = load_ind(recode_path)
-            Qbar_list = get_Qbar(Q_list,ind2pop)
-            if not os.path.exists(os.path.join(params.output_path,ILP_withinK_filename)):
-                # write
-                align_ILP_withinK(ILP_withinK_filename,params.output_path,Qbar_list,K_range,k2ids)
-            else:
-                logging.info("pairwise alignment (Qbar) already exist")
+        # if params.Qbar_flag:
+        #     ind2pop, pop_n_ind = load_ind(recode_path)
+        #     Qbar_list = get_Qbar(Q_list,ind2pop)
+        #     if not os.path.exists(os.path.join(params.output_path,ILP_withinK_filename)):
+        #         # write
+        #         align_ILP_withinK(ILP_withinK_filename,params.output_path,Qbar_list,K_range,k2ids)
+        #     else:
+        #         logging.info("pairwise alignment (Qbar) already exist")
+        # else:
+        if not os.path.exists(os.path.join(params.output_path,ILP_withinK_filename)):
+            # write
+            align_ILP_withinK(ILP_withinK_filename,params.output_path,Q_list,K_range,k2ids)
         else:
-            if not os.path.exists(os.path.join(params.output_path,ILP_withinK_filename)):
-                # write
-                align_ILP_withinK(ILP_withinK_filename,params.output_path,Q_list,K_range,k2ids)
-            else:
-                logging.info("pairwise alignment already exist")
+            logging.info("pairwise alignment already exist")
         # load
         align_ILP_res, cost_ILP_res = load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2idxinK,get_cost=True)
         
@@ -204,7 +213,6 @@ def main(args):
     
     toc = time.time()
     logging.info("time to align replicates and detect modes: %s", toc-tic)
-    logging.info("(method used: {})".format(md_method))
     
     #%% Alignment across-K
         
@@ -270,7 +278,7 @@ def main(args):
     ## Alignment of all modes
     if params.plot_flag_all_modes:
         plot_name = "all_modes.png" 
-        plot_all_modes(K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_best_ILP_acrossK,save_path,plot_name,cmap=cmap)    
+        show_all_modes(params.plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_best_ILP_acrossK,save_path,plot_name,cmap=cmap)    
     
     ## Optimal alignment across-K in chains
     if params.plot_flag_mode_across_K_chains:
@@ -285,7 +293,7 @@ def main(args):
     
     
     tot_toc = time.time()
-    logging.info("Total Time: %s", tot_toc-tot_tic)
+    logging.info("---Total Time: %s", tot_toc-tot_tic)
     
     # zip all files
     shutil.make_archive(params.output_path, "zip", params.output_path)

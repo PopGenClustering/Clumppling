@@ -38,7 +38,7 @@ class Params:
         self.plot_flag_mode_across_K_chains = False
         
         # other parameters
-        self.Qbar_flag = False
+        # self.Qbar_flag = False
         self.reorder_inds = False
         
         
