@@ -1,3 +1,5 @@
-# CLUMPPLING
+# Clumppling
 
-How to set up
+## Local Version
+
+## Online Version
