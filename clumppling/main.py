@@ -58,13 +58,13 @@ def main(args):
     params = Params(input_path,output_path,prj_type)
     
     if args.default_cd:
-        params.default_cd = args.default_cd
+        params.default_cd = True if args.default_cd=="Y" else False        
     if args.cd_mod_thre:
         params.cd_mod_thre = args.cd_mod_thre
     if args.reorder_inds:
-        params.reorder_inds = args.reorder_inds
+        params.reorder_inds = True if args.reorder_inds=="Y" else False    
     if args.custom_cmap:
-        params.custom_cmap = args.custom_cmap
+        params.custom_cmap = True if args.custom_cmap=="Y" else False    
         params.cmap = args.cmap.split()
     
     if os.path.exists(params.input_path+".zip"):
@@ -101,12 +101,12 @@ def main(args):
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
     
-    logging.info("Running clumppling ...")
+    logging.info("\n==========\nRunning clumppling ...")
     if params.lc_flag:
         logging.info("---Mode detection method: LC \n---LC cost threshold: {}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre))
     else:
         logging.info("---Mode detection method: {} \n---Modularity threshold for mode detection: {}".format("default" if params.default_cd else "custom",params.cd_mod_thre))
-    
+    logging.info("==========")
 
     recode_path = os.path.join(params.output_path,"data")
     if not os.path.exists(recode_path) or len(os.listdir(recode_path))==0:
@@ -153,8 +153,8 @@ def main(args):
         cmap = cm.colors.ListedColormap(params.cmap)
         logging.info("using custom cmap ...")
     else:
-        np.random.seed(9999)
-        cmap = cm.get_cmap('nipy_spectral') # colormap for plotting clusters
+        np.random.seed(999)
+        cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
         cmap = cmap(np.linspace(0, 1, max_K))
         np.random.shuffle(cmap)
         cmap = cm.colors.ListedColormap(cmap)
@@ -305,18 +305,14 @@ if __name__ == "__main__":
     parser.add_argument('--output_path', type=str, required=True)
     parser.add_argument('--prj_type', type=str, required=True)
     
-    optional_arguments = [['default_cd','bool','whether to use default community detection method (Louvain) to detect modes'],
+    optional_arguments = [['default_cd','str','Y/N: whether to use default community detection method (Louvain) to detect modes'],
                           ['cd_mod_thre','float','the modularity threshold for community detection'],
-                          ['reorder_inds','bool','whether to reorder individuals based on memberships from the last Q with largest K'],
-                           ['custom_cmap','bool','whether to use customized colormap'],
+                          ['reorder_inds','str','Y/N: whether to reorder individuals based on memberships from the last Q with largest K'],
+                           ['custom_cmap','str','Y/N: whether to use customized colormap'],
                            ['cmap','str','user-specified colormap as a list of colors (in hex code) in a space-delimited string']]
     
     for opt_arg in optional_arguments: 
         parser.add_argument('--{}'.format(opt_arg[0]), type=getattr(builtins, opt_arg[1]), required=False, help=opt_arg[2])
 
-    
-    # parser.add_argument('--default_cd', type=bool, required=False)
-    # parser.add_argument('--cd_mod_thre', type=float, required=False)
-    # parser.add_argument('--reorder_inds', type=bool, required=False)
     args = parser.parse_args()
     main(args)

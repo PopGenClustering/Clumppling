@@ -135,7 +135,7 @@ def recode_admixture_files(data_path,recode_path):
         # write to file
         np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
     
-def load_Q(recode_path,reorder_inds=False):
+def load_Q(recode_path,reorder_inds=False,ignore_recode_name=False):
 
     Q_list = list()
     K_list = list()
@@ -148,18 +148,31 @@ def load_Q(recode_path,reorder_inds=False):
         sys.exit("ERROR: no Q files detected. Please double check input_path and prj_type.")
     
     R = len(Q_files)
+    
+    if ignore_recode_name:
+        for r in range(R):
+            Q = np.loadtxt(os.path.join(recode_path,Q_files[r]))
+            K = Q.shape[1]
+            if r==0:
+                N = Q.shape[0]
+            else:
+                assert(Q.shape[0]==N)
+                
+            Q_list.append(Q)
+            K_list.append(K)
+    else:
 
-    for r in range(R):
-        Q = np.loadtxt(os.path.join(recode_path,'rep_{}.Q'.format(r)))
-        
-        K = Q.shape[1]
-        if r==0:
-            N = Q.shape[0]
-        else:
-            assert(Q.shape[0]==N)
+        for r in range(R):
+            Q = np.loadtxt(os.path.join(recode_path,'rep_{}.Q'.format(r)))
             
-        Q_list.append(Q)
-        K_list.append(K)
+            K = Q.shape[1]
+            if r==0:
+                N = Q.shape[0]
+            else:
+                assert(Q.shape[0]==N)
+                
+            Q_list.append(Q)
+            K_list.append(K)
      
     # reorder by consecutive K values   
     sored_idx = list(np.argsort(K_list))

@@ -6,6 +6,51 @@ from itertools import product,combinations_with_replacement
 from collections import defaultdict
 import networkx as nx
 
+def alignQ_wrtP(P,Q,idxQ2P,merge=True):
+    # K1, K2 = P.shape[1], Q.shape[1]
+    idxQ2P = list(idxQ2P)
+    if merge:        
+        aligned_Q = np.zeros_like(P)
+        for q_idx in range(Q.shape[1]):
+            aligned_Q[:,idxQ2P[q_idx]] += Q[:,q_idx]
+    else:
+        aligned_Q = np.zeros_like(Q)
+        dups = np.unique([i for i in idxQ2P if idxQ2P.count(i)>1])
+        extras = list()
+        dups_min = defaultdict(lambda: (float('inf'),None))
+
+        new_pattern = [0 for _ in range(Q.shape[1])]
+        for q_idx in range(Q.shape[1]):
+            p_idx = idxQ2P[q_idx]
+            if p_idx not in dups:
+                new_pattern[q_idx] = p_idx
+                aligned_Q[:,p_idx] = Q[:,q_idx]
+            else:
+                diff = np.linalg.norm(Q[:,q_idx]-P[:,p_idx])
+                if dups_min[p_idx][0] > diff:
+                    dups_min[p_idx] = (diff,q_idx) 
+        extra_cnt = P.shape[1]
+        for q_idx in range(Q.shape[1]):
+            p_idx = idxQ2P[q_idx]
+            if p_idx in dups:
+                if q_idx==dups_min[p_idx][1]:
+                    new_pattern[q_idx] = p_idx
+                    aligned_Q[:,p_idx] = Q[:,q_idx]
+                else:
+                    new_pattern[q_idx] = extra_cnt
+                    extras.append(q_idx)
+                    extra_cnt += 1
+        
+        for ie, e in enumerate(extras):
+            # print(P.shape[1],ie,e)
+            # print(aligned_Q.shape)
+            # print(P.shape)
+            # print(Q.shape)
+            aligned_Q[:,P.shape[1]+ie] = Q[:,e]
+            
+    return aligned_Q, new_pattern
+
+
 def plot_membership(ax,P,max_K,cmap,title):
 
     N = P.shape[0]
@@ -230,7 +275,7 @@ def plot_withinK_modes(K,max_K,meanQ_modes,meanQ_acrossK_Q2P,save_path,plot_file
     plt.close(fig)
     
     
-def show_all_modes(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_best_ILP_acrossK,save_path,plot_name,cmap):
+def show_all_modes_old(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_best_ILP_acrossK,save_path,plot_name,cmap):
     
     # use mode 0 as base for each K
     # align all mode 0 across K's
@@ -300,8 +345,22 @@ def show_all_modes(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,mea
                 prev_pattern = pattern
         # retrieve alignment pattern
         pattern = meanQ_acrossK_Q2P["{}-{}".format(m1,m2)]
+        
+        
+        # P = meanQ_modes[int(m1.split("#")[0])][int(m1.split("#")[1])]
+        # # if prev_pattern:
+        # #     P = P[:,prev_pattern]
+        #     # reord = [prev_pattern[i] for i in pattern]
+        #     # pattern = [prev_pattern[i] for i in pattern]
+        # aligned_Q, new_pattern = alignQ_wrtP(P,Q,pattern,merge=False)
+        # if prev_pattern:
+        #     new_pattern = [prev_pattern[i] for i in new_pattern]
+        
+ 
         if prev_pattern:
             pattern = [prev_pattern[i] for i in pattern]
+            
+        
         pattern_expanded = list()
         extra_cnt = len(np.unique(pattern))
         for p in pattern:
@@ -312,8 +371,11 @@ def show_all_modes(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,mea
                 extra_cnt += 1
         
         aligned_Q = np.zeros_like(Q)
+        
+        
         for q_idx in range(Q.shape[1]):
             aligned_Q[:,pattern_expanded[q_idx]] += Q[:,q_idx]
+            
         if plot_flag_all_modes:
             ax = axes[mode2fig_idx[m2]] #axes[fig_idx]        
             plot_membership(ax,aligned_Q,max_K,cmap,"K{} mode{}".format(K,m_m2))
@@ -346,3 +408,105 @@ def show_all_modes(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,mea
         plt.close(fig)
         
     # return
+    
+    
+def show_all_modes(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_best_ILP_acrossK,save_path,plot_name,cmap):
+    
+    # use mode 0 as base for each K
+    # align all mode 0 across K's
+    # use the best alignment mode as the ref
+    meanQ_best_ILP_acrossK = meanQ_best_ILP_acrossK[::-1]
+    num_modes = sum([len(meanQ_modes[K].keys()) for K in K_range])  
+    mode2fig_idx = ["{}#{}".format(K,m) for K in K_range for m in meanQ_modes[K].keys()]
+    mode2fig_idx = {m:i for i,m in enumerate(mode2fig_idx)}
+    
+    modeQ_path = os.path.join(save_path,"modes_Q")
+    base_patterns = dict()
+    
+    if plot_flag_all_modes:
+        fig, axes = plt.subplots(num_modes,1,figsize=(15,1.5*num_modes))
+    
+    K = K_range[0]
+    # m = 0
+    m1 = meanQ_best_ILP_acrossK[0].split("-")[0]
+    assert(m1.split("#")[0]==str(K))
+    m_m1 = int(m1.split("#")[1])
+    # m1 = "{}#{}".format(K,m)
+    max_K = max(K_range)
+    base_Q = meanQ_modes[K][m_m1]
+    base_patterns[m1] = [i for i in range(K)]
+    if plot_flag_all_modes:
+        ax = axes[mode2fig_idx[m1]]
+        plot_membership(ax,base_Q,max_K,cmap,"K{} mode{}".format(K,m_m1)) 
+    np.savetxt(os.path.join(modeQ_path,'K{}_mode{}.Q'.format(K,m_m1)), base_Q, delimiter=' ')
+    
+    modes = range(len(meanQ_modes[K].keys()))
+    if len(modes)>1:
+        for m in modes:
+            if m!=m_m1:
+                m2 = "{}#{}".format(K,m)
+                # retrieve alignment pattern
+                ali_pat = meanQ_acrossK_Q2P["{}-{}".format(m1,m2)]
+                Q = meanQ_modes[K][m]
+                aligned_Q = np.zeros_like(Q)
+                for q_idx in range(Q.shape[1]):
+                    aligned_Q[:,ali_pat[q_idx]] += Q[:,q_idx]
+                base_patterns[m2] = ali_pat
+                if plot_flag_all_modes:
+                    ax = axes[mode2fig_idx[m2]]#axes[fig_idx]
+                    plot_membership(ax,aligned_Q,max_K,cmap,"K{} mode{}".format(K,m))
+                np.savetxt(os.path.join(modeQ_path,'K{}_mode{}.Q'.format(K,m)), aligned_Q, delimiter=' ')
+    
+    for best_pair in meanQ_best_ILP_acrossK:
+        m1 = best_pair.split("-")[0]#"{}#{}".format(K_range[K_idx-1],0)
+        m2 = best_pair.split("-")[1]
+        
+        K = int(m2.split("#")[0])
+        
+        modes = range(len(meanQ_modes[K].keys()))
+        m_m2 = int(m2.split("#")[1])
+        Q = meanQ_modes[K][m_m2]
+        P = meanQ_modes[int(m1.split("#")[0])][int(m1.split("#")[1])]
+        pattern = meanQ_acrossK_Q2P[best_pair]
+        aligned_Q, new_pattern = alignQ_wrtP(P,Q,pattern,merge=False)
+
+        pat = [base_patterns[m1][i] if i<int(m1.split("#")[0]) else i for i in new_pattern]
+        aligned_Q = np.zeros_like(aligned_Q)
+        for q_idx in range(Q.shape[1]):
+            aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
+        base_patterns[m2] = pat
+        
+        if plot_flag_all_modes:
+            ax = axes[mode2fig_idx[m2]] #axes[fig_idx]        
+            plot_membership(ax,aligned_Q,max_K,cmap,"K{} mode{}".format(K,m_m2))
+        np.savetxt(os.path.join(modeQ_path,'K{}_mode{}.Q'.format(K,m_m2)), aligned_Q, delimiter=' ')
+        
+        if len(modes)>1:
+            for m in modes:
+                if m!=m_m2:
+                    m3 = "{}#{}".format(K,m)
+                    ali_pat = meanQ_acrossK_Q2P["{}-{}".format(m2,m3)]
+                    Q = meanQ_modes[K][m]
+                    P = meanQ_modes[K][m_m2]
+                    aligned_Q, new_pattern = alignQ_wrtP(P,Q,ali_pat,merge=False)
+                    
+                    pat = [base_patterns[m2][i] for i in new_pattern ]
+                    aligned_Q = np.zeros_like(aligned_Q)
+                    for q_idx in range(Q.shape[1]):
+                        aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
+                    base_patterns[m3] = pat
+                    
+                    if plot_flag_all_modes:
+                        ax = axes[mode2fig_idx[m3]]
+                        # ax = axes[fig_idx]    
+                        plot_membership(ax,aligned_Q,max_K,cmap,"K{} mode{}".format(K,m))
+                        # fig_idx += 1
+                    np.savetxt(os.path.join(modeQ_path,'K{}_mode{}.Q'.format(K,m)), aligned_Q, delimiter=' ')            
+        
+    if plot_flag_all_modes:    
+        fig.savefig(os.path.join(save_path,plot_name),dpi=50)
+        plt.close(fig)
+    
+
+                     
+    

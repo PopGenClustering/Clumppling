@@ -53,7 +53,7 @@ def align_ILP(P,Q):
     constraints = [A @ w == A_ones, B @ w >= B_ones]
     obj = d.T @ w
     problem = cp.Problem(cp.Minimize(obj), constraints)
-    problem.solve() #solver=cp.GLPK_MI
+    problem.solve(solver=cp.GLPK_MI) #
     
     # optimal solution
     opt_obj = problem.value
@@ -65,6 +65,54 @@ def align_ILP(P,Q):
     # matching index Q_idx to P_idx
     idxQ2P = np.where(opt_W==1)[1]
     # idxP2Q = np.where(opt_W.T==1)[1]
+    return opt_obj, idxQ2P#, idxP2Q
+
+
+def align_ILP_weighted(P,Q,weight):
+    
+    K_Q = Q.shape[1] # #rows
+    K_P = P.shape[1] # #columns
+    N_ind = Q.shape[0] #individuals
+    assert(K_Q>=K_P)
+
+    # compute distance
+    dist_elem = (np.expand_dims(Q, axis=2)-np.expand_dims(P, axis=1))**2
+    
+    w_dist = dist_elem*np.expand_dims(weight,(1,2))
+    D = np.sum(w_dist,axis=0)
+    d = D.flatten()
+    
+    # constraints
+    # sum of row = 1
+    A = np.zeros((K_Q,d.shape[0]))
+    for i in range(K_Q):
+        A[i,i*K_P:(i+1)*K_P] = np.ones((1,K_P))
+    A_ones = np.ones((K_Q))
+    
+    # sum of column >= 1
+    B = np.zeros((K_P,d.shape[0]))
+    for i in range(K_P):
+        B[i,np.arange(i,d.shape[0],K_P)] = np.ones((1,K_Q))
+    B_ones = np.ones((K_P))
+ 
+    # ILP
+    w = cp.Variable(d.shape[0], boolean = True)
+    constraints = [A @ w == A_ones, B @ w >= B_ones]
+    obj = d.T @ w
+    problem = cp.Problem(cp.Minimize(obj), constraints)
+    problem.solve(solver=cp.GLPK_MI) #
+    
+    # optimal solution
+    opt_obj = problem.value
+    opt_w = problem.variables()[0].value.astype(int)
+    opt_W = np.reshape(opt_w,D.shape)
+    # print("Optimal value: {}".format(opt_obj))
+    # print("Solution:\n {}".format(opt_W))
+    
+    # matching index Q_idx to P_idx
+    idxQ2P = np.where(opt_W==1)[1]
+    
+    
     return opt_obj, idxQ2P#, idxP2Q
 
 
@@ -105,18 +153,61 @@ def alignQ_wrtP(P,Q,idxQ2P,merge=True):
             aligned_Q[:,idxQ2P[q_idx]] += Q[:,q_idx]
     else:
         aligned_Q = np.zeros_like(Q)
-        aligned = set()
+        dups = np.unique([i for i in idxQ2P if idxQ2P.count(i)>1])
         extras = list()
+        dups_min = defaultdict(lambda: (float('inf'),None))
+
         for q_idx in range(Q.shape[1]):
-            if idxQ2P[q_idx] in aligned: 
-                extras.append(q_idx)
+            p_idx = idxQ2P[q_idx]
+            if p_idx not in dups:
+                aligned_Q[:,p_idx] = Q[:,q_idx]
             else:
-                aligned.add(idxQ2P[q_idx])
-                aligned_Q[:,idxQ2P[q_idx]] = Q[:,q_idx]
+                diff = np.linalg.norm(Q[:,q_idx]-P[:,p_idx])
+                if dups_min[p_idx][0] > diff:
+                    dups_min[p_idx] = (diff,q_idx) 
+        for q_idx in range(Q.shape[1]):
+            p_idx = idxQ2P[q_idx]
+            if p_idx in dups:
+                if q_idx==dups_min[p_idx][1]:
+                    aligned_Q[:,p_idx] = Q[:,q_idx]
+                else:
+                    extras.append(q_idx)
+        
+        # aligned = set()
+        # extras = list()
+        # for q_idx in range(Q.shape[1]):
+        #     if idxQ2P[q_idx] in aligned: 
+        #         extras.append(q_idx)
+        #     else:
+        #         aligned.add(idxQ2P[q_idx])
+        #         aligned_Q[:,idxQ2P[q_idx]] = Q[:,q_idx]
         for ie, e in enumerate(extras):
             aligned_Q[:,P.shape[1]+ie] = Q[:,e]
             
     return aligned_Q
+
+
+# def alignQ_wrtP(P,Q,idxQ2P,merge=True):
+#     # K1, K2 = P.shape[1], Q.shape[1]
+    
+#     if merge:        
+#         aligned_Q = np.zeros_like(P)
+#         for q_idx in range(Q.shape[1]):
+#             aligned_Q[:,idxQ2P[q_idx]] += Q[:,q_idx]
+#     else:
+#         aligned_Q = np.zeros_like(Q)
+#         aligned = set()
+#         extras = list()
+#         for q_idx in range(Q.shape[1]):
+#             if idxQ2P[q_idx] in aligned: 
+#                 extras.append(q_idx)
+#             else:
+#                 aligned.add(idxQ2P[q_idx])
+#                 aligned_Q[:,idxQ2P[q_idx]] = Q[:,q_idx]
+#         for ie, e in enumerate(extras):
+#             aligned_Q[:,P.shape[1]+ie] = Q[:,e]
+            
+#     return aligned_Q
 
 
 def align_ILP_withinK(ILP_withinK_filename,output_path,Q_list,K_range,k2ids):
