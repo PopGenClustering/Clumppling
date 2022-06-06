@@ -180,7 +180,7 @@ def load_Q(recode_path,reorder_inds=False,ignore_recode_name=False):
     Q_list = [Q_list[i] for i in sored_idx]
                    
     if reorder_inds:
-        reorder_idx = reorder_Q_inds(Q_list[-1])
+        reorder_idx = reorder_Q_inds(Q_list[0])
         for r in range(R):
             Q_list[r] = Q_list[r][reorder_idx,:]
     
