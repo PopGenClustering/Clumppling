@@ -1,0 +1,3 @@
+python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/HGDP_all791_Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/HGDP_diffloci/all791" --prj_type="structure" --cd_mod_thre=0.2
+python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/HGDP_selected12_Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/HGDP_diffloci/selected12" --prj_type="structure" --cd_mod_thre=0.2
+python -m clumppling.diffLoci --input_base_path="G:/My Drive/Projects/ImprClsAlign/output/HGDP_diffloci" --output_path="G:/My Drive/Projects/ImprClsAlign/output/diffloci" --plot_separate=N
