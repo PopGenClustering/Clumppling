@@ -77,9 +77,9 @@ def main(args):
     
     # cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
     # cmap_modes = cm.get_cmap('tab10') # colormap for plotting mode network
-    
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+    os.makedirs(output_path)
     
     # if params.lc_flag:
     #     md_method = "LC_{}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre) 
@@ -92,8 +92,8 @@ def main(args):
     # if not os.path.exists(save_path):
     #     os.makedirs(save_path)
         
-    if not os.path.exists(os.path.join(save_path,"modes_Q")):
-        os.makedirs(os.path.join(save_path,"modes_Q"))
+    # if not os.path.exists(os.path.join(save_path,"modes_Q")):
+    os.makedirs(os.path.join(save_path,"modes_Q"))
     
     output_f = os.path.join(save_path,'output.txt')
     handlers = [logging.FileHandler(output_f, 'w'), logging.StreamHandler()]
@@ -109,25 +109,25 @@ def main(args):
     logging.info("==========")
 
     recode_path = os.path.join(params.output_path,"data")
-    if not os.path.exists(recode_path) or len(os.listdir(recode_path))==0:
-        # remove empty directory if exist
-        if os.path.exists(recode_path):
-            os.rmdir(recode_path)
-        
-        os.makedirs(recode_path) 
-        tic = time.time()
-        
-        if params.prj_type =="structure":
-            recode_struture_files(params.input_path,recode_path)
-        elif params.prj_type =="fastStructure":
-            recode_faststruture_files(params.input_path,recode_path)
-        elif params.prj_type =="admixture" or params.prj_type =="generalQ":
-            recode_admixture_files(params.input_path,recode_path)
-        else:
-            sys.exit("Input project type isn't supported. Please specify one of the following: structure, admixture, fastStructure, and generalQ.")
-        
-        toc = time.time()
-        logging.info("time to recode structure files: %s",toc-tic)
+    # if not os.path.exists(recode_path) or len(os.listdir(recode_path))==0:
+    # remove empty directory if exist
+    # if os.path.exists(recode_path):
+    #     os.rmdir(recode_path)
+    
+    os.makedirs(recode_path) 
+    tic = time.time()
+    
+    if params.prj_type =="structure":
+        recode_struture_files(params.input_path,recode_path)
+    elif params.prj_type =="fastStructure":
+        recode_faststruture_files(params.input_path,recode_path)
+    elif params.prj_type =="admixture" or params.prj_type =="generalQ":
+        recode_admixture_files(params.input_path,recode_path)
+    else:
+        sys.exit("Input project type isn't supported. Please specify one of the following: structure, admixture, fastStructure, and generalQ.")
+    
+    toc = time.time()
+    logging.info("time to recode structure files: %s",toc-tic)
     
     
     #%% Loading membership data
@@ -251,7 +251,7 @@ def main(args):
         for K in K_range: #[1:2]:
             modes = modes_allK_list[K]
             for m in modes:
-                plot_name = "K{}_mode{}_meanQ.png".format(K,m)
+                plot_name = "K{}_mode{}_meanQ.pdf".format(K,m)
                 plot_aligned(K,m,Q_list,modes,align_ILP_res,rep_modes,meanQ_modes[K][m],max_K,k2ids,idx2idxinK,save_path=save_path,plot_name=plot_name,cmap=cmap)
     
     ## Alignment between modes within-K
@@ -267,17 +267,17 @@ def main(args):
     tic = time.time()
     ## Average membership multipartite graph
     if params.plot_flag_mode_across_K_multipartite:
-        plot_file_name = "acrossK_meanQ_cost.png"
+        plot_file_name = "acrossK_meanQ_cost.pdf"
         title = "Mode (average membership) across K"
         G = plot_acrossK_multipartite(K_range,modes_allK_list,meanQ_modes,meanQ_acrossK_cost,layer_color,title,save_path,plot_file_name)
         
-        plot_file_name = "acrossK_repQ_cost.png"
+        plot_file_name = "acrossK_repQ_cost.pdf"
         title = "Mode (representative membership) across K"
         G = plot_acrossK_multipartite(K_range,modes_allK_list,repQ_modes,repQ_acrossK_cost,layer_color,title,save_path,plot_file_name)
     
     ## Alignment of all modes
     if params.plot_flag_all_modes:
-        plot_name = "all_modes.png" 
+        plot_name = "all_modes.pdf" 
         show_all_modes(params.plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_best_ILP_acrossK,save_path,plot_name,cmap=cmap)    
     
     ## Optimal alignment across-K in chains

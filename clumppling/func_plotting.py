@@ -59,7 +59,7 @@ def plot_membership(ax,P,max_K,cmap,title):
     K = P.shape[1]
     for k in range(K):
         ax.bar(range(N), P_aug[:,(k+1)], bottom=np.sum(P_aug[:,:(k+1)],axis=1), 
-               width=1.0, edgecolor='w', linewidth=0.05, facecolor=cmap(k/max_K))
+               width=1.0, edgecolor='w', linewidth=0, facecolor=cmap(k/max_K))
 
     ax.set_xticks([])
     ax.set_xlim([0,N])
@@ -97,7 +97,7 @@ def plot_aligned(K,m,Q_list,modes,align_ILP_res,rep_modes,consensusQ,max_K,k2ids
             title = None
         plot_membership(ax,aligned_Q,max_K,cmap,title)        
     # plt.suptitle("K{} mode{} Average Membership".format(K,m))
-    fig.savefig(os.path.join(save_path,plot_name),dpi=50)
+    fig.savefig(os.path.join(save_path,plot_name), bbox_inches='tight',dpi=30)
     plt.close(fig)
 
 
@@ -156,7 +156,7 @@ def plot_acrossK_multipartite(K_range,modes_allK_list,meanQ_modes,meanQ_acrossK_
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, label_pos=0.73, alpha=0.7, font_size=10)
     # plt.title(title, fontsize=16)
     # save 
-    fig.savefig(os.path.join(save_path,plot_file_name))
+    fig.savefig(os.path.join(save_path,plot_file_name), bbox_inches='tight',dpi=30)
     plt.close(fig)
     
     return G
@@ -222,7 +222,7 @@ def plot_acrossK_chains(K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_acrossK_cost
         fig, axes = plt.subplots(len(chain),1,figsize=(20,2*len(chain)))
         ax = axes[0]
         K,m = int(chain[0].split("#")[0]),int(chain[0].split("#")[1])
-        plot_name = "K{}_mode{}_{}.png".format(K,m,plot_file_name_suffix)
+        plot_name = "K{}_mode{}_{}.pdf".format(K,m,plot_file_name_suffix)
         Q = meanQ_modes[K][m]
         plot_membership(ax,Q,max_K,cmap,"K{} mode{}".format(K,m))
         
@@ -237,7 +237,7 @@ def plot_acrossK_chains(K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_acrossK_cost
                 aligned_Q[:,ali_pat[q_idx]] += Q[:,q_idx]
             plot_membership(ax,aligned_Q,max_K,cmap,"K{} mode{}".format(K,m))
         
-        fig.savefig(os.path.join(save_path,plot_name),dpi=50)
+        fig.savefig(os.path.join(save_path,plot_name), bbox_inches='tight',dpi=30)
         plt.close(fig)
     
     return best_alignment_chains    
@@ -251,7 +251,7 @@ def plot_withinK_modes(K,max_K,meanQ_modes,meanQ_acrossK_Q2P,save_path,plot_file
         ax = axes
     else:
         ax = axes[0]
-    plot_name = "K{}_{}.png".format(K,plot_file_name_suffix)
+    plot_name = "K{}_{}.pdf".format(K,plot_file_name_suffix)
     m = 0
     m1 = "{}#{}".format(K,m)
     Q = meanQ_modes[K][m]
@@ -271,7 +271,7 @@ def plot_withinK_modes(K,max_K,meanQ_modes,meanQ_acrossK_Q2P,save_path,plot_file
         ax = axes[i]
         plot_membership(ax,aligned_Q,max_K,cmap,"K{} mode{}".format(K,m))
     
-    fig.savefig(os.path.join(save_path,plot_name),dpi=50)
+    fig.savefig(os.path.join(save_path,plot_name), bbox_inches='tight',dpi=30)
     plt.close(fig)
     
     
@@ -404,7 +404,7 @@ def show_all_modes_old(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P
         prev_mode = m2      
                      
     if plot_flag_all_modes:    
-        fig.savefig(os.path.join(save_path,plot_name),dpi=50)
+        fig.savefig(os.path.join(save_path,plot_name), bbox_inches='tight',dpi=30)
         plt.close(fig)
         
     # return
@@ -504,7 +504,7 @@ def show_all_modes(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,mea
                     np.savetxt(os.path.join(modeQ_path,'K{}_mode{}.Q'.format(K,m)), aligned_Q, delimiter=' ')            
         
     if plot_flag_all_modes:    
-        fig.savefig(os.path.join(save_path,plot_name),dpi=50)
+        fig.savefig(os.path.join(save_path,plot_name), bbox_inches='tight',dpi=30)
         plt.close(fig)
     
 

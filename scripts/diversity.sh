@@ -1,4 +1,0 @@
-python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/diversity200/diversity200_Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/Rosenberg2002/diversity_1_200" --prj_type="structure" --cd_mod_thre=0.15
-python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/diversity100/diversity100_Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/Rosenberg2002/diversity_2_100" --prj_type="structure" --cd_mod_thre=0.15
-python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/diversity50/diversity50_Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/Rosenberg2002/diversity_3_50" --prj_type="structure" --cd_mod_thre=0.2
-python -m clumppling.diffInd --input_base_path="G:/My Drive/Projects/ImprClsAlign/output/Rosenberg2002" --output_path="G:/My Drive/Projects/ImprClsAlign/output/diversity" --plot_separate=N

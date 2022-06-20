@@ -106,7 +106,7 @@ def align_multiple(input_names, Q_all, K_all, output_path, cmap, plot_separate=F
                 ax = axes[fig_idx]
                 plot_membership(ax,P,max_K,cmap,"K={}".format(K))
                 fig_idx += 1 
-        fig.savefig(os.path.join(output_path,"aligned_{}.png".format(input_names[i_p])),dpi=50)
+        fig.savefig(os.path.join(output_path,"aligned_{}.pdf".format(input_names[i_p])), bbox_inches='tight', dpi=30)
         plt.close(fig)
         
         for i_q in range(1,num_input):
@@ -124,7 +124,7 @@ def align_multiple(input_names, Q_all, K_all, output_path, cmap, plot_separate=F
                     ax = axes[fig_idx]
                     plot_membership(ax,aligned_Q,max_K,cmap,"K={}".format(K))
                     fig_idx += 1
-            fig.savefig(os.path.join(output_path,"aligned_{}.png".format(input_names[i_q])),dpi=50)
+            fig.savefig(os.path.join(output_path,"aligned_{}.pdf".format(input_names[i_q])), bbox_inches='tight', dpi=30)
             plt.close(fig)
                 
     else:
@@ -164,7 +164,7 @@ def align_multiple(input_names, Q_all, K_all, output_path, cmap, plot_separate=F
             ax = axes[0,i_p]
             ax.set_title(input_names[i_p], fontsize=18)
             
-        fig.savefig(os.path.join(output_path,"aligned.png"),dpi=50)
+        fig.savefig(os.path.join(output_path,"aligned_all.pdf"), bbox_inches='tight', dpi=30)
         plt.close(fig)
 
 
@@ -182,8 +182,9 @@ def main(args):
         plot_separate = False
     
     # create output directory
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+    os.makedirs(output_path)
     
     tot_tic = time.time()
     
@@ -193,7 +194,7 @@ def main(args):
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
     
-    logging.info("\n==========\nRunning alignment for memberships based on different sets of loci...")
+    logging.info("\n==========\nRunning alignment for memberships based on different models...")
     
     # determine input directories
     input_names = [f for f in os.listdir(input_base_path) if os.path.isdir(os.path.join(input_base_path, f))]
