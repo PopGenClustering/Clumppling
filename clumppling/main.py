@@ -49,13 +49,13 @@ def main(args):
 
     input_path = args.input_path
     output_path = args.output_path
-    prj_type = args.prj_type
+    input_type = args.input_type
     
-    if not prj_type in ["structure","fastStructure","admixture","generalQ"]:
-        sys.exit("ERROR: Input project type isn't supported. \nPlease specify prj_type as one of the following: structure, admixture, fastStructure, and generalQ.")
+    if not input_type in ["structure","fastStructure","admixture","generalQ"]:
+        sys.exit("ERROR: Input project type isn't supported. \nPlease specify input_type as one of the following: structure, admixture, fastStructure, and generalQ.")
     
   
-    params = Params(input_path,output_path,prj_type)
+    params = Params(input_path,output_path,input_type)
     
     if args.default_cd:
         params.default_cd = True if args.default_cd=="Y" else False        
@@ -79,7 +79,10 @@ def main(args):
     # cmap_modes = cm.get_cmap('tab10') # colormap for plotting mode network
     if os.path.exists(output_path):
         shutil.rmtree(output_path)
-    os.makedirs(output_path)
+    if os.path.exists(output_path+".zip"):
+        os.remove(output_path+".zip")
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
     
     # if params.lc_flag:
     #     md_method = "LC_{}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre) 
@@ -87,10 +90,6 @@ def main(args):
     #     md_method = "{}_{}".format("default" if params.default_cd else "custom",params.cd_mod_thre)
     
     save_path = output_path
-    
-    # save_path = os.path.join(params.output_path, md_method)
-    # if not os.path.exists(save_path):
-    #     os.makedirs(save_path)
         
     # if not os.path.exists(os.path.join(save_path,"modes_Q")):
     os.makedirs(os.path.join(save_path,"modes_Q"))
@@ -109,19 +108,15 @@ def main(args):
     logging.info("==========")
 
     recode_path = os.path.join(params.output_path,"data")
-    # if not os.path.exists(recode_path) or len(os.listdir(recode_path))==0:
-    # remove empty directory if exist
-    # if os.path.exists(recode_path):
-    #     os.rmdir(recode_path)
     
     os.makedirs(recode_path) 
     tic = time.time()
     
-    if params.prj_type =="structure":
+    if params.input_type =="structure":
         recode_struture_files(params.input_path,recode_path)
-    elif params.prj_type =="fastStructure":
+    elif params.input_type =="fastStructure":
         recode_faststruture_files(params.input_path,recode_path)
-    elif params.prj_type =="admixture" or params.prj_type =="generalQ":
+    elif params.input_type =="admixture" or params.input_type =="generalQ":
         recode_admixture_files(params.input_path,recode_path)
     else:
         sys.exit("Input project type isn't supported. Please specify one of the following: structure, admixture, fastStructure, and generalQ.")
@@ -134,7 +129,7 @@ def main(args):
     tic = time.time()
     
     N, R, Q_list, K_list = load_Q(recode_path,reorder_inds=params.reorder_inds)
-    if prj_type == "structure":
+    if input_type == "structure":
         ind2pop, pop_n_ind = load_ind(recode_path)
     else:
         ind2pop = None
@@ -271,15 +266,17 @@ def main(args):
         title = "Mode (average membership) across K"
         G = plot_acrossK_multipartite(K_range,modes_allK_list,meanQ_modes,meanQ_acrossK_cost,layer_color,title,save_path,plot_file_name)
         
-        plot_file_name = "acrossK_repQ_cost.pdf"
-        title = "Mode (representative membership) across K"
-        G = plot_acrossK_multipartite(K_range,modes_allK_list,repQ_modes,repQ_acrossK_cost,layer_color,title,save_path,plot_file_name)
+        # plot_file_name = "acrossK_repQ_cost.pdf"
+        # title = "Mode (representative membership) across K"
+        # G = plot_acrossK_multipartite(K_range,modes_allK_list,repQ_modes,repQ_acrossK_cost,layer_color,title,save_path,plot_file_name)
     
     ## Alignment of all modes
     if params.plot_flag_all_modes:
-        plot_name = "all_modes.pdf" 
+        plot_name = "all_modes_meanQ.pdf" 
         show_all_modes(params.plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_best_ILP_acrossK,save_path,plot_name,cmap=cmap)    
-    
+        # plot_name = "all_modes_repQ.pdf" 
+        # show_all_modes(params.plot_flag_all_modes,K_range,repQ_modes,repQ_acrossK_Q2P,repQ_best_ILP_acrossK,save_path,plot_name,cmap=cmap)    
+
     ## Optimal alignment across-K in chains
     if params.plot_flag_mode_across_K_chains:
         plot_file_name_suffix = "meanQ_alignment_chain_merged"
@@ -303,7 +300,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
-    parser.add_argument('--prj_type', type=str, required=True)
+    parser.add_argument('--input_type', type=str, required=True)
     
     optional_arguments = [['default_cd','str','Y/N: whether to use default community detection method (Louvain) to detect modes'],
                           ['cd_mod_thre','float','the modularity threshold for community detection'],

@@ -1,1 +1,1 @@
-python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/PembertonEtAl2008" --output_path="G:/My Drive/Projects/ImprClsAlign/output/Pemberton2008" --prj_type="err" --cd_mod_thre=0.1
+python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/PembertonEtAl2008" --output_path="G:/My Drive/Projects/ImprClsAlign/output/Pemberton2008" --input_type="err" --cd_mod_thre=0.1

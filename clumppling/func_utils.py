@@ -13,6 +13,7 @@ import sys
 import time
 from itertools import product,combinations_with_replacement
 from collections import defaultdict
+
 # from scipy import special
 
 # import community as community_louvain
@@ -62,6 +63,8 @@ def reorder_Q_inds(Q_ind):
 
 def recode_struture_files(data_path,recode_path):
 
+    file_list = list()
+
     files = os.listdir(data_path)
     Q_files = [i for i in files if i.endswith('_f')]
     
@@ -91,6 +94,8 @@ def recode_struture_files(data_path,recode_path):
     header[2] = header[2].split(":")[0]
     df_ind_info.columns = header
     df_ind_info.to_csv(os.path.join(recode_path,'ind_info.txt'), sep=' ')
+
+    return file_list
         
     
 def recode_faststruture_files(data_path,recode_path):
@@ -99,7 +104,7 @@ def recode_faststruture_files(data_path,recode_path):
     
     if len(Q_files)==0:
         # sanity check if data directory is empty
-        sys.exit("ERROR: no Q files detected. Please double check input_path and prj_type.")
+        sys.exit("ERROR: no Q files detected. Please double check input_path and input_type.")
         
     R = len(Q_files)
     for r in range(R):
@@ -120,7 +125,7 @@ def recode_admixture_files(data_path,recode_path):
     
     if len(Q_files)==0:
         # sanity check if data directory is empty
-        sys.exit("ERROR: no Q files detected. Please double check input_path and prj_type.")
+        sys.exit("ERROR: no Q files detected. Please double check input_path and input_type.")
         
     R = len(Q_files)
     for r in range(R):
@@ -145,7 +150,7 @@ def load_Q(recode_path,reorder_inds=False,ignore_recode_name=False):
     
     if len(Q_files)==0:
         # sanity check if data directory is empty
-        sys.exit("ERROR: no Q files detected. Please double check input_path and prj_type.")
+        sys.exit("ERROR: no Q files detected. Please double check input_path and input_type.")
     
     R = len(Q_files)
     
@@ -307,4 +312,23 @@ def write_modes_to_file(file_name,K_range,N_ind,modes_allK_list,meanQ_modes):
         f.write("\n")
     
     f.close()
+
+
+
+def standardize_matrix(W):
+    off_diag_idx = np.where(~np.eye(W.shape[0],dtype=bool))
+    off_diag_w = W[off_diag_idx]
+    W_standardized = np.zeros(W.shape)
+    W_standardized[off_diag_idx] = (off_diag_w-off_diag_w.mean())/off_diag_w.std()
+    return W_standardized
+
+def normalize_matrix(W):
+    return W/np.sqrt(W.shape[0])
+
+
+def exponentiate_matrix(W,t):
+    off_diag_idx = np.where(~np.eye(W.shape[0],dtype=bool))
+    W_exp = np.zeros(W.shape)
+    W_exp[off_diag_idx] = np.exp(W[off_diag_idx]*t)
+    return W_exp
 

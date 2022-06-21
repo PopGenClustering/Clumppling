@@ -184,7 +184,10 @@ def main(args):
     # create output directory
     if os.path.exists(output_path):
         shutil.rmtree(output_path)
-    os.makedirs(output_path)
+    if os.path.exists(output_path+".zip"):
+        os.remove(output_path+".zip")
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
     
     tot_tic = time.time()
     

@@ -10,6 +10,7 @@ from scipy import special
 # from cdlib import algorithms, evaluation
 # import community as community_louvain
 import networkx as nx
+from TracyWidom import TracyWidom
 # import markov_clustering as mc # MCL for mode detection
 
 # import networkx.algorithms.community as nx_comm
@@ -305,38 +306,71 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, draw_communities=F
     
         # normalize cost matrix and obtain adjacency matrix
         cost_mat = np.array(cost_ILP_res[K])
+        n_nodes = cost_mat.shape[0]
         if np.nanmean(cost_mat)<1e-6:
-            # create graph
-            G = nx.from_numpy_matrix(np.zeros(cost_mat.shape))           
+            # adj_mat = np.zeros(cost_mat.shape)
+            partition_map = {i:0 for i in range(n_nodes)} 
+                    
         else:
             adj_mat = get_adj_mat(cost_mat)
-            # create graph
-            G = nx.from_numpy_matrix(adj_mat)
-            
-        G.remove_edges_from(nx.selfloop_edges(G))
-        pos = nx.spring_layout(G)
-            
-        # adj_mat_allK_list[K] = adj_mat
-             
+
+            # test for community structure
+            has_comm_struc = test_comm_struc(adj_mat, alpha = 0.01)
+
+            if not has_comm_struc:
+                partition_map = {i:0 for i in range(n_nodes)} 
+                print("K={}: no significant community structure -> set to single mode.".format(K))
+
+            else: # having community structure
+
+                # create graph
+                G = nx.from_numpy_matrix(adj_mat)   
+                G.remove_edges_from(nx.selfloop_edges(G))
+                pos = nx.spring_layout(G)
+                    
+                # adj_mat_allK_list[K] = adj_mat
+                     
+                ########################################
+                # community detection to find modes
+                ########################################
+                if np.nanmean(cost_mat)<1e-6:
+                    partition_map = {i:0 for i in range(n_nodes)} 
+                else:
+                    if default_cd:
+                        partition_map = cd_func(G)
+                        # print("Running default Louvain for mode detection.")
+                    else:
+                        partition_map = cd_custom(G)
+                        # print("Running customized community detection.")
+                    # if cd_mod_thre is not None:
+                    #     mod_res = community_louvain.modularity(partition_map, G)
+                    #     if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
+                    #         print("K={}: low community detection quality, set to single mode.".format(K))
+                    #         partition_map = {i:0 for i in range(G.number_of_nodes())} 
+                
+                if draw_communities:
+                    # draw the graph
+                    fig, ax = plt.subplots()
+                    nx.draw(G,pos,with_labels=True,node_color='white',edge_color='white')
+                    nx.draw_networkx_nodes(G, pos, partition_map.keys(), alpha=0.7, #node_size=40,
+                                           node_color=list(partition_map.values()))
+                    nx.draw_networkx_edges(G, pos, alpha=0.2)
+                    # save 
+                    fig.savefig(os.path.join(save_path,'K{}_modes_network_{}.png'.format(K,method_name)))
+                    plt.close(fig)
+    
         ########################################
-        # community detection to find modes
+        # separate modes
         ########################################
-        if np.nanmean(cost_mat)<1e-6:
-            partition_map = {i:0 for i in range(G.number_of_nodes())} 
-        else:
-            if default_cd:
-                partition_map = cd_func(G)
-                # print("Running default Louvain for mode detection.")
-            else:
-                partition_map = cd_custom(G)
-                # print("Running customized community detection.")
-            if cd_mod_thre is not None:
-                mod_res = community_louvain.modularity(partition_map, G)
-                if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
-                    print("K={}: low community detection quality, set to single mode.".format(K))
-                    partition_map = {i:0 for i in range(G.number_of_nodes())} 
         
+        modes = defaultdict(list)
+        for r in partition_map.keys():
+            modes[partition_map[r]].append(r)
         
+        modes_allK_list[K] = modes
+        
+    return modes_allK_list
+    
         # if method_name=="louvain":
 
         #     resolution = method_para if method_para else 1
@@ -406,28 +440,7 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, draw_communities=F
         #     partition_map = {i:0 for i in range(G.number_of_nodes())}       
     
     
-        if draw_communities:
-            # draw the graph
-            fig, ax = plt.subplots()
-            nx.draw(G,pos,with_labels=True,node_color='white',edge_color='white')
-            nx.draw_networkx_nodes(G, pos, partition_map.keys(), alpha=0.7, #node_size=40,
-                                   node_color=list(partition_map.values()))
-            nx.draw_networkx_edges(G, pos, alpha=0.2)
-            # save 
-            fig.savefig(os.path.join(save_path,'K{}_modes_network_{}.png'.format(K,method_name)))
-            plt.close(fig)
-    
-        ########################################
-        # separate modes
-        ########################################
         
-        modes = defaultdict(list)
-        for r in partition_map.keys():
-            modes[partition_map[r]].append(r)
-        
-        modes_allK_list[K] = modes
-        
-    return modes_allK_list
 
 
 def extract_modes(Q_list,modes_allK_list,align_ILP_res,cost_ILP_res,K_range,N_ind,k2ids,save_modes=False, save_path=None,ILP_modes_filename=None):
@@ -973,3 +986,33 @@ def report_stats(modes_allK_list,average_stats,K_range,k2ids,save_path,stats=['c
 
     return weighted_stats
 
+
+def test_comm_struc(W, alpha = 0.05):
+    
+    # standardization mapping
+    W_standardized = standardize_matrix(W)
+    T = normalize_matrix(W_standardized)
+    
+    t = 1/2
+    W_exp = exponentiate_matrix(W,t)
+    Te = normalize_matrix(standardize_matrix(W_exp))
+    
+    # Tracy Widom CI
+    x = np.linspace(-10, 10, 1001)
+    tw = TracyWidom(beta=1)  # allowed beta values are 1, 2, and 4
+    cdf = tw.cdf(x)
+    
+    CI_max = x[np.where(cdf>(1-alpha/4))[0][0]]
+    CI_min = x[np.where(cdf<alpha/4)[0][-1]]
+    CI_p_max, CI_p_min = CI_max, CI_min
+    
+    # test
+    eigval, eigvec = np.linalg.eig(T)
+    eig_T_max, eig_T_min = eigval.max(), eigval.min()
+    eigval, eigvec = np.linalg.eig(Te)
+    eig_Te_max, eig_Te_min = eigval.max(), eigval.min()
+    
+    s = int(eig_T_max<CI_max) + int(eig_T_min>CI_min) + int(eig_Te_max<CI_p_max) + int(eig_Te_min>CI_p_min)
+    has_comm_struc = s!=4
+    
+    return has_comm_struc
