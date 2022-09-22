@@ -7,35 +7,13 @@ Created on Sat Mar 12 19:29:46 2022
 
 #%% Imports
 import numpy as np
-# import pandas as pd
 import os
 import sys
-# import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import time
 import logging
 import shutil
-import builtins
-   
-# from itertools import product,combinations_with_replacement
-# from collections import defaultdict
-
-# set working directory
-# os.chdir(os.path.dirname(os.path.realpath(__file__)))
-
-
-# import community as community_louvain
-# from cdlib import algorithms, evaluation
-# import networkx as nx
-# import markov_clustering as mc # MCL for mode detection
-
-# import networkx.algorithms.community as nx_comm
-# import markov_clustering as mc # MCL for mode detection
-
-# import community.community_lc_cost_thre
-
-# from scipy.spatial.distance import cdist
-# import cvxpy as cp
+import builtins   
 
 
 from clumppling.func_utils import *
@@ -60,9 +38,8 @@ def main(args):
     if args.default_cd:
         params.default_cd = True if args.default_cd=="Y" else False        
     if args.cd_mod_thre:
-        params.cd_mod_thre = args.cd_mod_thre
-    if args.reorder_inds:
-        params.reorder_inds = True if args.reorder_inds=="Y" else False    
+        params.cd_mod_thre = args.cd_mod_thre if args.cd_mod_thre!=-1 else -1.0
+ 
     if args.custom_cmap:
         params.custom_cmap = True if args.custom_cmap=="Y" else False    
         params.cmap = args.cmap.split()
@@ -99,38 +76,35 @@ def main(args):
     logging.basicConfig(level=logging.INFO, format='', handlers = handlers)
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
-    
-    logging.info("\n==========\nRunning clumppling ...")
-    if params.lc_flag:
-        logging.info("---Mode detection method: LC \n---LC cost threshold: {}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre))
-    else:
-        logging.info("---Mode detection method: {} \n---Modularity threshold for mode detection: {}".format("default" if params.default_cd else "custom",params.cd_mod_thre))
-    logging.info("==========")
+
+    # logging.info("Input path: {}".format(input_path))
+    # logging.info("Input data type: {}".format(input_type))
+    # logging.info("Output path: {}".format(output_path))
+    disp = params.display()
+    logging.info(disp)
+
+    logging.info("========== Starting Clumppling ... ==========")
+    # logging.info("Mode detection method: {}".format("community detection" if not params.lc_flag else "leader clustering"))
+    # if params.lc_flag:
+    #     logging.info("---Mode detection method: LC \n---LC cost threshold: {}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre))
+    # else:
+    #     logging.info("---Mode detection method: {} \n---Modularity threshold for mode detection: {}".format("default" if params.default_cd else "custom",params.cd_mod_thre))
+    # logging.info("==========")
 
     recode_path = os.path.join(params.output_path,"data")
     
     os.makedirs(recode_path) 
     tic = time.time()
-    
-    if params.input_type =="structure":
-        recode_struture_files(params.input_path,recode_path)
-    elif params.input_type =="fastStructure":
-        recode_faststruture_files(params.input_path,recode_path)
-    elif params.input_type =="admixture" or params.input_type =="generalQ":
-        recode_admixture_files(params.input_path,recode_path)
-    else:
-        sys.exit("Input project type isn't supported. Please specify one of the following: structure, admixture, fastStructure, and generalQ.")
-    
-    toc = time.time()
-    logging.info("time to recode structure files: %s",toc-tic)
+    logging.info("---------- Processing input data files and checking arguments ...")
+    file_list = recode_files(params.input_path,recode_path,params.input_type)
     
     
-    #%% Loading membership data
-    tic = time.time()
-    
-    N, R, Q_list, K_list = load_Q(recode_path,reorder_inds=params.reorder_inds)
+    #%% Loading membership data    
+    N, R, Q_list, K_list, file_list = load_Q(recode_path,file_list=file_list)
+   
     if input_type == "structure":
         ind2pop, pop_n_ind = load_ind(recode_path)
+        logging.info(">>>Extract individual information from STRUCTURE files.")
     else:
         ind2pop = None
     
@@ -143,10 +117,10 @@ def main(args):
     # colormap
     if params.custom_cmap:
         if len(params.cmap) < max_K:
-            logging.info("The provided colormap does not have enough colors for all clusters. Colors are recycled.")
+            logging.info(">>>The provided colormap does not have enough colors for all clusters. Colors are recycled.")
             params.cmap.extend(params.cmap)
         cmap = cm.colors.ListedColormap(params.cmap)
-        logging.info("using custom cmap ...")
+        # logging.info(">>>Use customized cmap.")
     else:
         np.random.seed(999)
         cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
@@ -157,47 +131,45 @@ def main(args):
     # color of mode network layers
     cmap_modes = cm.get_cmap('tab10') # colormap for plotting mode network
     layer_color = {K:cmap_modes(i) for i,K in enumerate(K_range)}
-    
+
     toc = time.time()
-    logging.info("time to load and set up replicates: %s",toc-tic)
+    logging.info("Time: %.3fs",toc-tic)
+    
     
     #%% Alignment within-K and mode detection
     
     tic = time.time()
+    logging.info("---------- Aligning replicates within K and detecting modes ...")
+
     ILP_modes_filename = "ILPmodes.txt"
     
     if params.lc_flag:
         ## Leader Clustering
         if params.adaptive_thre_flag:
-            modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering_adaptive(lc_cost_thre,Q_list,K_range,N,k2ids,ind2pop, pop_n_ind,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
+
+            logging.info(">>>Use leader clustering (adaptive threshold.")
+            modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering_adaptive(params.lc_cost_thre,Q_list,K_range,N,k2ids,ind2pop, pop_n_ind,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
         else:
-            modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering(lc_cost_thre,Q_list,K_range,N,k2ids,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
+            logging.info(">>>Use leader clustering (fixed threshold.")
+            modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering(params.lc_cost_thre,Q_list,K_range,N,k2ids,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
         
     else:
+        logging.info(">>>Use ILP.")
+        if params.cd_mod_thre!=-1:
+            logging.info(">>>Use community detection modularity threshold: {})".format(params.cd_mod_thre))
         ## ILP over all pairs within K 
         # write to file then load from file
         ILP_withinK_filename = "ILPaligned.txt"
+        align_ILP_withinK(ILP_withinK_filename,params.output_path,Q_list,K_range,k2ids)
         
-        # if params.Qbar_flag:
-        #     ind2pop, pop_n_ind = load_ind(recode_path)
-        #     Qbar_list = get_Qbar(Q_list,ind2pop)
-        #     if not os.path.exists(os.path.join(params.output_path,ILP_withinK_filename)):
-        #         # write
-        #         align_ILP_withinK(ILP_withinK_filename,params.output_path,Qbar_list,K_range,k2ids)
-        #     else:
-        #         logging.info("pairwise alignment (Qbar) already exist")
-        # else:
-        if not os.path.exists(os.path.join(params.output_path,ILP_withinK_filename)):
-            # write
-            align_ILP_withinK(ILP_withinK_filename,params.output_path,Q_list,K_range,k2ids)
-        else:
-            logging.info("pairwise alignment already exist")
         # load
         align_ILP_res, cost_ILP_res = load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2idxinK,get_cost=True)
         
         ## Mode detection 
-        modes_allK_list = detect_modes(cost_ILP_res,K_range,params.default_cd,params.cd_mod_thre,draw_communities=params.plot_flag_community_detection, save_path=save_path)
-           
+        modes_allK_list, msg = detect_modes(cost_ILP_res,K_range,params.default_cd,params.cd_mod_thre, save_path=save_path)
+        if msg!="":
+            logging.info(">>>"+msg)
+
         # extract representative/consensus replicates
         rep_modes,repQ_modes,meanQ_modes,average_stats = extract_modes(Q_list,modes_allK_list,align_ILP_res,cost_ILP_res,K_range,N,k2ids,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
     
@@ -207,43 +179,44 @@ def main(args):
     
     
     toc = time.time()
-    logging.info("time to align replicates and detect modes: %s", toc-tic)
+    logging.info("Time: %.3fs", toc-tic)
     
     #%% Alignment across-K
         
     # use representative membership as the consensus
     ILP_acrossK_filename = "ILP_acrossK_repQ.txt"
-    
+    logging.info("---------- Aligning modes (representative) across K ...")
     if not os.path.exists(os.path.join(save_path,ILP_acrossK_filename)):
         # write
         tic = time.time()
-        repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = align_ILP_modes_acrossK(repQ_modes,K_range,N,save_path,ILP_acrossK_filename,ind2pop=ind2pop)
+        repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = align_ILP_modes_acrossK(repQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_combK=params.enum_combK,ind2pop=ind2pop)
         toc = time.time()
-        logging.info("time to ILP over all modes (repQ) across-K: %s", toc-tic)
+        logging.info("Time: %.3fs", toc-tic)
     else:
         # load alignments 
         repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = load_ILP_acrossK(save_path,ILP_acrossK_filename)
-        logging.info("across-K alignment (repQ) already exist")
+        logging.info(">>>Across-K alignment (repQ) already exist.")
     
 
     # use average membership as the consensus
     ILP_acrossK_filename = "ILP_acrossK_meanQ.txt"
-    
+    logging.info("---------- Aligning modes (average) across K ...")
     if not os.path.exists(os.path.join(save_path+ILP_acrossK_filename)):
         # write
         tic = time.time()
-        meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = align_ILP_modes_acrossK(meanQ_modes,K_range,N,save_path,ILP_acrossK_filename)
+        meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = align_ILP_modes_acrossK(meanQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_combK=params.enum_combK,ind2pop=ind2pop)
         toc = time.time()
-        logging.info("time to ILP over all modes (meanQ) across-K: %s", toc-tic)
+        logging.info("Time: %.3fs", toc-tic)
     else:
         meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = load_ILP_acrossK(save_path,ILP_acrossK_filename)
-        logging.info("across-K alignment (meanQ) already exist")
+        logging.info(">>>Across-K alignment (meanQ) already exist.")
     
     #%% Visualization of alignment within-K
     tic = time.time()
+    logging.info("---------- Plotting alignment within K ...")
     ##  Alignment of each mode
     if params.plot_flag_all_within_mode:
-        for K in K_range: #[1:2]:
+        for K in K_range: 
             modes = modes_allK_list[K]
             for m in modes:
                 plot_name = "K{}_mode{}_meanQ.pdf".format(K,m)
@@ -256,10 +229,11 @@ def main(args):
             plot_withinK_modes(K,max_K,meanQ_modes,meanQ_acrossK_Q2P,save_path,plot_file_name_suffix,cmap=cmap)
             
     toc = time.time()
-    logging.info("time to plot alignment within-K: %s", toc-tic)
+    logging.info("Time: %.3fs", toc-tic)
     
     #%% Visualization of alignment across-K
     tic = time.time()
+    logging.info("---------- Plotting alignment across K ...")
     ## Average membership multipartite graph
     if params.plot_flag_mode_across_K_multipartite:
         plot_file_name = "acrossK_meanQ_cost.pdf"
@@ -286,14 +260,15 @@ def main(args):
         best_alignment_chains = plot_acrossK_chains(K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_acrossK_cost,save_path,plot_file_name_suffix,cmap=cmap,merge_cluster=False)
     
     toc = time.time()
-    logging.info("time to plot alignment across-K: %s", toc-tic)
+    logging.info("Time: %.3fs", toc-tic)
     
-    
-    tot_toc = time.time()
-    logging.info("---Total Time: %s", tot_toc-tot_tic)
     
     # zip all files
+    logging.info("---------- Zipping files ...")
     shutil.make_archive(params.output_path, "zip", params.output_path)
+
+    tot_toc = time.time()
+    logging.info("======== Total Time: %.3fs ========", tot_toc-tot_tic)
     
     
 if __name__ == "__main__":
@@ -304,7 +279,6 @@ if __name__ == "__main__":
     
     optional_arguments = [['default_cd','str','Y/N: whether to use default community detection method (Louvain) to detect modes'],
                           ['cd_mod_thre','float','the modularity threshold for community detection'],
-                          ['reorder_inds','str','Y/N: whether to reorder individuals based on memberships from the last Q with largest K'],
                            ['custom_cmap','str','Y/N: whether to use customized colormap'],
                            ['cmap','str','user-specified colormap as a list of colors (in hex code) in a space-delimited string']]
     

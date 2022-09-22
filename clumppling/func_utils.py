@@ -14,7 +14,7 @@ import time
 from itertools import product,combinations_with_replacement
 from collections import defaultdict
 
-# from scipy import special
+from scipy import special
 
 # import community as community_louvain
 # from cdlib import algorithms, evaluation
@@ -61,86 +61,74 @@ def reorder_Q_inds(Q_ind):
     return reorder_idx
 
 
-def recode_struture_files(data_path,recode_path):
+def recode_files(data_path,recode_path,input_type):
 
     file_list = list()
-
     files = os.listdir(data_path)
-    Q_files = [i for i in files if i.endswith('_f')]
-    
+    if input_type == "structure":
+        Q_files = [i for i in files if i.endswith('_f')]
+    elif input_type == "fastStructure":
+        Q_files = [i for i in files if i.endswith('.meanQ')]
+    elif input_type == "admixture" or input_type == "generalQ":
+        Q_files = [i for i in files if i.endswith('.Q')]
+    else:
+        sys.exit("ERROR: Please specify one of the following for input_type: structure, admixture, fastStructure, and generalQ.")
+
+    if len(Q_files)==0:
+        # check if no input data of the right form 
+        sys.exit("ERROR: No input files detected. Please double check input_path and input_type.")
+
+ 
     R = len(Q_files)
-    for r in range(R):
-        Q_file = Q_files[r]
-        with open(os.path.join(data_path,Q_file)) as file:
-            lines = file.readlines()
+    
+    if input_type =="structure":
+        for r in range(R):
+            Q_file = Q_files[r]
+            with open(os.path.join(data_path,Q_file)) as file:
+                lines = file.readlines()
+            
+            # get only the membership coefficients part
+            res_start = lines.index("Inferred ancestry of individuals:\n")
+            lines = lines[(res_start+1):]
+            res_end = lines.index("\n")
+            lines = lines[:res_end]
+            
+            # extract membership matrix
+            Q = [[float(i) for i in l.split()[5:]] for l in lines[1:]]
+            Q = np.array(Q)
+            
+            # write to file
+            np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
+            file_list.append(Q_file)
+
         
-        # get only the membership coefficients part
-        res_start = lines.index("Inferred ancestry of individuals:\n")
-        lines = lines[(res_start+1):]
-        res_end = lines.index("\n")
-        lines = lines[:res_end]
-        
-        # extract membership matrix
-        Q = [[float(i) for i in l.split()[5:]] for l in lines[1:]]
-        Q = np.array(Q)
-        
-        # write to file
-        np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
-          
-    # extract individual info
-    df_ind_info = pd.DataFrame([l.split()[0:4] for l in lines[1:]])
-    df_ind_info.set_index([0],inplace=True)
-    header = lines[0].split()[:3]
-    header[2] = header[2].split(":")[0]
-    df_ind_info.columns = header
-    df_ind_info.to_csv(os.path.join(recode_path,'ind_info.txt'), sep=' ')
+    else: # if input_type =="admixture" or "fastStructure" or "generalQ"
+        for r in range(R):
+            Q_file = Q_files[r]
+            with open(os.path.join(data_path,Q_file)) as file:
+                lines = file.readlines()
+                
+            # extract membership matrix
+            Q = [[float(i) for i in l.split()] for l in lines]
+            Q = np.array(Q)
+            
+            # write to file
+            np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
+            file_list.append(Q_file)
+
+    if input_type =="structure":
+        # extract individual info
+        df_ind_info = pd.DataFrame([l.split()[0:4] for l in lines[1:]])
+        df_ind_info.set_index([0],inplace=True)
+        header = lines[0].split()[:3]
+        header[2] = header[2].split(":")[0]
+        df_ind_info.columns = header
+        df_ind_info.to_csv(os.path.join(recode_path,'ind_info.txt'), sep=' ')
 
     return file_list
-        
+
     
-def recode_faststruture_files(data_path,recode_path):
-    files = os.listdir(data_path)  
-    Q_files = [i for i in files if i.endswith('.meanQ')]
-    
-    if len(Q_files)==0:
-        # sanity check if data directory is empty
-        sys.exit("ERROR: no Q files detected. Please double check input_path and input_type.")
-        
-    R = len(Q_files)
-    for r in range(R):
-        Q_file = Q_files[r]
-        with open(os.path.join(data_path,Q_file)) as file:
-            lines = file.readlines()
-            
-        # extract membership matrix
-        Q = [[float(i) for i in l.split()] for l in lines]
-        Q = np.array(Q)
-        
-        # write to file
-        np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
-        
-def recode_admixture_files(data_path,recode_path):
-    files = os.listdir(data_path)  
-    Q_files = [i for i in files if i.endswith('.Q')]
-    
-    if len(Q_files)==0:
-        # sanity check if data directory is empty
-        sys.exit("ERROR: no Q files detected. Please double check input_path and input_type.")
-        
-    R = len(Q_files)
-    for r in range(R):
-        Q_file = Q_files[r]
-        with open(os.path.join(data_path,Q_file)) as file:
-            lines = file.readlines()
-            
-        # extract membership matrix
-        Q = [[float(i) for i in l.split()] for l in lines]
-        Q = np.array(Q)
-        
-        # write to file
-        np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
-    
-def load_Q(recode_path,reorder_inds=False,ignore_recode_name=False):
+def load_Q(recode_path,ignore_recode_name=False,file_list=None):
 
     Q_list = list()
     K_list = list()
@@ -155,6 +143,7 @@ def load_Q(recode_path,reorder_inds=False,ignore_recode_name=False):
     R = len(Q_files)
     
     if ignore_recode_name:
+        file_list = list()
         for r in range(R):
             Q = np.loadtxt(os.path.join(recode_path,Q_files[r]))
             K = Q.shape[1]
@@ -165,6 +154,7 @@ def load_Q(recode_path,reorder_inds=False,ignore_recode_name=False):
                 
             Q_list.append(Q)
             K_list.append(K)
+            file_list.append(Q_files[r])
     else:
 
         for r in range(R):
@@ -183,15 +173,11 @@ def load_Q(recode_path,reorder_inds=False,ignore_recode_name=False):
     sored_idx = list(np.argsort(K_list))
     K_list = [K_list[i] for i in sored_idx]
     Q_list = [Q_list[i] for i in sored_idx]
+    file_list = [file_list[i] for i in sored_idx]
                    
-    if reorder_inds:
-        reorder_idx = reorder_Q_inds(Q_list[0])
-        for r in range(R):
-            Q_list[r] = Q_list[r][reorder_idx,:]
-    
     N = Q.shape[0]
     
-    return N, R, Q_list, K_list
+    return N, R, Q_list, K_list, file_list
 
 
 def load_ind(recode_path):
@@ -206,19 +192,17 @@ def load_ind(recode_path):
     
     return ind2pop, pop_n_ind
 
-def get_Qbar(Q_list,ind2pop):
-    ind_pop_first = [i+1 for i,ind in enumerate(ind2pop[:-1]) if ind!=ind2pop[i+1] ]    
-    ind_pop_first = [0] + ind_pop_first + [len(ind2pop)]
+# def get_Qbar(Q_list,ind2pop):
+#     ind_pop_first = [i+1 for i,ind in enumerate(ind2pop[:-1]) if ind!=ind2pop[i+1] ]    
+#     ind_pop_first = [0] + ind_pop_first + [len(ind2pop)]
 
-    Qbar_list = list()
-    for Q in Q_list:
-        Q_pop = [np.sum(Q[ind_pop_first[i]:ind_pop_first[i+1],:],axis=0,keepdims=True)/(ind_pop_first[i+1]-ind_pop_first[i])*(ind_pop_first[i+1]-ind_pop_first[i]) for i in range(len(ind_pop_first)-1)]
-        Q_pop = np.array(Q_pop).squeeze()
-        # temp = [np.repeat(np.sum(Q[ind_pop_first[i]:ind_pop_first[i+1],:],axis=0,keepdims=True)/(ind_pop_first[i+1]-ind_pop_first[i]),(ind_pop_first[i+1]-ind_pop_first[i]),axis=0) for i in range(len(ind_pop_first)-1)]
-        # Qbar = np.concatenate(temp,axis=0)
-        Qbar_list.append(Q_pop)
+#     Qbar_list = list()
+#     for Q in Q_list:
+#         Q_pop = [np.sum(Q[ind_pop_first[i]:ind_pop_first[i+1],:],axis=0,keepdims=True)/(ind_pop_first[i+1]-ind_pop_first[i])*(ind_pop_first[i+1]-ind_pop_first[i]) for i in range(len(ind_pop_first)-1)]
+#         Q_pop = np.array(Q_pop).squeeze()
+#         Qbar_list.append(Q_pop)
         
-    return Qbar_list
+#     return Qbar_list
 
 #%% Dirichlet Functions
 def digamma_inv(y,n_iter=5):
@@ -264,7 +248,6 @@ def fixed_point(Q, a0, n_iter = 10):
             a = a_next
             break
         a = a_next
-#     print("#iterations:{}".format(i_iter+1))
     return a
 
 def repdist0(a):
@@ -314,7 +297,6 @@ def write_modes_to_file(file_name,K_range,N_ind,modes_allK_list,meanQ_modes):
     f.close()
 
 
-
 def standardize_matrix(W):
     off_diag_idx = np.where(~np.eye(W.shape[0],dtype=bool))
     off_diag_w = W[off_diag_idx]
@@ -324,7 +306,6 @@ def standardize_matrix(W):
 
 def normalize_matrix(W):
     return W/np.sqrt(W.shape[0])
-
 
 def exponentiate_matrix(W,t):
     off_diag_idx = np.where(~np.eye(W.shape[0],dtype=bool))

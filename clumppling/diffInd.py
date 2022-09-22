@@ -23,10 +23,6 @@ from clumppling.func_main import align_ILP_weighted
 from clumppling.func_plotting import plot_membership
 import argparse
 
-# input_base_path= "G:/My Drive/Projects/ImprClsAlign/output/Rosenberg2002"
-
-# input_paths = ["G:/My Drive/Projects/ImprClsAlign/output/Rosenberg2002/diversity100","G:/My Drive/Projects/ImprClsAlign/output/Rosenberg2002/diversity50"]
-# output_path = "G:/My Drive/Projects/ImprClsAlign/output/diversity"
 
 def load_Q_and_indinfo(input_base_path,input_names):
     # load mode Q and ind pop info    
@@ -38,7 +34,7 @@ def load_Q_and_indinfo(input_base_path,input_names):
     popNind_all = list()
     for input_name in input_names:
         Q_path = os.path.join(input_base_path, input_name,"modes_Q")
-        N, R, Q_list, K_list = load_Q(Q_path,reorder_inds=False,ignore_recode_name=True)
+        N, R, Q_list, K_list, file_list = load_Q(Q_path,ignore_recode_name=True,file_list=None)
         ind2pop, pop_n_ind = load_ind(os.path.join(input_base_path,input_name,"data"))
         N_all.append(N)
         R_all.append(R)
@@ -207,7 +203,6 @@ def main(args):
         shutil.rmtree(output_path)
     if os.path.exists(output_path+".zip"):
         os.remove(output_path+".zip")
-    # os.makedirs(output_path, exist_ok=True)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     
@@ -219,22 +214,23 @@ def main(args):
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
     
-    logging.info("\n==========\nRunning alignment based on population-wise memberships...")
+    logging.info("========== Starting Clumppling (different individuals with labeled population) ... ==========")
     
     # determine input directories
     input_names = [f for f in os.listdir(input_base_path) if os.path.isdir(os.path.join(input_base_path, f))]
-    logging.info("---input Q files: {}".format(", ".join(input_names)))
-    logging.info("---plotting figures separately: {}".format("Yes" if plot_separate else "No"))
-    logging.info("==========")
+    logging.info("Input Q files: {}".format(", ".join(input_names)))
+    logging.info("Plotting figures separately: {}".format("Yes" if plot_separate else "No"))
 
     # load files
     tic = time.time()
+    logging.info("---------- Loading files ...")
     N_all, R_all, Q_all, K_all, ind2pop_all, popNind_all = load_Q_and_indinfo(input_base_path,input_names)
     toc = time.time()
-    logging.info("time to load files: %s",toc-tic)
+    logging.info("Time: %.3fs",toc-tic)
     
     # alignment
     tic = time.time()
+    logging.info("---------- Aligning and plotting ...")
     # set colormap
     K_range = np.sort(list(set().union(*[set(K) for K in K_all])))
     max_K = np.max(K_range)
@@ -246,19 +242,21 @@ def main(args):
     # align and plot
     align_popwise_membership(input_names, Q_all, K_all, ind2pop_all, output_path, cmap, plot_separate=plot_separate)
     toc = time.time()
-    logging.info("time to align and plot: %s",toc-tic)     
-    
-    tot_toc = time.time()
-    logging.info("---Total Time: %s", tot_toc-tot_tic)
+    logging.info("Time: %.3fs",toc-tic)     
     
     # zip all files
+    logging.info("---------- Zipping files ...")
     shutil.make_archive(output_path, "zip", output_path)
+
+    tot_toc = time.time()
+    logging.info("======== Total Time: %.3fs ========", tot_toc-tot_tic)
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_base_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
-    parser.add_argument('--plot_separate', type=str, help='Y/N: whether plot alignment separately for each type of input')
+    parser.add_argument('--plot_separate', type=str, help='Y/N: whether plot alignment separately for each set of input')
         
     args = parser.parse_args()
     main(args)

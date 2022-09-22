@@ -1,3 +1,3 @@
-python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/HGDP_all791_Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/HGDP_diffmodel/all791" --input_type="structure" --cd_mod_thre=0.2
-python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/HGDP_selected12_Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/HGDP_diffmodel/selected12" --input_type="structure" --cd_mod_thre=0.2
+python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/Fortier2020_791loci/b10000/Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/HGDP_diffmodel/791loci" --input_type="structure" --cd_mod_thre=0.2
+python -m clumppling.main --input_path="G:/My Drive/Projects/ImprClsAlign/StructureHuman/Fortier2020_13loci/b10000/Results" --output_path="G:/My Drive/Projects/ImprClsAlign/output/HGDP_diffmodel/13loci" --input_type="structure" --cd_mod_thre=0.2
 python -m clumppling.diffModel --input_base_path="G:/My Drive/Projects/ImprClsAlign/output/HGDP_diffmodel" --output_path="G:/My Drive/Projects/ImprClsAlign/output/diffmodel" --plot_separate=N

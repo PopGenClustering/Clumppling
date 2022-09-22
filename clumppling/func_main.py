@@ -3,21 +3,13 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import time
-from itertools import product,combinations_with_replacement
+from itertools import product,combinations_with_replacement, combinations
 from collections import defaultdict
 from scipy import special
 
-# from cdlib import algorithms, evaluation
-# import community as community_louvain
 import networkx as nx
 from TracyWidom import TracyWidom
-# import markov_clustering as mc # MCL for mode detection
-
-# import networkx.algorithms.community as nx_comm
-# import markov_clustering as mc # MCL for mode detection
-
 import community.community_louvain as community_louvain
-
 from scipy.spatial.distance import cdist
 import cvxpy as cp
 
@@ -68,6 +60,51 @@ def align_ILP(P,Q):
     # idxP2Q = np.where(opt_W.T==1)[1]
     return opt_obj, idxQ2P#, idxP2Q
 
+# align P and Q by enumerating all combinations of two clusters when K is differ by 1
+def align_ILP_diff1(P,Q):
+
+    K_Q = Q.shape[1] # #rows
+    K_P = P.shape[1] # #columns
+    N_ind = Q.shape[0] #individuals
+    assert(K_Q-K_P==1)
+
+    # all combinations of Q into the same size of P
+    Q_2combs = list(combinations(np.arange(K_Q),2))
+
+    best_obj = np.inf
+    idxQ2P = None 
+
+    for pair in Q_2combs:
+
+        # new row
+        new_r = Q[:,pair[0]]+Q[:,pair[1]]
+        
+        # remove matrix
+        old_idx = np.arange(K_Q)
+        old_idx = np.delete(old_idx, [pair[0],pair[1]])
+        # idx_map = {i:idx for i,idx in enumerate(old_idx)}
+        
+        # update matrix
+        new_idx = Q.shape[1]-2
+        Q_comb = np.hstack([Q[:,old_idx],np.expand_dims(new_r,1)])
+
+        opt_obj, idxQ2P_comb = align_ILP(P,Q_comb)
+
+        if opt_obj<best_obj:
+            best_obj = opt_obj
+            idxQ2P = np.zeros(K_Q)
+            # print(pair,new_idx)
+            for i,idx in enumerate(old_idx):
+                idxQ2P[idx] = idxQ2P_comb[i]
+            idxQ2P[pair[0]] = idxQ2P_comb[new_idx]
+            idxQ2P[pair[1]] = idxQ2P_comb[new_idx]
+    idxQ2P = idxQ2P.astype(int)
+    # print("sanity check")
+    # opt_obj_old, idxQ2P_old = align_ILP(P,Q)
+    # print(opt_obj,opt_obj_old)
+    # print(idxQ2P.shape,idxQ2P_old.shape)
+
+    return opt_obj, idxQ2P
 
 def align_ILP_weighted(P,Q,weight):
     
@@ -287,20 +324,14 @@ def cd_default(G):
     return partition_map
 
 def cd_custom(G):
+    # Please comment out the following line and customize your community detection method here.
     partition_map = {i:0 for i in range(G.number_of_nodes())} 
     return partition_map
 
-def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, draw_communities=False, save_path=None, cd_func=cd_default):
+def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, save_path=None, cd_func=cd_default):
 
     modes_allK_list = dict()
-    # adj_mat_allK_list = dict()
-    # method_name,method_para = "", None
-    # if len(method)>0:
-    #     method_name = method[0]
-    # if len(method)>1:
-    #     method_para = method[1]
-    # if len(method)>2:
-    #     method_modthre = method[2]
+    msg = ""
             
     for K in K_range:
     
@@ -319,7 +350,7 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, draw_communities=F
 
             if not has_comm_struc:
                 partition_map = {i:0 for i in range(n_nodes)} 
-                print("K={}: no significant community structure -> set to single mode.".format(K))
+                msg = "K={}: no significant community structure -> set to single mode".format(K)
 
             else: # having community structure
 
@@ -342,22 +373,22 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, draw_communities=F
                     else:
                         partition_map = cd_custom(G)
                         # print("Running customized community detection.")
-                    # if cd_mod_thre is not None:
-                    #     mod_res = community_louvain.modularity(partition_map, G)
-                    #     if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
-                    #         print("K={}: low community detection quality, set to single mode.".format(K))
-                    #         partition_map = {i:0 for i in range(G.number_of_nodes())} 
+                    if cd_mod_thre!=-1:
+                        mod_res = community_louvain.modularity(partition_map, G)
+                        if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
+                            msg = "K={}: low community detection quality (below modularity threshold) -> set to single mode".format(K)
+                            partition_map = {i:0 for i in range(G.number_of_nodes())} 
                 
-                if draw_communities:
-                    # draw the graph
-                    fig, ax = plt.subplots()
-                    nx.draw(G,pos,with_labels=True,node_color='white',edge_color='white')
-                    nx.draw_networkx_nodes(G, pos, partition_map.keys(), alpha=0.7, #node_size=40,
-                                           node_color=list(partition_map.values()))
-                    nx.draw_networkx_edges(G, pos, alpha=0.2)
-                    # save 
-                    fig.savefig(os.path.join(save_path,'K{}_modes_network_{}.png'.format(K,method_name)))
-                    plt.close(fig)
+                # if draw_communities:
+                #     # draw the graph
+                #     fig, ax = plt.subplots()
+                #     nx.draw(G,pos,with_labels=True,node_color='white',edge_color='white')
+                #     nx.draw_networkx_nodes(G, pos, partition_map.keys(), alpha=0.7, #node_size=40,
+                #                            node_color=list(partition_map.values()))
+                #     nx.draw_networkx_edges(G, pos, alpha=0.2)
+                #     # save 
+                #     fig.savefig(os.path.join(save_path,'K{}_modes_network_{}.png'.format(K,method_name)))
+                #     plt.close(fig)
     
         ########################################
         # separate modes
@@ -369,7 +400,7 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, draw_communities=F
         
         modes_allK_list[K] = modes
         
-    return modes_allK_list
+    return modes_allK_list, msg
     
         # if method_name=="louvain":
 
@@ -702,7 +733,7 @@ def align_leader_clustering_adaptive(cost_thre_base,Q_list,K_range,N_ind,k2ids,i
             min_cost_idx = np.argmin(cost_to_leaders)
             min_cost = cost_to_leaders[min_cost_idx]
 
-            cost_thre = 5*ct#cost_thre_base+10*np.mean([theo_cost_list[ids[r]],theo_cost_list[ids[leaders[min_cost_idx]]]]) #lc_theo_cost[leaders[min_cost_idx]]
+            cost_thre = 5*ct #cost_thre_base+10*np.mean([theo_cost_list[ids[r]],theo_cost_list[ids[leaders[min_cost_idx]]]]) #lc_theo_cost[leaders[min_cost_idx]]
             # print(cost_thre_base,cost_thre,min_cost)
             
             if min_cost>(cost_thre): #*1.2**(K-K_range[0])
@@ -773,79 +804,7 @@ def align_leader_clustering_adaptive(cost_thre_base,Q_list,K_range,N_ind,k2ids,i
     return modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats 
 
 
-
-# def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_filename,ind2pop=None):
-    
-#     K_comb = list(combinations_with_replacement(sorted(K_range,reverse=True),r=2))
-#     perm_ILP_acrossK_Q2P = dict()
-#     # perm_ILP_acrossK_P2Q = dict()
-#     cost_acrossK_ILP = dict()
-    
-#     f = open(os.path.join(save_path,ILP_acrossK_filename),"w")
-    
-#     best_alignments = dict()
-    
-#     for K1,K2 in K_comb:
-        
-#         best_alignment_idx = None
-#         best_alignment_obj = np.inf
-
-#         # labels = list(product(["K{}m{}".format(K1,im) for im,m in enumerate(consensusQ_modes[K1])],\
-#         #                       ["K{}m{}".format(K2,im) for im,m in enumerate(consensusQ_modes[K2])]))
-#         rijs = list(product(range(len(consensusQ_modes[K1])),range(len(consensusQ_modes[K2]))))
-        
-#         for i,(ri,rj) in enumerate(rijs):
-            
-#             Q = consensusQ_modes[K1][ri] # Q is the one with more clusters
-#             P = consensusQ_modes[K2][rj]
-    
-#             opt_obj, idxQ2P = align_ILP(P, Q)
-#             if best_alignment_obj>opt_obj:
-#                 best_alignment_obj = opt_obj
-#                 best_alignment_idx = i
-#             f.write("{}#{}-{}#{}:{}\n".format(K2,rj,K1,ri,opt_obj))
-#             f.write("{}\n".format(" ".join([str(id) for id in idxQ2P])))
-#             # f.write("{}\n".format(" ".join([str(id) for id in idxP2Q])))
-    
-#             # retrieve alignment
-#             # if "{}#{}-{}#{}".format(K2,rj,K1,ri)=="3#0-3#1":
-#             #     print(K1,K2,rijs)
-#             #     print("GOOD")
-#             #     raise KeyboardInterrupt
-#             cost_acrossK_ILP["{}#{}-{}#{}".format(K2,rj,K1,ri)] = opt_obj
-#             perm_ILP_acrossK_Q2P["{}#{}-{}#{}".format(K2,rj,K1,ri)] = idxQ2P
-#             # perm_ILP_acrossK_P2Q[labels[i]] = idxP2Q
-        
-#         best_alignments[(K1,K2)] = rijs[best_alignment_idx]
-#     f.close()
-    
-#     # if len(ind2pop)>0:
-#     #     f = open(os.path.join(save_path,ILP_acrossK_filename.split(".")[0]+"_best.txt"),"w")
-#     #     for i_K1 in range(len(K_range)-1):
-#     #         K1 = K_range[i_K1+1]
-#     #         K2 = K_range[i_K1]
-#     #         ri,rj = best_alignments[(K1,K2)]
-#     #         Q = consensusQ_modes[K1][ri] # Q is the one with more clusters
-#     #         P = consensusQ_modes[K2][rj]
-            
-#     #         Qbar = get_Qbar([Q],ind2pop)
-#     #         Qbar = Qbar[0]
-#     #         Pbar = get_Qbar([P],ind2pop)
-#     #         Pbar = Pbar[0]
-#     #         print(K1,K2,ri,rj,Qbar.shape,Pbar.shape)
-    
-#     #         opt_obj, idxQ2P = align_IQP(Pbar, Qbar)
-#     #         print(opt_obj)
-#     #         print(idxQ2P)
-#     #         f.write("{}#{}-{}#{}:{}\n".format(K2,rj,K1,ri,opt_obj))
-#     #         f.write("{}\n".format(" ".join([str(id) for id in idxQ2P])))
-            
-#     #     f.close()
-    
-#     return perm_ILP_acrossK_Q2P, cost_acrossK_ILP
-
-
-def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_filename,ind2pop=None):
+def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_combK=True,ind2pop=None):
     
     K_range_sorted = sorted(K_range,reverse=True)
     K_comb = list([(K_range_sorted[i],K_range_sorted[i+1]) for i in range(len(K_range_sorted)-1)])
@@ -872,8 +831,16 @@ def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_fil
             
             Q = consensusQ_modes[K1][ri] # Q is the one with more clusters
             P = consensusQ_modes[K2][rj]
-    
-            opt_obj, idxQ2P = align_ILP(P, Q)
+
+            if (K1==K2 and rj==ri):
+                # identical alignment (dummy)
+                opt_obj = 0
+                idxQ2P = np.arange(K1)
+            elif enum_combK and (K1-K2)==1:
+                opt_obj, idxQ2P = align_ILP_diff1(P, Q)
+            else:
+                opt_obj, idxQ2P = align_ILP(P, Q)
+
             if best_alignment_obj>opt_obj:
                 best_alignment_obj = opt_obj
                 best_alignment_idx = i
@@ -904,29 +871,6 @@ def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_fil
         best_ILP_acrossK.append(bali)
         f.write("{}\n".format(bali))
     f.close()
-    
-    # if len(ind2pop)>0:
-    #     f = open(os.path.join(save_path,ILP_acrossK_filename.split(".")[0]+"_best.txt"),"w")
-    #     for i_K1 in range(len(K_range)-1):
-    #         K1 = K_range[i_K1+1]
-    #         K2 = K_range[i_K1]
-    #         ri,rj = best_alignments[(K1,K2)]
-    #         Q = consensusQ_modes[K1][ri] # Q is the one with more clusters
-    #         P = consensusQ_modes[K2][rj]
-            
-    #         Qbar = get_Qbar([Q],ind2pop)
-    #         Qbar = Qbar[0]
-    #         Pbar = get_Qbar([P],ind2pop)
-    #         Pbar = Pbar[0]
-    #         print(K1,K2,ri,rj,Qbar.shape,Pbar.shape)
-    
-    #         opt_obj, idxQ2P = align_IQP(Pbar, Qbar)
-    #         print(opt_obj)
-    #         print(idxQ2P)
-    #         f.write("{}#{}-{}#{}:{}\n".format(K2,rj,K1,ri,opt_obj))
-    #         f.write("{}\n".format(" ".join([str(id) for id in idxQ2P])))
-            
-    #     f.close()
     
     return perm_ILP_acrossK_Q2P, cost_acrossK_ILP, best_ILP_acrossK
 
