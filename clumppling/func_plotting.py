@@ -135,11 +135,14 @@ def plot_acrossK_multipartite(K_range,modes_allK_list,meanQ_modes,meanQ_acrossK_
     for k1k2_pair in meanQ_acrossK_cost:
         k1m = k1k2_pair.split("-")[0]
         k2m = k1k2_pair.split("-")[1]
-        if int(k1m.split("#")[0])+1==int(k2m.split("#")[0]):
+        k1 = int(k1m.split("#")[0])
+        k2 = int(k2m.split("#")[0])
+        k1, k2 = min([k1,k2]), max([k1,k2])
+        if K_range_sorted.index(k1)-1==K_range_sorted.index(k2):
             cost = float(meanQ_acrossK_cost[k1k2_pair])
             norm_cost = 1-cost/max_cost
             G.add_edge(km2nid[k1m],km2nid[k2m],weight=norm_cost,cost=round(cost,3))
-    
+
     # plot the network of modes 
     color = [layer_color[data["layer"]] for v, data in G.nodes(data=True)]
     size = [s * 2500 for s in nodes_sizes]
@@ -154,7 +157,6 @@ def plot_acrossK_multipartite(K_range,modes_allK_list,meanQ_modes,meanQ_acrossK_
             width=2, edge_color=weights, edge_cmap=plt.cm.Reds)
     
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, label_pos=0.73, alpha=0.7, font_size=10)
-    # plt.title(title, fontsize=16)
     # save 
     fig.savefig(os.path.join(save_path,plot_file_name), bbox_inches='tight',dpi=30)
     plt.close(fig)

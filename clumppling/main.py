@@ -71,7 +71,7 @@ def main(args):
     # if not os.path.exists(os.path.join(save_path,"modes_Q")):
     os.makedirs(os.path.join(save_path,"modes_Q"))
     
-    output_f = os.path.join(save_path,'output.txt')
+    output_f = os.path.join(save_path,'output.log')
     handlers = [logging.FileHandler(output_f, 'w'), logging.StreamHandler()]
     logging.basicConfig(level=logging.INFO, format='', handlers = handlers)
     logging.getLogger('matplotlib.font_manager').disabled = True
