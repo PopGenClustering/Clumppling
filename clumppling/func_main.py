@@ -25,7 +25,7 @@ def align_ILP(P,Q):
     assert(K_Q>=K_P)
     
     # compute distance
-    D = cdist(Q.T, P.T, metric='euclidean')**2/N_ind # seuclidean, euclidean : 
+    D = cdist(Q.T, P.T, metric='sqeuclidean')/N_ind # seuclidean, euclidean : 
     d = D.flatten()
     
     # constraints

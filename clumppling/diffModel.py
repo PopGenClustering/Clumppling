@@ -191,7 +191,7 @@ def main(args):
     
     tot_tic = time.time()
     
-    output_f = os.path.join(output_path,'output.txt')
+    output_f = os.path.join(output_path,'output.log')
     handlers = [logging.FileHandler(output_f, 'w'), logging.StreamHandler()]
     logging.basicConfig(level=logging.INFO, format='', handlers = handlers)
     logging.getLogger('matplotlib.font_manager').disabled = True
