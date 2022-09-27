@@ -33,8 +33,10 @@ def main(args):
     input_format = args.input_format
     
     # sanity check for arguments
-    if not os.path.exists(input_path):
-        sys.exit("ERROR: Input file path doesn't exist.")
+    if os.path.exists(params.input_path+".zip"):
+        shutil.unpack_archive(params.input_path+".zip",params.input_path)
+    if not os.path.exists(params.input_path):
+        sys.exit("ERROR: Input file doesn't exist.")
     if not os.path.exists(params_path):
         sys.exit("ERROR: Parameter file doesn't exist.")
     if not input_format in ["structure","fastStructure","admixture","generalQ"]:
@@ -54,10 +56,7 @@ def main(args):
     else:
         params.cmap = []
     
-    if os.path.exists(params.input_path+".zip"):
-        shutil.unpack_archive(params.input_path+".zip",params.input_path)
-    if not os.path.exists(params.input_path):
-        sys.exit("Input file doesn't exist.")
+    
     
     #%% Set-up 
     tot_tic = time.time()
