@@ -33,9 +33,9 @@ def main(args):
     input_format = args.input_format
     
     # sanity check for arguments
-    if os.path.exists(params.input_path+".zip"):
-        shutil.unpack_archive(params.input_path+".zip",params.input_path)
-    if not os.path.exists(params.input_path):
+    if os.path.exists(input_path+".zip"):
+        shutil.unpack_archive(input_path+".zip",input_path)
+    if not os.path.exists(input_path):
         sys.exit("ERROR: Input file doesn't exist.")
     if not os.path.exists(params_path):
         sys.exit("ERROR: Parameter file doesn't exist.")
