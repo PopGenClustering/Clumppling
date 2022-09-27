@@ -180,6 +180,13 @@ def main(args):
             plot_separate = False
     else:
         plot_separate = False
+
+    if args.custom_cmap:
+        custom_cmap = True if args.custom_cmap=="Y" else False    
+    if args.cmap:
+        cmap = args.cmap.split()
+    else:
+        cmap = []
     
     # create output directory
     if os.path.exists(output_path):
@@ -214,14 +221,26 @@ def main(args):
     # alignment
     tic = time.time()
     logging.info("---------- Aligning and plotting ...")
-    # set colormap
+    
     K_range = np.sort(list(set().union(*[set(K) for K in K_all])))
     max_K = np.max(K_range)
-    np.random.seed(999)
-    cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
-    cmap = cmap(np.linspace(0, 1, max_K))
-    np.random.shuffle(cmap)
-    cmap = cm.colors.ListedColormap(cmap)
+
+    # set colormap
+    if custom_cmap and len(cmap)>0:
+        while len(cmap) < max_K:
+            logging.info(">>>The provided colormap does not have enough colors for all clusters. Colors are recycled.")
+            cmap.extend(cmap)
+        cmap = cm.colors.ListedColormap(cmap)
+    else:
+        if custom_cmap:
+            logging.info(">>>Custom colormap is not provided. Use the deafult colormap.")
+        np.random.seed(999)
+        cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
+        cmap = cmap(np.linspace(0, 1, max_K))
+        np.random.shuffle(cmap)
+        cmap = cm.colors.ListedColormap(cmap)
+
+
     # align and plot
     align_multiple(input_names, Q_all, K_all, output_path, cmap, plot_separate=plot_separate)
     toc = time.time()
@@ -237,9 +256,15 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_base_path', type=str, required=True)
-    parser.add_argument('--output_path', type=str, required=True)
-    parser.add_argument('--plot_separate', type=str, help='Y/N: whether plot alignment separately for each model')
-        
+    parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    optional = parser.add_argument_group('optional arguments')
+
+    required.add_argument('-i', '--input_base_path', type=str, required=True)
+    required.add_argument('-o', '--output_path', type=str, required=True)
+    optional.add_argument('--plot_separate', type=str, required=False, help='Y/N: whether plot alignment separately for each model')
+    optional.add_argument('--custom_cmap', type=str, required=False, help='Y/N: whether to use customized colormap')
+    optional.add_argument('--cmap', type=str, required=False, help='user-specified colormap as a list of colors (in hex code) in a space-delimited string')
+
     args = parser.parse_args()
     main(args)

@@ -22,27 +22,37 @@ from clumppling.func_plotting import *
 from clumppling.params import Params
 import argparse
 
+# import xml.dom.minidom
+
 
 def main(args):
 
     input_path = args.input_path
     output_path = args.output_path
-    input_type = args.input_type
+    params_path = args.params_path
+    input_format = args.input_format
     
-    if not input_type in ["structure","fastStructure","admixture","generalQ"]:
-        sys.exit("ERROR: Input project type isn't supported. \nPlease specify input_type as one of the following: structure, admixture, fastStructure, and generalQ.")
+    # sanity check for arguments
+    if not os.path.exists(input_path):
+        sys.exit("ERROR: Input file path doesn't exist.")
+    if not os.path.exists(params_path):
+        sys.exit("ERROR: Parameter file doesn't exist.")
+    if not input_format in ["structure","fastStructure","admixture","generalQ"]:
+        sys.exit("ERROR: Input data format isn't supported. \nPlease specify input_format as one of the following: structure, admixture, fastStructure, and generalQ.")
     
-  
-    params = Params(input_path,output_path,input_type)
-    
+    params = Params(input_path,output_path,params_path,input_format)
+
     if args.default_cd:
         params.default_cd = True if args.default_cd=="Y" else False        
     if args.cd_mod_thre:
         params.cd_mod_thre = args.cd_mod_thre if args.cd_mod_thre!=-1 else -1.0
  
     if args.custom_cmap:
-        params.custom_cmap = True if args.custom_cmap=="Y" else False    
+        params.custom_cmap = True if args.custom_cmap=="Y" else False  
+    if args.cmap:
         params.cmap = args.cmap.split()
+    else:
+        params.cmap = []
     
     if os.path.exists(params.input_path+".zip"):
         shutil.unpack_archive(params.input_path+".zip",params.input_path)
@@ -61,11 +71,6 @@ def main(args):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     
-    # if params.lc_flag:
-    #     md_method = "LC_{}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre) 
-    # else:
-    #     md_method = "{}_{}".format("default" if params.default_cd else "custom",params.cd_mod_thre)
-    
     save_path = output_path
         
     # if not os.path.exists(os.path.join(save_path,"modes_Q")):
@@ -77,9 +82,6 @@ def main(args):
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
 
-    # logging.info("Input path: {}".format(input_path))
-    # logging.info("Input data type: {}".format(input_type))
-    # logging.info("Output path: {}".format(output_path))
     disp = params.display()
     logging.info(disp)
 
@@ -96,13 +98,13 @@ def main(args):
     os.makedirs(recode_path) 
     tic = time.time()
     logging.info("---------- Processing input data files and checking arguments ...")
-    file_list = recode_files(params.input_path,recode_path,params.input_type)
+    file_list = recode_files(params.input_path,recode_path,params.input_format)
     
     
     #%% Loading membership data    
     N, R, Q_list, K_list, file_list = load_Q(recode_path,file_list=file_list)
    
-    if input_type == "structure":
+    if input_format == "structure":
         ind2pop, pop_n_ind = load_ind(recode_path)
         logging.info(">>>Extract individual information from STRUCTURE files.")
     else:
@@ -114,14 +116,15 @@ def main(args):
     k2ids = {k:np.where(K_list==k)[0] for k in K_range}
     idx2idxinK = [i-np.where(K_list==K)[0][0] for i,K in enumerate(K_list)]
     
-    # colormap
-    if params.custom_cmap:
-        if len(params.cmap) < max_K:
+    # set colormap
+    if params.custom_cmap and len(params.cmap)>0:
+        while len(params.cmap) < max_K:
             logging.info(">>>The provided colormap does not have enough colors for all clusters. Colors are recycled.")
             params.cmap.extend(params.cmap)
         cmap = cm.colors.ListedColormap(params.cmap)
-        # logging.info(">>>Use customized cmap.")
     else:
+        if params.custom_cmap:
+            logging.info(">>>Custom colormap is not provided. Use the deafult colormap.")
         np.random.seed(999)
         cmap = cm.get_cmap('Spectral') # colormap for plotting clusters
         cmap = cmap(np.linspace(0, 1, max_K))
@@ -273,9 +276,14 @@ def main(args):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_path', type=str, required=True)
-    parser.add_argument('--output_path', type=str, required=True)
-    parser.add_argument('--input_type', type=str, required=True)
+    parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    optional = parser.add_argument_group('optional arguments')
+
+    required.add_argument('-i', '--input_path', type=str, required=True, help='path to the input files')
+    required.add_argument('-o', '--output_path', type=str, required=True, help='path to the output files')
+    required.add_argument('-p', '--params_path', type=str, required=True, help='path to the parameter file (.xml)')
+    required.add_argument('-f', '--input_format', type=str, required=True, help='input data format')
     
     optional_arguments = [['default_cd','str','Y/N: whether to use default community detection method (Louvain) to detect modes'],
                           ['cd_mod_thre','float','the modularity threshold for community detection'],
@@ -283,7 +291,7 @@ if __name__ == "__main__":
                            ['cmap','str','user-specified colormap as a list of colors (in hex code) in a space-delimited string']]
     
     for opt_arg in optional_arguments: 
-        parser.add_argument('--{}'.format(opt_arg[0]), type=getattr(builtins, opt_arg[1]), required=False, help=opt_arg[2])
+        optional.add_argument('--{}'.format(opt_arg[0]), type=getattr(builtins, opt_arg[1]), required=False, help=opt_arg[2])
 
     args = parser.parse_args()
     main(args)

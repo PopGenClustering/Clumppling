@@ -61,27 +61,27 @@ def reorder_Q_inds(Q_ind):
     return reorder_idx
 
 
-def recode_files(data_path,recode_path,input_type):
+def recode_files(data_path,recode_path,input_format):
 
     file_list = list()
     files = os.listdir(data_path)
-    if input_type == "structure":
+    if input_format == "structure":
         Q_files = [i for i in files if i.endswith('_f')]
-    elif input_type == "fastStructure":
+    elif input_format == "fastStructure":
         Q_files = [i for i in files if i.endswith('.meanQ')]
-    elif input_type == "admixture" or input_type == "generalQ":
+    elif input_format == "admixture" or input_format == "generalQ":
         Q_files = [i for i in files if i.endswith('.Q')]
     else:
-        sys.exit("ERROR: Please specify one of the following for input_type: structure, admixture, fastStructure, and generalQ.")
+        sys.exit("ERROR: Please specify one of the following for input_format: structure, admixture, fastStructure, and generalQ.")
 
     if len(Q_files)==0:
         # check if no input data of the right form 
-        sys.exit("ERROR: No input files detected. Please double check input_path and input_type.")
+        sys.exit("ERROR: No input files detected. Please double check input_path and input_format.")
 
  
     R = len(Q_files)
     
-    if input_type =="structure":
+    if input_format =="structure":
         for r in range(R):
             Q_file = Q_files[r]
             with open(os.path.join(data_path,Q_file)) as file:
@@ -102,7 +102,7 @@ def recode_files(data_path,recode_path,input_type):
             file_list.append(Q_file)
 
         
-    else: # if input_type =="admixture" or "fastStructure" or "generalQ"
+    else: # if input_format =="admixture" or "fastStructure" or "generalQ"
         for r in range(R):
             Q_file = Q_files[r]
             with open(os.path.join(data_path,Q_file)) as file:
@@ -116,7 +116,7 @@ def recode_files(data_path,recode_path,input_type):
             np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
             file_list.append(Q_file)
 
-    if input_type =="structure":
+    if input_format =="structure":
         # extract individual info
         df_ind_info = pd.DataFrame([l.split()[0:4] for l in lines[1:]])
         df_ind_info.set_index([0],inplace=True)
@@ -138,7 +138,7 @@ def load_Q(recode_path,ignore_recode_name=False,file_list=None):
     
     if len(Q_files)==0:
         # sanity check if data directory is empty
-        sys.exit("ERROR: no Q files detected. Please double check input_path and input_type.")
+        sys.exit("ERROR: no Q files detected. Please double check input_path and input_format.")
     
     R = len(Q_files)
     
@@ -312,4 +312,3 @@ def exponentiate_matrix(W,t):
     W_exp = np.zeros(W.shape)
     W_exp[off_diag_idx] = np.exp(W[off_diag_idx]*t)
     return W_exp
-
