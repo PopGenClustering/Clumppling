@@ -52,13 +52,13 @@ def avg_tril(A):
 
 #%% Data Prep Functions
 
-def reorder_Q_inds(Q_ind):
-    Q_ind_reorder = list(np.hstack((Q_ind,np.expand_dims(np.arange(Q_ind.shape[0],dtype='object'),axis=-1))))
+# def reorder_Q_inds(Q_ind):
+#     Q_ind_reorder = list(np.hstack((Q_ind,np.expand_dims(np.arange(Q_ind.shape[0],dtype='object'),axis=-1))))
     
-    Q_ind_reorder.sort(key=lambda x:(x[0], x[1] ),reverse=True)
-    Q_ind_reorder = np.array(Q_ind_reorder)
-    reorder_idx = Q_ind_reorder[:,-1].astype('int32')
-    return reorder_idx
+#     Q_ind_reorder.sort(key=lambda x:(x[0], x[1] ),reverse=True)
+#     Q_ind_reorder = np.array(Q_ind_reorder)
+#     reorder_idx = Q_ind_reorder[:,-1].astype('int32')
+#     return reorder_idx
 
 
 def recode_files(data_path,recode_path,input_format):
@@ -105,12 +105,14 @@ def recode_files(data_path,recode_path,input_format):
     else: # if input_format =="admixture" or "fastStructure" or "generalQ"
         for r in range(R):
             Q_file = Q_files[r]
-            with open(os.path.join(data_path,Q_file)) as file:
-                lines = file.readlines()
+            Q = np.loadtxt(os.path.join(data_path,Q_file)).astype(float)
+
+            # with open(os.path.join(data_path,Q_file)) as file:
+            #     lines = file.readlines()
                 
-            # extract membership matrix
-            Q = [[float(i) for i in l.split()] for l in lines]
-            Q = np.array(Q)
+            # # extract membership matrix
+            # Q = [[float(i) for i in l.split()] for l in lines]
+            # Q = np.array(Q)
             
             # write to file
             np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
@@ -286,7 +288,7 @@ def write_modes_to_file(file_name,K_range,N_ind,modes_allK_list,meanQ_modes):
     for i_K, K in enumerate(K_range):
         
         f.write("K={}|{}|{}\n".format(K,i_K,N_ind))
-        for mode_idx in range(len(meanQ_modes[K].keys())):
+        for mode_idx in range(len(meanQ_modes[K])):
             indices_in_mode = " ".join([str(item) for item in modes_allK_list[K][mode_idx]])
             meanQ = meanQ_modes[K][mode_idx]
             meanQ_str = ' '.join(str(np.round(item,4)) for innerlist in meanQ for item in innerlist)

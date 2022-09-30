@@ -18,7 +18,7 @@ class Params:
         # self.cmap = ""
 
         # # Advanced: ILP when number of clusters differ by 1
-        # self.enum_combK = True
+        # self.enum_comb_k = True
 
         # # Advanced: leader clustering parameters
         # self.lc_flag = False     
@@ -56,7 +56,7 @@ class Params:
         self.cmap = str(cmap) if cmap else ""
 
         # Advanced: ILP when number of clusters differ by 1
-        self.enum_combK = parse_bool(find_element('enum_combK'))
+        self.enum_comb_k = parse_bool(find_element('enum_comb_k'))
 
         # Advanced: leader clustering parameters
         self.lc_flag = parse_bool(find_element('lc_flag'))     
@@ -88,7 +88,7 @@ class Params:
             disp.append("Using adaptive threshold in leader clustering: {}".format(self.adaptive_thre_flag))
             if not self.adaptive_thre_flag:
                 disp.append("Fixed threshold in leader clustering: {}".format(self.lc_cost_thre))
-        disp.append("Enumerating all combinations of two clusters when aligning two replicates with K differing by one: {}".format(self.enum_combK))
+        disp.append("Enumerating all combinations of two clusters when aligning two replicates with K differing by one: {}".format(self.enum_comb_k))
         disp.append("Using customized colormap: {}".format(self.custom_cmap))
         if self.custom_cmap:
             disp.append("Customized colormap: {}".format(", ".join(self.cmap)))

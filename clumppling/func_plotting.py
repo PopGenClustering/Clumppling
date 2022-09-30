@@ -96,7 +96,7 @@ def plot_aligned(K,m,Q_list,modes,align_ILP_res,rep_modes,consensusQ,max_K,k2ids
         else:
             title = None
         plot_membership(ax,aligned_Q,max_K,cmap,title)        
-    # plt.suptitle("K{} mode{} Average Membership".format(K,m))
+
     fig.savefig(os.path.join(save_path,plot_name), bbox_inches='tight',dpi=30)
     plt.close(fig)
 
@@ -509,6 +509,13 @@ def show_all_modes(plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,mea
         fig.savefig(os.path.join(save_path,plot_name), bbox_inches='tight',dpi=30)
         plt.close(fig)
     
-
                      
-    
+def plot_colorbar(cmap,max_K,save_path):
+    colors = cmap(np.arange(max_K))
+    fig, ax = plt.subplots(figsize=(6, 2),
+                           subplot_kw=dict(yticks=[])) #xticks=[], 
+    plt.xticks(ticks=np.arange(0.5,max_K+0.5,1),labels=np.arange(0,max_K,1))
+    ax.imshow([colors], extent=[0, max_K, 0, 1])
+    plt.title("Colors used for each cluster")
+    fig.savefig(os.path.join(save_path,"colorbar.pdf"), bbox_inches='tight',dpi=30)
+    plt.close(fig)

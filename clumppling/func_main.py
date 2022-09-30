@@ -52,12 +52,10 @@ def align_ILP(P,Q):
     opt_obj = problem.value
     opt_w = problem.variables()[0].value.astype(int)
     opt_W = np.reshape(opt_w,D.shape)
-    # print("Optimal value: {}".format(opt_obj))
-    # print("Solution:\n {}".format(opt_W))
-    
+
     # matching index Q_idx to P_idx
     idxQ2P = np.where(opt_W==1)[1]
-    # idxP2Q = np.where(opt_W.T==1)[1]
+
     return opt_obj, idxQ2P#, idxP2Q
 
 # align P and Q by enumerating all combinations of two clusters when K is differ by 1
@@ -75,112 +73,77 @@ def align_ILP_diff1(P,Q):
     idxQ2P = None 
 
     for pair in Q_2combs:
-
-        # new row
-        new_r = Q[:,pair[0]]+Q[:,pair[1]]
         
         # remove matrix
         old_idx = np.arange(K_Q)
         old_idx = np.delete(old_idx, [pair[0],pair[1]])
-        # idx_map = {i:idx for i,idx in enumerate(old_idx)}
         
         # update matrix
         new_idx = Q.shape[1]-2
-        Q_comb = np.hstack([Q[:,old_idx],np.expand_dims(new_r,1)])
+        Q_comb = np.hstack([Q[:,old_idx],np.expand_dims(Q[:,pair[0]]+Q[:,pair[1]],1)])
 
         opt_obj, idxQ2P_comb = align_ILP(P,Q_comb)
 
         if opt_obj<best_obj:
             best_obj = opt_obj
             idxQ2P = np.zeros(K_Q)
-            # print(pair,new_idx)
-            for i,idx in enumerate(old_idx):
-                idxQ2P[idx] = idxQ2P_comb[i]
+            # for i,idx in enumerate(old_idx):
+            idxQ2P[old_idx] = idxQ2P_comb[np.arange(len(old_idx))]
+
             idxQ2P[pair[0]] = idxQ2P_comb[new_idx]
             idxQ2P[pair[1]] = idxQ2P_comb[new_idx]
     idxQ2P = idxQ2P.astype(int)
-    # print("sanity check")
-    # opt_obj_old, idxQ2P_old = align_ILP(P,Q)
-    # print(opt_obj,opt_obj_old)
-    # print(idxQ2P.shape,idxQ2P_old.shape)
+
 
     return opt_obj, idxQ2P
 
-def align_ILP_weighted(P,Q,weight):
-    
-    K_Q = Q.shape[1] # #rows
-    K_P = P.shape[1] # #columns
-    N_ind = Q.shape[0] #individuals
-    assert(K_Q>=K_P)
-
-    # compute distance
-    dist_elem = (np.expand_dims(Q, axis=2)-np.expand_dims(P, axis=1))**2
-    
-    w_dist = dist_elem*np.expand_dims(weight,(1,2))
-    D = np.sum(w_dist,axis=0)
-    d = D.flatten()
-    
-    # constraints
-    # sum of row = 1
-    A = np.zeros((K_Q,d.shape[0]))
-    for i in range(K_Q):
-        A[i,i*K_P:(i+1)*K_P] = np.ones((1,K_P))
-    A_ones = np.ones((K_Q))
-    
-    # sum of column >= 1
-    B = np.zeros((K_P,d.shape[0]))
-    for i in range(K_P):
-        B[i,np.arange(i,d.shape[0],K_P)] = np.ones((1,K_Q))
-    B_ones = np.ones((K_P))
- 
-    # ILP
-    w = cp.Variable(d.shape[0], boolean = True)
-    constraints = [A @ w == A_ones, B @ w >= B_ones]
-    obj = d.T @ w
-    problem = cp.Problem(cp.Minimize(obj), constraints)
-    problem.solve(solver=cp.GLPK_MI) #
-    
-    # optimal solution
-    opt_obj = problem.value
-    opt_w = problem.variables()[0].value.astype(int)
-    opt_W = np.reshape(opt_w,D.shape)
-    # print("Optimal value: {}".format(opt_obj))
-    # print("Solution:\n {}".format(opt_W))
-    
-    # matching index Q_idx to P_idx
-    idxQ2P = np.where(opt_W==1)[1]
-    
-    
-    return opt_obj, idxQ2P#, idxP2Q
-
-
-# def align_IQP(P,Q):
+# def align_ILP_weighted(P,Q,weight):
     
 #     K_Q = Q.shape[1] # #rows
 #     K_P = P.shape[1] # #columns
 #     N_ind = Q.shape[0] #individuals
 #     assert(K_Q>=K_P)
+
+#     # compute distance
+#     dist_elem = (np.expand_dims(Q, axis=2)-np.expand_dims(P, axis=1))**2
     
-#     W = cp.Variable((K_Q,K_P), boolean = True)
+#     w_dist = dist_elem*np.expand_dims(weight,(1,2))
+#     D = np.sum(w_dist,axis=0)
+#     d = D.flatten()
     
-#     obj = cp.sum_squares(Q @ W - P)/N_ind
+#     # constraints
+#     # sum of row = 1
+#     A = np.zeros((K_Q,d.shape[0]))
+#     for i in range(K_Q):
+#         A[i,i*K_P:(i+1)*K_P] = np.ones((1,K_P))
+#     A_ones = np.ones((K_Q))
     
-#     constraints = [W @ np.ones((K_P,1)) == np.ones((K_Q,1)), np.ones((1,K_Q)) @ W >= np.ones((1,K_P))]
-    
+#     # sum of column >= 1
+#     B = np.zeros((K_P,d.shape[0]))
+#     for i in range(K_P):
+#         B[i,np.arange(i,d.shape[0],K_P)] = np.ones((1,K_Q))
+#     B_ones = np.ones((K_P))
+ 
+#     # ILP
+#     w = cp.Variable(d.shape[0], boolean = True)
+#     constraints = [A @ w == A_ones, B @ w >= B_ones]
+#     obj = d.T @ w
 #     problem = cp.Problem(cp.Minimize(obj), constraints)
-#     problem.solve() #solver='SCIP'
+#     problem.solve(solver=cp.GLPK_MI) #
     
 #     # optimal solution
 #     opt_obj = problem.value
-#     opt_W = problem.variables()[0].value.astype(int)
-    
+#     opt_w = problem.variables()[0].value.astype(int)
+#     opt_W = np.reshape(opt_w,D.shape)
 #     # print("Optimal value: {}".format(opt_obj))
 #     # print("Solution:\n {}".format(opt_W))
     
 #     # matching index Q_idx to P_idx
 #     idxQ2P = np.where(opt_W==1)[1]
-#     # idxP2Q = np.where(opt_W.T==1)[1]
+    
+    
 #     return opt_obj, idxQ2P#, idxP2Q
+
 
 def alignQ_wrtP(P,Q,idxQ2P,merge=True):
     # K1, K2 = P.shape[1], Q.shape[1]
@@ -192,7 +155,9 @@ def alignQ_wrtP(P,Q,idxQ2P,merge=True):
     else:
         aligned_Q = np.zeros_like(Q)
         dups = np.unique([i for i in idxQ2P if idxQ2P.count(i)>1])
-        extras = list()
+
+        # extras = list()
+        extra_cnt = 0
         dups_min = defaultdict(lambda: (float('inf'),None))
 
         for q_idx in range(Q.shape[1]):
@@ -203,54 +168,25 @@ def alignQ_wrtP(P,Q,idxQ2P,merge=True):
                 diff = np.linalg.norm(Q[:,q_idx]-P[:,p_idx])
                 if dups_min[p_idx][0] > diff:
                     dups_min[p_idx] = (diff,q_idx) 
+        
+        P_dim2 = P.shape[1]
         for q_idx in range(Q.shape[1]):
             p_idx = idxQ2P[q_idx]
             if p_idx in dups:
                 if q_idx==dups_min[p_idx][1]:
                     aligned_Q[:,p_idx] = Q[:,q_idx]
                 else:
-                    extras.append(q_idx)
-        
-        # aligned = set()
-        # extras = list()
-        # for q_idx in range(Q.shape[1]):
-        #     if idxQ2P[q_idx] in aligned: 
-        #         extras.append(q_idx)
-        #     else:
-        #         aligned.add(idxQ2P[q_idx])
-        #         aligned_Q[:,idxQ2P[q_idx]] = Q[:,q_idx]
-        for ie, e in enumerate(extras):
-            aligned_Q[:,P.shape[1]+ie] = Q[:,e]
+                    # extras.append(q_idx)
+                    aligned_Q[:,P_dim2+extra_cnt] = Q[:,q_idx]
+                    extra_cnt += 1
             
     return aligned_Q
-
-
-# def alignQ_wrtP(P,Q,idxQ2P,merge=True):
-#     # K1, K2 = P.shape[1], Q.shape[1]
-    
-#     if merge:        
-#         aligned_Q = np.zeros_like(P)
-#         for q_idx in range(Q.shape[1]):
-#             aligned_Q[:,idxQ2P[q_idx]] += Q[:,q_idx]
-#     else:
-#         aligned_Q = np.zeros_like(Q)
-#         aligned = set()
-#         extras = list()
-#         for q_idx in range(Q.shape[1]):
-#             if idxQ2P[q_idx] in aligned: 
-#                 extras.append(q_idx)
-#             else:
-#                 aligned.add(idxQ2P[q_idx])
-#                 aligned_Q[:,idxQ2P[q_idx]] = Q[:,q_idx]
-#         for ie, e in enumerate(extras):
-#             aligned_Q[:,P.shape[1]+ie] = Q[:,e]
-            
-#     return aligned_Q
 
 
 def align_ILP_withinK(ILP_withinK_filename,output_path,Q_list,K_range,k2ids):
 
     f = open(os.path.join(output_path,ILP_withinK_filename),"w")
+
     for K in K_range:
         ids = k2ids[K]
         n_ids = len(ids)
@@ -263,13 +199,13 @@ def align_ILP_withinK(ILP_withinK_filename,output_path,Q_list,K_range,k2ids):
                 Q = Q_list[ids[j]]
                 opt_obj, idxQ2P = align_ILP(P, Q)
                 f.write("{} {} {} {}\n".format(K,ids[i],ids[j],opt_obj))
-                f.write("{}\n".format(" ".join([str(id) for id in idxQ2P])))
-                # f.write("{}\n".format(" ".join([str(id) for id in idxP2Q])))   
+                f.write("{}\n".format(" ".join([str(id) for id in idxQ2P])))  
 
     f.close()
     
 
 def load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2idxinK,get_cost=True):
+
     f = open(os.path.join(output_path,ILP_withinK_filename),"r")
     alignments = f.readlines()
     f.close()
@@ -280,14 +216,16 @@ def load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2i
     
     for K in K_range:
         ids = k2ids[K]
+        n_ids = len(ids)
          
-        align_ILP_res[K] = [[None for _ in ids] for _ in ids]
-        cost_ILP_res[K] = [[np.nan for _ in ids] for _ in ids]
+        # align_ILP_res[K] = [[None for _ in ids] for _ in ids]
+        # cost_ILP_res[K] = [[np.nan for _ in ids] for _ in ids]
+        align_ILP_res[K] = np.zeros((n_ids,n_ids,K)).astype(int)
+        cost_ILP_res[K] = np.zeros((n_ids,n_ids))
         
     for l in range(len(alignments)//2):
         l1 = alignments[2*l].split()
         l2 = alignments[2*l+1].split()
-        # l3 = alignments[3*l+2].split()
         
         # cost
         K = int(l1[0])
@@ -295,11 +233,13 @@ def load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2i
         i,j = idx2idxinK[int(l1[1])], idx2idxinK[int(l1[2])]
         
         # alignment
+        # l2 = [int(idx) for idx in l2]
+        # align_ILP_res[K][i][j] = [l2.index(idx) for idx in range(K)] # P2Q
+        # align_ILP_res[K][j][i] = l2 # Q2P
+
         l2 = [int(idx) for idx in l2]
-        # l3 = [int(idx) for idx in l3]
-        # align_ILP_res[K][i][j] = l3 # P2Q
-        align_ILP_res[K][i][j] = [l2.index(idx) for idx in range(K)] # P2Q
-        align_ILP_res[K][j][i] = l2 # Q2P
+        align_ILP_res[K][i][j] = np.array([l2.index(idx) for idx in range(K)]) # P2Q
+        align_ILP_res[K][j][i] = np.array(l2) # Q2P
         
         if get_cost:  
             # alignment cost
@@ -310,8 +250,8 @@ def load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2i
             for q_idx in range(Q.shape[1]):
                 aligned_Q[:,aligned_idxQ2P[q_idx]] += Q[:,q_idx]
             cost_actual = cost_membership(P,aligned_Q,P.shape[0])
-            cost_ILP_res[K][i][j] = cost_actual #float(l1[3])
-            cost_ILP_res[K][j][i] = cost_actual #float(l1[3])
+            cost_ILP_res[K][i][j] = cost_actual 
+            cost_ILP_res[K][j][i] = cost_actual 
         
     if get_cost:
         return align_ILP_res, cost_ILP_res
@@ -319,16 +259,43 @@ def load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2i
         return align_ILP_res
 
 def cd_default(G):
+    """Community detection using the Louvain method
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        the similarity network of replicates, with edges weighted by similarity after optimal alignment
+
+    Returns
+    -------
+    partition_map
+        a dictionary where keys are the indices of replicates and values are the indices of the communities they belong to
+    """
+
     resolution = 1
     partition_map = community_louvain.best_partition(G,resolution=resolution,random_state=6)
     return partition_map
 
 def cd_custom(G):
+    """Customized community detection method (need to be modified)
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        the similarity network of replicates, with edges weighted by similarity after optimal alignment
+
+    Returns
+    -------
+    partition_map
+        a dictionary where keys are the indices of replicates and values are the indices of the communities they belong to
+    """
+
     # Please comment out the following line and customize your community detection method here.
     partition_map = {i:0 for i in range(G.number_of_nodes())} 
+    
     return partition_map
 
-def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, save_path=None, cd_func=cd_default):
+def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, save_path=None):
 
     modes_allK_list = dict()
     msg = ""
@@ -336,18 +303,17 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, save_path=None, cd
     for K in K_range:
     
         # normalize cost matrix and obtain adjacency matrix
-        cost_mat = np.array(cost_ILP_res[K])
+        # cost_mat = np.array(cost_ILP_res[K])
+        cost_mat = cost_ILP_res[K]
         n_nodes = cost_mat.shape[0]
         if np.nanmean(cost_mat)<1e-6:
             # adj_mat = np.zeros(cost_mat.shape)
-            partition_map = {i:0 for i in range(n_nodes)} 
-                    
+            partition_map = {i:0 for i in range(n_nodes)}         
         else:
             adj_mat = get_adj_mat(cost_mat)
 
             # test for community structure
             has_comm_struc = test_comm_struc(adj_mat, alpha = 0.01)
-
             if not has_comm_struc:
                 partition_map = {i:0 for i in range(n_nodes)} 
                 msg = "K={}: no significant community structure -> set to single mode".format(K)
@@ -368,7 +334,7 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, save_path=None, cd
                     partition_map = {i:0 for i in range(n_nodes)} 
                 else:
                     if default_cd:
-                        partition_map = cd_func(G)
+                        partition_map = cd_default(G)
                         # print("Running default Louvain for mode detection.")
                     else:
                         partition_map = cd_custom(G)
@@ -379,17 +345,6 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, save_path=None, cd
                             msg = "K={}: low community detection quality (below modularity threshold) -> set to single mode".format(K)
                             partition_map = {i:0 for i in range(G.number_of_nodes())} 
                 
-                # if draw_communities:
-                #     # draw the graph
-                #     fig, ax = plt.subplots()
-                #     nx.draw(G,pos,with_labels=True,node_color='white',edge_color='white')
-                #     nx.draw_networkx_nodes(G, pos, partition_map.keys(), alpha=0.7, #node_size=40,
-                #                            node_color=list(partition_map.values()))
-                #     nx.draw_networkx_edges(G, pos, alpha=0.2)
-                #     # save 
-                #     fig.savefig(os.path.join(save_path,'K{}_modes_network_{}.png'.format(K,method_name)))
-                #     plt.close(fig)
-    
         ########################################
         # separate modes
         ########################################
@@ -402,34 +357,6 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, save_path=None, cd
         
     return modes_allK_list, msg
     
-        # if method_name=="louvain":
-
-        #     resolution = method_para if method_para else 1
-        #     partition_map = community_louvain.best_partition(G,resolution=resolution,random_state=6)
-        #     modthre = method_modthre if method_modthre else 0.
-        #     mod_res = community_louvain.modularity(partition_map, G)
-        #     if mod_res<modthre: # quality of community detection is low --> no community structure
-        #         print("K={}: low community detection quality, set to single mode.".format(K))
-        #         partition_map = {i:0 for i in range(G.number_of_nodes())}
-        # else: # no method
-        #     print("try louvain in func")
-        #     partition_map = cd_func(G)
-        #     print("K={}: no community detection algorithm provided, set to single mode".format(K))
-        #     partition_map = {i:0 for i in range(G.number_of_nodes())}     
-
-        # # compute the best partition
-        # if method_name=="louvain":
-        #     resolution = method_para if method_para else 1.
-        #     modthre = method_modthre  if method_modthre else 0.
-            
-        #     coms = algorithms.louvain(G, weight='weight', resolution=resolution, randomize=False)
-        #     partition = coms.communities
-        #     partition_map = {i:i_s for i_s,s in enumerate(partition) for i in s}
-        
-        #     mod_res = evaluation.newman_girvan_modularity(G,coms).score
-        #     if mod_res<modthre: # quality of community detection is low --> no community structure
-        #         print("K={}: low community detection quality, set to single mode".format(K))
-        #         partition_map = {i:0 for i in range(G.number_of_nodes())}
         
         # elif method_name=="mcl":
             
@@ -471,8 +398,6 @@ def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre, save_path=None, cd
         #     partition_map = {i:0 for i in range(G.number_of_nodes())}       
     
     
-        
-
 
 def extract_modes(Q_list,modes_allK_list,align_ILP_res,cost_ILP_res,K_range,N_ind,k2ids,save_modes=False, save_path=None,ILP_modes_filename=None):
  
@@ -489,7 +414,8 @@ def extract_modes(Q_list,modes_allK_list,align_ILP_res,cost_ILP_res,K_range,N_in
     
         modes = modes_allK_list[K]
         
-        cost_mat = np.array(cost_ILP_res[K])
+        # cost_mat = np.array(cost_ILP_res[K])
+        cost_mat = cost_ILP_res[K]
         adj_mat = get_adj_mat(cost_mat)
     
         mds = range(len(modes.keys()))
@@ -498,7 +424,7 @@ def extract_modes(Q_list,modes_allK_list,align_ILP_res,cost_ILP_res,K_range,N_in
         meanQ_modes[K] = dict()
         repQ_modes[K] = dict()
         average_stats[K] = dict()
-    
+
         for mode_idx in mds:
             # print("mode {}".format(mode_idx))
     
@@ -555,9 +481,7 @@ def extract_modes(Q_list,modes_allK_list,align_ILP_res,cost_ILP_res,K_range,N_in
                     for q_idx in range(Q.shape[1]):
                         aligned_Q[:,aligned_idxQ2P[q_idx]] += Q[:,q_idx]
                     Q_sum += aligned_Q
-                    # check
-                    # cost_recomputed = cost_membership(P,aligned_Q,N_ind)
-                    # assert(np.sum(np.abs(cost_recomputed-cost_ILP_res[K][other_self_indices[i]][minC_self_idx]))<0.001)
+
                 meanQ_modes[K][mode_idx] = Q_sum/len(all_indices)
 
     if save_modes:
@@ -798,13 +722,11 @@ def align_leader_clustering_adaptive(cost_thre_base,Q_list,K_range,N_ind,k2ids,i
         # write the by-mode alignment into file
         file_name = os.path.join(save_path,ILP_modes_filename)
         write_modes_to_file(file_name,K_range,N_ind,modes_allK_list,meanQ_modes)
-        
-    
-    
+            
     return modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats 
 
 
-def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_combK=True,ind2pop=None):
+def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_comb_k=True,ind2pop=None):
     
     K_range_sorted = sorted(K_range,reverse=True)
     K_comb = list([(K_range_sorted[i],K_range_sorted[i+1]) for i in range(len(K_range_sorted)-1)])
@@ -836,7 +758,7 @@ def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_fil
                 # identical alignment (dummy)
                 opt_obj = 0
                 idxQ2P = np.arange(K1)
-            elif enum_combK and (K1-K2)==1:
+            elif enum_comb_k and (K1-K2)==1:
                 opt_obj, idxQ2P = align_ILP_diff1(P, Q)
             else:
                 opt_obj, idxQ2P = align_ILP(P, Q)
@@ -848,11 +770,6 @@ def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_fil
             f.write("{}\n".format(" ".join([str(id) for id in idxQ2P])))
             # f.write("{}\n".format(" ".join([str(id) for id in idxP2Q])))
     
-            # retrieve alignment
-            # if "{}#{}-{}#{}".format(K2,rj,K1,ri)=="3#0-3#1":
-            #     print(K1,K2,rijs)
-            #     print("GOOD")
-            #     raise KeyboardInterrupt
             cost_acrossK_ILP["{}#{}-{}#{}".format(K2,rj,K1,ri)] = opt_obj
             perm_ILP_acrossK_Q2P["{}#{}-{}#{}".format(K2,rj,K1,ri)] = idxQ2P
             # perm_ILP_acrossK_P2Q[labels[i]] = idxP2Q
@@ -863,53 +780,59 @@ def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_fil
     # best alignments
     best_ILP_acrossK = list()
     f = open(os.path.join(save_path,ILP_acrossK_filename.split(".")[0]+"_best."+ILP_acrossK_filename.split(".")[1]),"w")
+    stats = ['cost', 'Hprime']
+    f.write('best_pair\t{}\n'.format("\t".join(stats)))
     for i_K1 in range(len(K_range_sorted)-1):
         K1 = K_range_sorted[i_K1]
         K2 = K_range_sorted[i_K1+1]
         ri,rj = best_alignments[(K1,K2)]
         bali = "{}#{}-{}#{}".format(K2,rj,K1,ri)
+        Q = consensusQ_modes[K1][ri]
+        P = consensusQ_modes[K2][rj]
+        aligned_Q = alignQ_wrtP(P,Q,perm_ILP_acrossK_Q2P["{}#{}-{}#{}".format(K2,rj,K1,ri)],merge=True)
+        cost_bali = cost_membership(P,aligned_Q,P.shape[0])
         best_ILP_acrossK.append(bali)
-        f.write("{}\n".format(bali))
+        f.write("{}\t{}\t{}\n".format(bali,cost_bali,C2Gprime(cost_bali)))
     f.close()
     
     return perm_ILP_acrossK_Q2P, cost_acrossK_ILP, best_ILP_acrossK
 
 
-def load_ILP_acrossK(save_path,ILP_acrossK_filename):
+# def load_ILP_acrossK(save_path,ILP_acrossK_filename):
 
-    # load alignments
-    f = open(os.path.join(save_path,ILP_acrossK_filename),"r")
-    alignments_acrossK = f.readlines()
-    f.close()
+#     # load alignments
+#     f = open(os.path.join(save_path,ILP_acrossK_filename),"r")
+#     alignments_acrossK = f.readlines()
+#     f.close()
     
-    cost_acrossK_ILP_res = dict()
-    # align_acrossK_ILP_res_P2Q = dict()
-    align_acrossK_ILP_res_Q2P = dict() # Q has more clusters
+#     cost_acrossK_ILP_res = dict()
+#     # align_acrossK_ILP_res_P2Q = dict()
+#     align_acrossK_ILP_res_Q2P = dict() # Q has more clusters
     
-    n_pairs = (len(alignments_acrossK)-1)//2
+#     n_pairs = (len(alignments_acrossK)-1)//2
     
-    for l in range(n_pairs):
-        l1 = alignments_acrossK[2*l].split(":")
-        l2 = alignments_acrossK[2*l+1].split()
-        # l3 = alignments_acrossK[3*l+2].split()
+#     for l in range(n_pairs):
+#         l1 = alignments_acrossK[2*l].split(":")
+#         l2 = alignments_acrossK[2*l+1].split()
+#         # l3 = alignments_acrossK[3*l+2].split()
         
-        # alignment
-        l2 = [int(idx) for idx in l2]
-        # l3 = [int(idx) for idx in l3]
+#         # alignment
+#         l2 = [int(idx) for idx in l2]
+#         # l3 = [int(idx) for idx in l3]
     
-        cost_acrossK_ILP_res[l1[0]] = l1[1]
-        # align_acrossK_ILP_res_P2Q[l1[0]] = l3 # P2Q
-        align_acrossK_ILP_res_Q2P[l1[0]] = l2 # Q2P
+#         cost_acrossK_ILP_res[l1[0]] = l1[1]
+#         # align_acrossK_ILP_res_P2Q[l1[0]] = l3 # P2Q
+#         align_acrossK_ILP_res_Q2P[l1[0]] = l2 # Q2P
     
-    # best alignments
-    f = open(os.path.join(save_path,ILP_acrossK_filename.split(".")[0]+"_best."+ILP_acrossK_filename.split(".")[1]),"r")
-    best_ILP_acrossK = f.readlines()
-    f.close()
+#     # best alignments
+#     f = open(os.path.join(save_path,ILP_acrossK_filename.split(".")[0]+"_best."+ILP_acrossK_filename.split(".")[1]),"r")
+#     best_ILP_acrossK = f.readlines()
+#     f.close()
         
-    return align_acrossK_ILP_res_Q2P, cost_acrossK_ILP_res, best_ILP_acrossK
+#     return align_acrossK_ILP_res_Q2P, cost_acrossK_ILP_res, best_ILP_acrossK
 
 
-def report_stats(modes_allK_list,average_stats,K_range,k2ids,save_path,stats=['cost','Hprime']):
+def report_stats(modes_allK_list,average_stats,K_range,k2ids,save_path):
 
     stats = ['cost', 'Hprime']
     weighted_stats = list()

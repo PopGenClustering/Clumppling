@@ -43,12 +43,13 @@ def main(args):
         sys.exit("ERROR: Input data format isn't supported. \nPlease specify input_format as one of the following: structure, admixture, fastStructure, and generalQ.")
     
     params = Params(input_path,output_path,params_path,input_format)
-
-    if args.default_cd:
-        params.default_cd = True if args.default_cd=="Y" else False        
+           
     if args.cd_mod_thre:
         params.cd_mod_thre = args.cd_mod_thre if args.cd_mod_thre!=-1 else -1.0
- 
+
+    if args.enum_comb_k:
+        params.enum_comb_k = False if args.enum_comb_k=="N" else True 
+
     if args.custom_cmap:
         params.custom_cmap = True if args.custom_cmap=="Y" else False  
     if args.cmap:
@@ -71,6 +72,7 @@ def main(args):
         os.makedirs(output_path)
     
     save_path = output_path
+
         
     # if not os.path.exists(os.path.join(save_path,"modes_Q")):
     os.makedirs(os.path.join(save_path,"modes_Q"))
@@ -83,17 +85,9 @@ def main(args):
 
     disp = params.display()
     logging.info(disp)
-
     logging.info("========== Starting Clumppling ... ==========")
-    # logging.info("Mode detection method: {}".format("community detection" if not params.lc_flag else "leader clustering"))
-    # if params.lc_flag:
-    #     logging.info("---Mode detection method: LC \n---LC cost threshold: {}".format("adaptive_{}".format(params.lc_cost_thre) if params.adaptive_thre_flag else params.lc_cost_thre))
-    # else:
-    #     logging.info("---Mode detection method: {} \n---Modularity threshold for mode detection: {}".format("default" if params.default_cd else "custom",params.cd_mod_thre))
-    # logging.info("==========")
 
-    recode_path = os.path.join(params.output_path,"data")
-    
+    recode_path = os.path.join(params.output_path,"data") 
     os.makedirs(recode_path) 
     tic = time.time()
     logging.info("---------- Processing input data files and checking arguments ...")
@@ -129,7 +123,10 @@ def main(args):
         cmap = cmap(np.linspace(0, 1, max_K))
         np.random.shuffle(cmap)
         cmap = cm.colors.ListedColormap(cmap)
-    
+
+    # plot colorbar
+    plot_colorbar(cmap,max_K,save_path)
+
     # color of mode network layers
     cmap_modes = cm.get_cmap('tab10') # colormap for plotting mode network
     layer_color = {K:cmap_modes(i) for i,K in enumerate(K_range)}
@@ -177,7 +174,7 @@ def main(args):
     
     ## Within-K performance
     # stats of alignments: cost and hprime (similarity)
-    weighted_stats = report_stats(modes_allK_list,average_stats,K_range,k2ids,save_path=save_path,stats=['cost','Hprime'])
+    weighted_stats = report_stats(modes_allK_list,average_stats,K_range,k2ids,save_path=save_path)
     
     
     toc = time.time()
@@ -188,30 +185,30 @@ def main(args):
     # use representative membership as the consensus
     ILP_acrossK_filename = "ILP_acrossK_repQ.txt"
     logging.info("---------- Aligning modes (representative) across K ...")
-    if not os.path.exists(os.path.join(save_path,ILP_acrossK_filename)):
-        # write
-        tic = time.time()
-        repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = align_ILP_modes_acrossK(repQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_combK=params.enum_combK,ind2pop=ind2pop)
-        toc = time.time()
-        logging.info("Time: %.3fs", toc-tic)
-    else:
-        # load alignments 
-        repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = load_ILP_acrossK(save_path,ILP_acrossK_filename)
-        logging.info(">>>Across-K alignment (repQ) already exist.")
+    # if not os.path.exists(os.path.join(save_path,ILP_acrossK_filename)):
+    # align and write
+    tic = time.time()
+    repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = align_ILP_modes_acrossK(repQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_comb_k=params.enum_comb_k,ind2pop=ind2pop)
+    toc = time.time()
+    logging.info("Time: %.3fs", toc-tic)
+    # else:
+    #     # load alignments 
+    #     repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = load_ILP_acrossK(save_path,ILP_acrossK_filename)
+    #     logging.info(">>>Across-K alignment (repQ) already exist.")
     
 
     # use average membership as the consensus
     ILP_acrossK_filename = "ILP_acrossK_meanQ.txt"
     logging.info("---------- Aligning modes (average) across K ...")
-    if not os.path.exists(os.path.join(save_path+ILP_acrossK_filename)):
-        # write
-        tic = time.time()
-        meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = align_ILP_modes_acrossK(meanQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_combK=params.enum_combK,ind2pop=ind2pop)
-        toc = time.time()
-        logging.info("Time: %.3fs", toc-tic)
-    else:
-        meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = load_ILP_acrossK(save_path,ILP_acrossK_filename)
-        logging.info(">>>Across-K alignment (meanQ) already exist.")
+    # if not os.path.exists(os.path.join(save_path+ILP_acrossK_filename)):
+    # align and write
+    tic = time.time()
+    meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = align_ILP_modes_acrossK(meanQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_comb_k=params.enum_comb_k,ind2pop=ind2pop)
+    toc = time.time()
+    logging.info("Time: %.3fs", toc-tic)
+    # else:
+    #     meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = load_ILP_acrossK(save_path,ILP_acrossK_filename)
+    #     logging.info(">>>Across-K alignment (meanQ) already exist.")
     
     #%% Visualization of alignment within-K
     tic = time.time()
@@ -284,10 +281,10 @@ if __name__ == "__main__":
     required.add_argument('-p', '--params_path', type=str, required=True, help='path to the parameter file (.xml)')
     required.add_argument('-f', '--input_format', type=str, required=True, help='input data format')
     
-    optional_arguments = [['default_cd','str','Y/N: whether to use default community detection method (Louvain) to detect modes'],
-                          ['cd_mod_thre','float','the modularity threshold for community detection'],
-                           ['custom_cmap','str','Y/N: whether to use customized colormap'],
-                           ['cmap','str','user-specified colormap as a list of colors (in hex code) in a space-delimited string']]
+    optional_arguments = [['cd_mod_thre','float','the modularity threshold for community detection (default: -1, meaning not using the threshold)'],
+                            ['enum_comb_k','str','Y/N: whether to enumerate all combinations of two clusters when aligning modes with number of clusters differing by one (default: Y)'],
+                            ['custom_cmap','str','Y/N: whether to use customized colormap (default: N)'],
+                            ['cmap','str','user-specified colormap as a list of colors (in hex code) in a space-delimited string']]
     
     for opt_arg in optional_arguments: 
         optional.add_argument('--{}'.format(opt_arg[0]), type=getattr(builtins, opt_arg[1]), required=False, help=opt_arg[2])

@@ -11,7 +11,7 @@
 	<cmap></cmap>
 
 	<!-- Advanced: ILP when number of clusters differ by 1 -->
-	<enum_combK>True</enum_combK>
+	<enum_comb_k>True</enum_comb_k>
 
 	<!-- Advanced: leader clustering parameters -->
 	<lc_flag>True</lc_flag>
