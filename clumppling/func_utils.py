@@ -63,14 +63,18 @@ def avg_tril(A):
 
 def recode_files(data_path,recode_path,input_format):
 
-    file_list = list()
+
     files = os.listdir(data_path)
+    indivq_ext = False
     if input_format == "structure":
         Q_files = [i for i in files if i.endswith('_f')]
     elif input_format == "fastStructure":
         Q_files = [i for i in files if i.endswith('.meanQ')]
     elif input_format == "admixture" or input_format == "generalQ":
         Q_files = [i for i in files if i.endswith('.Q')]
+        if len(Q_files)==0: # indivq files
+            Q_files = [i for i in files if i.endswith('.indivq')]
+            indivq_ext = True
     else:
         sys.exit("ERROR: Please specify one of the following for input_format: structure, admixture, fastStructure, and generalQ.")
 
@@ -99,9 +103,13 @@ def recode_files(data_path,recode_path,input_format):
             
             # write to file
             np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
-            file_list.append(Q_file)
 
-        
+    elif indivq_ext:
+        for r in range(R):
+            Q_file = Q_files[r]
+            Q = np.loadtxt(os.path.join(data_path,Q_file),dtype=str)[:,5:].astype(float)
+            np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
+
     else: # if input_format =="admixture" or "fastStructure" or "generalQ"
         for r in range(R):
             Q_file = Q_files[r]
@@ -116,7 +124,6 @@ def recode_files(data_path,recode_path,input_format):
             
             # write to file
             np.savetxt(os.path.join(recode_path,'rep_{}.Q'.format(r)), Q, delimiter=' ')
-            file_list.append(Q_file)
 
     if input_format =="structure":
         # extract individual info
@@ -127,57 +134,56 @@ def recode_files(data_path,recode_path,input_format):
         df_ind_info.columns = header
         df_ind_info.to_csv(os.path.join(recode_path,'ind_info.txt'), sep=' ')
 
-    return file_list
+    return Q_files
 
     
-def load_Q(recode_path,ignore_recode_name=False,file_list=None):
+def load_Q(recode_path,file_list=None):
 
     Q_list = list()
     K_list = list()
     # pop_n_ind = None
     
     Q_files = [i for i in os.listdir(recode_path) if i.endswith('.Q')]
-    
-    if len(Q_files)==0:
+       
+    R = len(Q_files)
+    if R==0:
         # sanity check if data directory is empty
         sys.exit("ERROR: no Q files detected. Please double check input_path and input_format.")
     
-    R = len(Q_files)
-    
-    if ignore_recode_name:
-        file_list = list()
-        for r in range(R):
-            Q = np.loadtxt(os.path.join(recode_path,Q_files[r]))
-            K = Q.shape[1]
-            if r==0:
-                N = Q.shape[0]
-            else:
-                assert(Q.shape[0]==N)
-                
-            Q_list.append(Q)
-            K_list.append(K)
-            file_list.append(Q_files[r])
-    else:
 
-        for r in range(R):
+    for r in range(R):
+        if not file_list:
+            Q = np.loadtxt(os.path.join(recode_path,Q_files[r]))
+        else:
             Q = np.loadtxt(os.path.join(recode_path,'rep_{}.Q'.format(r)))
+        
+        K = Q.shape[1]
+        if r==0:
+            N = Q.shape[0]
+        else:
+            assert(Q.shape[0]==N)
             
-            K = Q.shape[1]
-            if r==0:
-                N = Q.shape[0]
-            else:
-                assert(Q.shape[0]==N)
-                
-            Q_list.append(Q)
-            K_list.append(K)
-     
+        Q_list.append(Q)
+        K_list.append(K)
+    
+    if not file_list:
+        file_list = Q_files
+        
     # reorder by consecutive K values   
     sored_idx = list(np.argsort(K_list))
     K_list = [K_list[i] for i in sored_idx]
     Q_list = [Q_list[i] for i in sored_idx]
+    num_zeros_in_all_Q = np.sum([np.sum(Q==0) for Q in Q_list])
     file_list = [file_list[i] for i in sored_idx]
                    
     N = Q.shape[0]
+
+    
+
+    # old file to Q idx
+    with open(os.path.join(recode_path,'idx2file.txt'),'w') as file:
+        for r,f_name in enumerate(file_list):
+            file.write('{}\t{}\n'.format(r,f_name))
     
     return N, R, Q_list, K_list, file_list
 
@@ -228,12 +234,15 @@ def initial_guess(Q):
     frac = Q.sum(axis=0)/Q.sum()
     if Q.shape[0]==1:
         return frac
+    denom = (Eq1sqr-Eq1**2)
     if (Eq1sqr-Eq1**2)!=0:
         a = np.multiply(frac,(Eq1-Eq1sqr)/(Eq1sqr-Eq1**2))
     else:
         a = frac
+    if np.all(np.abs(a)<1e-9) or np.all(np.abs(a)>1e9):
+        a = frac
     return a
-
+  
 def fixed_point(Q, a0, n_iter = 10):
     K = len(a0)
     N = Q.shape[0]
@@ -250,6 +259,7 @@ def fixed_point(Q, a0, n_iter = 10):
             a = a_next
             break
         a = a_next
+#     print("#iterations:{}".format(i_iter+1))
     return a
 
 def repdist0(a):
@@ -274,6 +284,56 @@ def get_theoretical_cost(Q,pop_n_ind,ind2pop):
     theo_cost_ws *= 2/len(ind2pop)
 
     return theo_cost_ws
+
+
+def get_Dir_params(Q,pop_n_ind,ind2pop):
+
+    # infer Dir parameters
+    a_vec_list = []
+    
+    for p in pop_n_ind.keys():
+    
+        Q_pop = Q[ind2pop==p,:]
+        if np.sum(Q_pop==0)>0:
+            Q_pop += 1e-6
+        a0 = initial_guess(Q_pop)
+        a = fixed_point(Q_pop, a0) # estimated parameter
+        if np.isnan(a[0]):
+            break
+        a_vec_list.append(a)
+
+    return a_vec_list
+
+def cost_batch(a,perms,coords):
+    
+    all_entry = (a[:,None]-a[None,:])*a[:, np.newaxis]
+    
+    flat_idx = np.concatenate((np.asarray(all_entry.shape[1:])[::-1].cumprod()[::-1],[1])).dot(coords)
+    a0 = np.sum(a)
+    c = np.take(all_entry,flat_idx).reshape(perms.shape)
+    c = np.sum(c,axis=1)/a0**2
+    return c
+
+def compute_cost_total(a_list,n_ind_list,perms):
+    N = sum(n_ind_list)
+    K = len(a_list[0])
+    coords = np.vstack([np.tile(np.arange(K), len(perms)),perms.flatten()])
+    the_C_pop = []
+    for a in a_list:
+        c = cost_batch(a,perms,coords)
+        the_C_pop.append(c)
+    the_C_pop = np.array(the_C_pop)
+    the_C_total = np.sum(the_C_pop*np.array(n_ind_list)[:, np.newaxis]/N,axis=0)
+    return the_C_total
+
+
+def sort_ignore_tie(l):
+    l = np.array(l)
+    sorted_idx = l.argsort()
+    sorted_val = l[sorted_idx]
+    return sorted_idx, sorted_val
+
+
 
 #%% Mode Detection Helpers
 def get_adj_mat(cost_mat):

@@ -3,8 +3,8 @@
 <parameters>
 	<!-- mode detection parameters -->
 	<cd_mod_thre>-1</cd_mod_thre>
-	<cd_param>1.05</cd_param>
-	<default_cd>True</default_cd>
+	<default_cd>False</default_cd>
+	<cd_param>1</cd_param>
 	<md_by_ac>False</md_by_ac>
 
 	<!-- colormap parameters -->

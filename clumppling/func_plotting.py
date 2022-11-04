@@ -2,9 +2,10 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from itertools import product,combinations_with_replacement
+# from itertools import product,combinations_with_replacement
 from collections import defaultdict
 import networkx as nx
+# from clumppling.func_main import alignQ_wrtP
 
 def alignQ_wrtP(P,Q,idxQ2P,merge=True):
     # K1, K2 = P.shape[1], Q.shape[1]
@@ -50,6 +51,43 @@ def alignQ_wrtP(P,Q,idxQ2P,merge=True):
             
     return aligned_Q, new_pattern
 
+# def alignQ_wrtP(P,Q,idxQ2P,merge=True):
+#     # K1, K2 = P.shape[1], Q.shape[1]
+    
+#     if merge:        
+#         aligned_Q = np.zeros_like(P)
+#         for q_idx in range(Q.shape[1]):
+#             aligned_Q[:,idxQ2P[q_idx]] += Q[:,q_idx]
+#     else:
+#         aligned_Q = np.zeros_like(Q)
+#         dups = np.unique([i for i in idxQ2P if idxQ2P.count(i)>1])
+
+#         # extras = list()
+#         extra_cnt = 0
+#         dups_min = defaultdict(lambda: (float('inf'),None))
+
+#         for q_idx in range(Q.shape[1]):
+#             p_idx = idxQ2P[q_idx]
+#             if p_idx not in dups:
+#                 aligned_Q[:,p_idx] = Q[:,q_idx]
+#             else:
+#                 diff = np.linalg.norm(Q[:,q_idx]-P[:,p_idx])
+#                 if dups_min[p_idx][0] > diff:
+#                     dups_min[p_idx] = (diff,q_idx) 
+        
+#         P_dim2 = P.shape[1]
+#         for q_idx in range(Q.shape[1]):
+#             p_idx = idxQ2P[q_idx]
+#             if p_idx in dups:
+#                 if q_idx==dups_min[p_idx][1]:
+#                     aligned_Q[:,p_idx] = Q[:,q_idx]
+#                 else:
+#                     # extras.append(q_idx)
+#                     aligned_Q[:,P_dim2+extra_cnt] = Q[:,q_idx]
+#                     extra_cnt += 1
+            
+#     return aligned_Q
+
 
 def plot_membership(ax,P,max_K,cmap,title):
 
@@ -80,7 +118,7 @@ def plot_aligned(K,m,Q_list,modes,align_ILP_res,rep_modes,consensusQ,max_K,k2ids
     fig, axes = plt.subplots(mode_size+1,1,figsize=(20,2*(mode_size+1)))
     ax = axes[0]
    
-    plot_membership(ax,consensusQ,max_K,cmap,"K{} mode{} average membership".format(K,m))
+    plot_membership(ax,consensusQ,max_K,cmap,"K{} mode{} concensus membership".format(K,m))
     for i,r in enumerate(modes[m]):
         ax = axes[i+1]
         Q = Q_list[k2ids[K][0]+r]
@@ -256,8 +294,8 @@ def plot_withinK_modes(K,max_K,meanQ_modes,meanQ_acrossK_Q2P,save_path,plot_file
     plot_name = "K{}_{}.pdf".format(K,plot_file_name_suffix)
     m = 0
     m1 = "{}#{}".format(K,m)
-    Q = meanQ_modes[K][m]
-    plot_membership(ax,Q,max_K,cmap,"K{} mode{}".format(K,m))
+    P = meanQ_modes[K][m]
+    plot_membership(ax,P,max_K,cmap,"K{} mode{}".format(K,m))
     
     
     for i in range(1,len(modes)):
@@ -266,9 +304,10 @@ def plot_withinK_modes(K,max_K,meanQ_modes,meanQ_acrossK_Q2P,save_path,plot_file
         # retrieve alignment pattern
         pattern = meanQ_acrossK_Q2P["{}-{}".format(m1,m2)]
         Q = meanQ_modes[K][m]
-        aligned_Q = np.zeros_like(Q)
-        for q_idx in range(Q.shape[1]):
-            aligned_Q[:,pattern[q_idx]] += Q[:,q_idx]
+        aligned_Q = alignQ_wrtP(Q,Q,pattern,merge=True)
+        # aligned_Q = np.zeros_like(Q)
+        # for q_idx in range(Q.shape[1]):
+        #     aligned_Q[:,pattern[q_idx]] += Q[:,q_idx]
         # plot
         ax = axes[i]
         plot_membership(ax,aligned_Q,max_K,cmap,"K{} mode{}".format(K,m))

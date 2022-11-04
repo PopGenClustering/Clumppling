@@ -49,6 +49,8 @@ class Params:
         # mode detection parameters
         self.default_cd = parse_bool(find_element('default_cd'))
         self.cd_mod_thre = float(find_element('cd_mod_thre'))
+        self.cd_param = float(find_element('cd_param'))
+        self.md_by_ac = parse_bool(find_element('md_by_ac'))
 
         # colormap parameters
         self.custom_cmap = parse_bool(find_element('custom_cmap'))
@@ -79,9 +81,13 @@ class Params:
         disp.append("Output path: {}".format(self.output_path))
         disp.append("Parameter file path: {}".format(self.params_path))
         disp.append("")
+        if self.md_by_ac:
+            disp.append("Mode detection method: AlignmentCost AUC")
+        
         disp.append("Mode detection method: {}".format("community detection" if not self.lc_flag else "leader clustering"))
         if not self.lc_flag:     
             disp.append("Using default community detection method: {}".format(self.default_cd))
+            disp.append("Method parameter (resolution if default): {}".format(self.cd_param))
             if self.default_cd:
                 disp.append("Community detection modularity threshold: {}".format(self.cd_mod_thre))
         else:

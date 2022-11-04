@@ -91,11 +91,12 @@ def main(args):
     os.makedirs(recode_path) 
     tic = time.time()
     logging.info("---------- Processing input data files and checking arguments ...")
-    file_list = recode_files(params.input_path,recode_path,params.input_format)
+    old_files = recode_files(params.input_path,recode_path,params.input_format)
     
     
     #%% Loading membership data    
-    N, R, Q_list, K_list, file_list = load_Q(recode_path,file_list=file_list)
+    N, R, Q_list, K_list, file_list = load_Q(recode_path,old_files)
+
    
     if input_format == "structure":
         ind2pop, pop_n_ind = load_ind(recode_path)
@@ -148,24 +149,30 @@ def main(args):
 
             logging.info(">>>Use leader clustering (adaptive threshold.")
             modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering_adaptive(params.lc_cost_thre,Q_list,K_range,N,k2ids,ind2pop, pop_n_ind,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
+            logging.info(str(len(meanQ_modes)))
         else:
             logging.info(">>>Use leader clustering (fixed threshold.")
             modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering(params.lc_cost_thre,Q_list,K_range,N,k2ids,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
-        
+            logging.info(str(len(meanQ_modes)))
     else:
         logging.info(">>>Use ILP.")
-        if params.cd_mod_thre!=-1:
-            logging.info(">>>Use community detection modularity threshold: {})".format(params.cd_mod_thre))
+        if not params.md_by_ac:
+            if params.cd_mod_thre!=-1:
+                logging.info(">>>Use community detection modularity threshold: {}".format(params.cd_mod_thre))
         ## ILP over all pairs within K 
         # write to file then load from file
         ILP_withinK_filename = "ILPaligned.txt"
         align_ILP_withinK(ILP_withinK_filename,params.output_path,Q_list,K_range,k2ids)
         
         # load
-        align_ILP_res, cost_ILP_res = load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2idxinK,get_cost=True)
+        align_ILP_res, cost_ILP_res = load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2idxinK)
         
         ## Mode detection 
-        modes_allK_list, msg = detect_modes(cost_ILP_res,K_range,params.default_cd,params.cd_mod_thre, save_path=save_path)
+        if max_K<=7 and params.md_by_ac:
+            modes_allK_list, msg = detect_modes_AC(Q_list, cost_ILP_res,K_range, k2ids, pop_n_ind,ind2pop)
+        else:
+            modes_allK_list, msg = detect_modes(cost_ILP_res,K_range,params.default_cd,params.cd_mod_thre,cd_param=params.cd_param)
+        
         if msg!="":
             logging.info(">>>"+msg)
 

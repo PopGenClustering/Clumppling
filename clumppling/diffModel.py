@@ -33,7 +33,7 @@ def load_Q_multiple(input_base_path,input_names):
 
     for input_name in input_names:
         Q_path = os.path.join(input_base_path, input_name,"modes_Q")
-        N, R, Q_list, K_list, file_list = load_Q(Q_path,ignore_recode_name=True,file_list=None)
+        N, R, Q_list, K_list, file_list = load_Q(Q_path,file_list=None)
         N_all.append(N)
         R_all.append(R)
         Q_all.append(Q_list)
@@ -183,6 +183,8 @@ def main(args):
 
     if args.custom_cmap:
         custom_cmap = True if args.custom_cmap=="Y" else False    
+    else:
+        custom_cmap = False
     if args.cmap:
         cmap = args.cmap.split()
     else:
