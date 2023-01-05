@@ -47,8 +47,8 @@ def main(args):
     if args.cd_mod_thre:
         params.cd_mod_thre = args.cd_mod_thre if args.cd_mod_thre!=-1 else -1.0
 
-    if args.enum_comb_k:
-        params.enum_comb_k = False if args.enum_comb_k=="N" else True 
+    if args.merge:
+        params.merge = True if args.merge=="Y" else False 
 
     if args.custom_cmap:
         params.custom_cmap = True if args.custom_cmap=="Y" else False  
@@ -145,20 +145,20 @@ def main(args):
     
     if params.lc_flag:
         ## Leader Clustering
-        if params.adaptive_thre_flag:
+        # if params.adaptive_thre_flag:
 
-            logging.info(">>>Use leader clustering (adaptive threshold.")
-            modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering_adaptive(params.lc_cost_thre,Q_list,K_range,N,k2ids,ind2pop, pop_n_ind,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
-            logging.info(str(len(meanQ_modes)))
-        else:
-            logging.info(">>>Use leader clustering (fixed threshold.")
-            modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering(params.lc_cost_thre,Q_list,K_range,N,k2ids,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
-            logging.info(str(len(meanQ_modes)))
+        #     logging.info(">>>Use leader clustering (adaptive threshold.")
+        #     modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering_adaptive(params.lc_cost_thre,Q_list,K_range,N,k2ids,ind2pop, pop_n_ind,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
+        #     logging.info(str(len(meanQ_modes)))
+        # else:
+        logging.info(">>>Use leader clustering (fixed threshold.")
+        modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats = align_leader_clustering(params.lc_cost_thre,Q_list,K_range,N,k2ids,save_modes=True, save_path=save_path,ILP_modes_filename=ILP_modes_filename)
+        logging.info(str(len(meanQ_modes)))
     else:
         logging.info(">>>Use ILP.")
-        if not params.md_by_ac:
-            if params.cd_mod_thre!=-1:
-                logging.info(">>>Use community detection modularity threshold: {}".format(params.cd_mod_thre))
+        # if not params.md_by_ac:
+        if params.cd_mod_thre!=-1:
+            logging.info(">>>Use community detection modularity threshold: {}".format(params.cd_mod_thre))
         ## ILP over all pairs within K 
         # write to file then load from file
         ILP_withinK_filename = "ILPaligned.txt"
@@ -168,10 +168,10 @@ def main(args):
         align_ILP_res, cost_ILP_res = load_ILP_withinK(Q_list,ILP_withinK_filename,output_path,K_range,k2ids,idx2idxinK)
         
         ## Mode detection 
-        if max_K<=7 and params.md_by_ac:
-            modes_allK_list, msg = detect_modes_AC(Q_list, cost_ILP_res,K_range, k2ids, pop_n_ind,ind2pop)
-        else:
-            modes_allK_list, msg = detect_modes(cost_ILP_res,K_range,params.default_cd,params.cd_mod_thre,cd_param=params.cd_param)
+        # if max_K<=7 and params.md_by_ac:
+        #     modes_allK_list, msg = detect_modes_AC(Q_list, cost_ILP_res,K_range, k2ids, pop_n_ind,ind2pop)
+        # else:
+        modes_allK_list, msg = detect_modes(cost_ILP_res,K_range,params.default_cd,params.cd_mod_thre,cd_param=params.cd_param)
         
         if msg!="":
             logging.info(">>>"+msg)
@@ -195,7 +195,7 @@ def main(args):
     # if not os.path.exists(os.path.join(save_path,ILP_acrossK_filename)):
     # align and write
     tic = time.time()
-    repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = align_ILP_modes_acrossK(repQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_comb_k=params.enum_comb_k,ind2pop=ind2pop)
+    repQ_acrossK_Q2P, repQ_acrossK_cost, repQ_best_ILP_acrossK = align_ILP_modes_acrossK(repQ_modes,K_range,N,save_path,ILP_acrossK_filename,merge=params.merge,ind2pop=ind2pop)
     toc = time.time()
     logging.info("Time: %.3fs", toc-tic)
     # else:
@@ -210,7 +210,7 @@ def main(args):
     # if not os.path.exists(os.path.join(save_path+ILP_acrossK_filename)):
     # align and write
     tic = time.time()
-    meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = align_ILP_modes_acrossK(meanQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_comb_k=params.enum_comb_k,ind2pop=ind2pop)
+    meanQ_acrossK_Q2P, meanQ_acrossK_cost, meanQ_best_ILP_acrossK = align_ILP_modes_acrossK(meanQ_modes,K_range,N,save_path,ILP_acrossK_filename,merge=params.merge,ind2pop=ind2pop)
     toc = time.time()
     logging.info("Time: %.3fs", toc-tic)
     # else:
@@ -225,7 +225,7 @@ def main(args):
         for K in K_range: 
             modes = modes_allK_list[K]
             for m in modes:
-                plot_name = "K{}_mode{}_meanQ.pdf".format(K,m)
+                plot_name = "K{}_mode{}_meanQ.png".format(K,m)
                 plot_aligned(K,m,Q_list,modes,align_ILP_res,rep_modes,meanQ_modes[K][m],max_K,k2ids,idx2idxinK,save_path=save_path,plot_name=plot_name,cmap=cmap)
     
     ## Alignment between modes within-K
@@ -242,28 +242,29 @@ def main(args):
     logging.info("---------- Plotting alignment across K ...")
     ## Average membership multipartite graph
     if params.plot_flag_mode_across_K_multipartite:
-        plot_file_name = "acrossK_meanQ_cost.pdf"
+        plot_file_name = "acrossK_meanQ_cost.png"
         title = "Mode (average membership) across K"
         G = plot_acrossK_multipartite(K_range,modes_allK_list,meanQ_modes,meanQ_acrossK_cost,layer_color,title,save_path,plot_file_name)
         
-        # plot_file_name = "acrossK_repQ_cost.pdf"
+        # plot_file_name = "acrossK_repQ_cost.png"
         # title = "Mode (representative membership) across K"
         # G = plot_acrossK_multipartite(K_range,modes_allK_list,repQ_modes,repQ_acrossK_cost,layer_color,title,save_path,plot_file_name)
     
     ## Alignment of all modes
     if params.plot_flag_all_modes:
-        plot_name = "all_modes_meanQ.pdf" 
+        plot_name = "all_modes_meanQ.png" 
         show_all_modes(params.plot_flag_all_modes,K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_best_ILP_acrossK,save_path,plot_name,cmap=cmap)    
-        # plot_name = "all_modes_repQ.pdf" 
+        plot_diff_btw_modes_acorssK(save_path,cmap)
+        # plot_name = "all_modes_repQ.png" 
         # show_all_modes(params.plot_flag_all_modes,K_range,repQ_modes,repQ_acrossK_Q2P,repQ_best_ILP_acrossK,save_path,plot_name,cmap=cmap)    
 
-    ## Optimal alignment across-K in chains
-    if params.plot_flag_mode_across_K_chains:
-        plot_file_name_suffix = "meanQ_alignment_chain_merged"
-        best_alignment_chains = plot_acrossK_chains(K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_acrossK_cost,save_path,plot_file_name_suffix,cmap=cmap,merge_cluster=True)
+    # ## Optimal alignment across-K in chains
+    # if params.plot_flag_mode_across_K_chains:
+    #     plot_file_name_suffix = "meanQ_alignment_chain_merged"
+    #     best_alignment_chains = plot_acrossK_chains(K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_acrossK_cost,save_path,plot_file_name_suffix,cmap=cmap,merge_cluster=True)
         
-        plot_file_name_suffix = "meanQ_alignment_chain"
-        best_alignment_chains = plot_acrossK_chains(K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_acrossK_cost,save_path,plot_file_name_suffix,cmap=cmap,merge_cluster=False)
+    #     plot_file_name_suffix = "meanQ_alignment_chain"
+    #     best_alignment_chains = plot_acrossK_chains(K_range,meanQ_modes,meanQ_acrossK_Q2P,meanQ_acrossK_cost,save_path,plot_file_name_suffix,cmap=cmap,merge_cluster=False)
     
     toc = time.time()
     logging.info("Time: %.3fs", toc-tic)
@@ -289,7 +290,7 @@ if __name__ == "__main__":
     required.add_argument('-f', '--input_format', type=str, required=True, help='input data format')
     
     optional_arguments = [['cd_mod_thre','float','the modularity threshold for community detection (default: -1, meaning not using the threshold)'],
-                            ['enum_comb_k','str','Y/N: whether to enumerate all combinations of two clusters when aligning modes with number of clusters differing by one (default: Y)'],
+                            ['merge','str','Y/N: whether to merge all pairs of clusters when aligning modes with number of clusters differing by one (default: N)'],
                             ['custom_cmap','str','Y/N: whether to use customized colormap (default: N)'],
                             ['cmap','str','user-specified colormap as a list of colors (in hex code) in a space-delimited string']]
     

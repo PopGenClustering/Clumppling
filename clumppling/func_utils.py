@@ -212,132 +212,132 @@ def load_ind(recode_path):
         
 #     return Qbar_list
 
-#%% Dirichlet Functions
-def digamma_inv(y,n_iter=5):
-    # Inverse of the digamma function (real positive arguments only).
-    #
-    gamma = -special.psi(1)
-    t_thre = -2.22
-    if y > t_thre:
-        x = np.exp(y) + 0.5
-    else:
-        x = 1.0 / (-y - gamma)
+# #%% Dirichlet Functions
+# def digamma_inv(y,n_iter=5):
+#     # Inverse of the digamma function (real positive arguments only).
+#     #
+#     gamma = -special.psi(1)
+#     t_thre = -2.22
+#     if y > t_thre:
+#         x = np.exp(y) + 0.5
+#     else:
+#         x = 1.0 / (-y - gamma)
 
-    for i_iter in range(n_iter):
-        x = x-(special.psi(x)-y)/special.polygamma(1, x)
+#     for i_iter in range(n_iter):
+#         x = x-(special.psi(x)-y)/special.polygamma(1, x)
 
-    return x
+#     return x
 
-def initial_guess(Q):
-    Eq1 = np.mean(Q[:,0])
-    Eq1sqr = np.mean(Q[:,0]**2)
-    frac = Q.sum(axis=0)/Q.sum()
-    if Q.shape[0]==1:
-        return frac
-    denom = (Eq1sqr-Eq1**2)
-    if (Eq1sqr-Eq1**2)!=0:
-        a = np.multiply(frac,(Eq1-Eq1sqr)/(Eq1sqr-Eq1**2))
-    else:
-        a = frac
-    if np.all(np.abs(a)<1e-9) or np.all(np.abs(a)>1e9):
-        a = frac
-    return a
+# def initial_guess(Q):
+#     Eq1 = np.mean(Q[:,0])
+#     Eq1sqr = np.mean(Q[:,0]**2)
+#     frac = Q.sum(axis=0)/Q.sum()
+#     if Q.shape[0]==1:
+#         return frac
+#     denom = (Eq1sqr-Eq1**2)
+#     if (Eq1sqr-Eq1**2)!=0:
+#         a = np.multiply(frac,(Eq1-Eq1sqr)/(Eq1sqr-Eq1**2))
+#     else:
+#         a = frac
+#     if np.all(np.abs(a)<1e-9) or np.all(np.abs(a)>1e9):
+#         a = frac
+#     return a
   
-def fixed_point(Q, a0, n_iter = 10):
-    K = len(a0)
-    N = Q.shape[0]
-    if N==1:
-        return a0
-    logq_bar = np.sum(np.log(Q),axis=0)/N
-    a = a0
-    a_next = a
-    for i_iter in range(n_iter):
-        a_sum = np.sum(a)
-        for k in range(K):
-            a_next[k] = digamma_inv(special.psi(a_sum)+logq_bar[k])
-        if np.sum(np.abs(a_next-a))<1e-3:
-            a = a_next
-            break
-        a = a_next
-#     print("#iterations:{}".format(i_iter+1))
-    return a
+# def fixed_point(Q, a0, n_iter = 10):
+#     K = len(a0)
+#     N = Q.shape[0]
+#     if N==1:
+#         return a0
+#     logq_bar = np.sum(np.log(Q),axis=0)/N
+#     a = a0
+#     a_next = a
+#     for i_iter in range(n_iter):
+#         a_sum = np.sum(a)
+#         for k in range(K):
+#             a_next[k] = digamma_inv(special.psi(a_sum)+logq_bar[k])
+#         if np.sum(np.abs(a_next-a))<1e-3:
+#             a = a_next
+#             break
+#         a = a_next
+# #     print("#iterations:{}".format(i_iter+1))
+#     return a
 
-def repdist0(a):
-    a0 = np.sum(a)
-    return 4*np.sum(np.tril(np.outer(a,a),-1))/((a0+1)*(a0**2))
+# def repdist0(a):
+#     a0 = np.sum(a)
+#     return 4*np.sum(np.tril(np.outer(a,a),-1))/((a0+1)*(a0**2))
 
-def get_theoretical_cost(Q,pop_n_ind,ind2pop):
-    a_vec_list = []
-    theo_cost = []
-    theo_cost_ws = 0
-    for p in pop_n_ind.keys():
+# def get_theoretical_cost(Q,pop_n_ind,ind2pop):
+#     a_vec_list = []
+#     theo_cost = []
+#     theo_cost_ws = 0
+#     for p in pop_n_ind.keys():
     
-        Q_pop = Q[ind2pop==p,:]
-        a0 = initial_guess(Q_pop)
-        a = fixed_point(Q_pop, a0) # estimated parameter
-        if np.isnan(a[0]):
-            break
-        a_vec_list.append(a)
-        theo_cost.append(repdist0(a))
-        theo_cost_ws += pop_n_ind[p]*repdist0(a)
+#         Q_pop = Q[ind2pop==p,:]
+#         a0 = initial_guess(Q_pop)
+#         a = fixed_point(Q_pop, a0) # estimated parameter
+#         if np.isnan(a[0]):
+#             break
+#         a_vec_list.append(a)
+#         theo_cost.append(repdist0(a))
+#         theo_cost_ws += pop_n_ind[p]*repdist0(a)
         
-    theo_cost_ws *= 2/len(ind2pop)
+#     theo_cost_ws *= 2/len(ind2pop)
 
-    return theo_cost_ws
+#     return theo_cost_ws
 
 
-def get_Dir_params(Q,pop_n_ind,ind2pop):
+# def get_Dir_params(Q,pop_n_ind,ind2pop):
 
-    # infer Dir parameters
-    a_vec_list = []
+#     # infer Dir parameters
+#     a_vec_list = []
     
-    for p in pop_n_ind.keys():
+#     for p in pop_n_ind.keys():
     
-        Q_pop = Q[ind2pop==p,:]
-        if np.sum(Q_pop==0)>0:
-            Q_pop += 1e-6
-        a0 = initial_guess(Q_pop)
-        a = fixed_point(Q_pop, a0) # estimated parameter
-        if np.isnan(a[0]):
-            break
-        a_vec_list.append(a)
+#         Q_pop = Q[ind2pop==p,:]
+#         if np.sum(Q_pop==0)>0:
+#             Q_pop += 1e-6
+#         a0 = initial_guess(Q_pop)
+#         a = fixed_point(Q_pop, a0) # estimated parameter
+#         if np.isnan(a[0]):
+#             break
+#         a_vec_list.append(a)
 
-    return a_vec_list
+#     return a_vec_list
 
-def cost_batch(a,perms,coords):
+# def cost_batch(a,perms,coords):
     
-    all_entry = (a[:,None]-a[None,:])*a[:, np.newaxis]
+#     all_entry = (a[:,None]-a[None,:])*a[:, np.newaxis]
     
-    flat_idx = np.concatenate((np.asarray(all_entry.shape[1:])[::-1].cumprod()[::-1],[1])).dot(coords)
-    a0 = np.sum(a)
-    c = np.take(all_entry,flat_idx).reshape(perms.shape)
-    c = np.sum(c,axis=1)/a0**2
-    return c
+#     flat_idx = np.concatenate((np.asarray(all_entry.shape[1:])[::-1].cumprod()[::-1],[1])).dot(coords)
+#     a0 = np.sum(a)
+#     c = np.take(all_entry,flat_idx).reshape(perms.shape)
+#     c = np.sum(c,axis=1)/a0**2
+#     return c
 
-def compute_cost_total(a_list,n_ind_list,perms):
-    N = sum(n_ind_list)
-    K = len(a_list[0])
-    coords = np.vstack([np.tile(np.arange(K), len(perms)),perms.flatten()])
-    the_C_pop = []
-    for a in a_list:
-        c = cost_batch(a,perms,coords)
-        the_C_pop.append(c)
-    the_C_pop = np.array(the_C_pop)
-    the_C_total = np.sum(the_C_pop*np.array(n_ind_list)[:, np.newaxis]/N,axis=0)
-    return the_C_total
+# def compute_cost_total(a_list,n_ind_list,perms):
+#     N = sum(n_ind_list)
+#     K = len(a_list[0])
+#     coords = np.vstack([np.tile(np.arange(K), len(perms)),perms.flatten()])
+#     the_C_pop = []
+#     for a in a_list:
+#         c = cost_batch(a,perms,coords)
+#         the_C_pop.append(c)
+#     the_C_pop = np.array(the_C_pop)
+#     the_C_total = np.sum(the_C_pop*np.array(n_ind_list)[:, np.newaxis]/N,axis=0)
+#     return the_C_total
 
 
-def sort_ignore_tie(l):
-    l = np.array(l)
-    sorted_idx = l.argsort()
-    sorted_val = l[sorted_idx]
-    return sorted_idx, sorted_val
+# def sort_ignore_tie(l):
+#     l = np.array(l)
+#     sorted_idx = l.argsort()
+#     sorted_val = l[sorted_idx]
+#     return sorted_idx, sorted_val
 
 
 
 #%% Mode Detection Helpers
 def get_adj_mat(cost_mat):
-    adj_mat = 1-cost_mat/np.nanmax(cost_mat)
+    adj_mat = 1-(cost_mat-np.nanmin(cost_mat))/(np.nanmax(cost_mat)-np.nanmin(cost_mat))
     adj_mat = np.nan_to_num(adj_mat,copy=True,nan=0)
     adj_mat = adj_mat + np.diag(np.ones(adj_mat.shape[0]))
     return adj_mat

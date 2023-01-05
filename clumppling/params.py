@@ -17,7 +17,7 @@ class Params:
         # self.custom_cmap = False
         # self.cmap = ""
 
-        # # Advanced: ILP when number of clusters differ by 1
+        # # Advanced: merge when number of clusters differ by 1
         # self.enum_comb_k = True
 
         # # Advanced: leader clustering parameters
@@ -50,7 +50,7 @@ class Params:
         self.default_cd = parse_bool(find_element('default_cd'))
         self.cd_mod_thre = float(find_element('cd_mod_thre'))
         self.cd_param = float(find_element('cd_param'))
-        self.md_by_ac = parse_bool(find_element('md_by_ac'))
+        # self.md_by_ac = parse_bool(find_element('md_by_ac'))
 
         # colormap parameters
         self.custom_cmap = parse_bool(find_element('custom_cmap'))
@@ -58,11 +58,11 @@ class Params:
         self.cmap = str(cmap) if cmap else ""
 
         # Advanced: ILP when number of clusters differ by 1
-        self.enum_comb_k = parse_bool(find_element('enum_comb_k'))
+        self.merge = parse_bool(find_element('merge'))
 
         # Advanced: leader clustering parameters
         self.lc_flag = parse_bool(find_element('lc_flag'))     
-        self.adaptive_thre_flag = parse_bool(find_element('adaptive_thre_flag'))    
+        # self.adaptive_thre_flag = parse_bool(find_element('adaptive_thre_flag'))    
         self.lc_cost_thre = float(find_element('lc_cost_thre'))
         
         # Advanced: plotting parameters
@@ -70,7 +70,7 @@ class Params:
         self.plot_flag_all_within_mode = parse_bool(find_element('plot_flag_all_within_mode'))    
         self.plot_flag_mode_within_K = parse_bool(find_element('plot_flag_mode_within_K'))    
         self.plot_flag_mode_across_K_multipartite = parse_bool(find_element('plot_flag_mode_across_K_multipartite'))    
-        self.plot_flag_mode_across_K_chains = parse_bool(find_element('plot_flag_mode_across_K_chains'))    
+        # self.plot_flag_mode_across_K_chains = parse_bool(find_element('plot_flag_mode_across_K_chains'))    
  
         
     def display(self):
@@ -81,8 +81,8 @@ class Params:
         disp.append("Output path: {}".format(self.output_path))
         disp.append("Parameter file path: {}".format(self.params_path))
         disp.append("")
-        if self.md_by_ac:
-            disp.append("Mode detection method: AlignmentCost AUC")
+        # if self.md_by_ac:
+        #     disp.append("Mode detection method: AlignmentCost AUC")
         
         disp.append("Mode detection method: {}".format("community detection" if not self.lc_flag else "leader clustering"))
         if not self.lc_flag:     
@@ -91,10 +91,10 @@ class Params:
             if self.default_cd:
                 disp.append("Community detection modularity threshold: {}".format(self.cd_mod_thre))
         else:
-            disp.append("Using adaptive threshold in leader clustering: {}".format(self.adaptive_thre_flag))
-            if not self.adaptive_thre_flag:
-                disp.append("Fixed threshold in leader clustering: {}".format(self.lc_cost_thre))
-        disp.append("Enumerating all combinations of two clusters when aligning two replicates with K differing by one: {}".format(self.enum_comb_k))
+            # disp.append("Using adaptive threshold in leader clustering: {}".format(self.adaptive_thre_flag))
+            # if not self.adaptive_thre_flag:
+            disp.append("Fixed threshold in leader clustering: {}".format(self.lc_cost_thre))
+        disp.append("Merging all possible pairs of clusters when aligning two replicates with K differing by one: {}".format(self.merge))
         disp.append("Using customized colormap: {}".format(self.custom_cmap))
         if self.custom_cmap:
             disp.append("Customized colormap: {}".format(", ".join(self.cmap)))
@@ -102,7 +102,7 @@ class Params:
         disp.append("Plotting all replicates within each mode: {}".format(self.plot_flag_all_within_mode))
         disp.append("Plotting all modes of the same K: {}".format(self.plot_flag_mode_within_K))
         disp.append("Plotting alignment relationships between modes across K: {}".format(self.plot_flag_mode_across_K_multipartite))
-        disp.append("Plotting the optimally aligned modes across K: {}".format(self.plot_flag_mode_across_K_chains))
+        # disp.append("Plotting the optimally aligned modes across K: {}".format(self.plot_flag_mode_across_K_chains))
         disp.append("")
 
         return "\n".join(disp)

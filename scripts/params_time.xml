@@ -3,27 +3,25 @@
 <parameters>
 	<!-- mode detection parameters -->
 	<cd_mod_thre>-1</cd_mod_thre>
-	<default_cd>False</default_cd>
-	<cd_param>1</cd_param>
-	<md_by_ac>False</md_by_ac>
+	<cd_param>1.05</cd_param>
+	<default_cd>True</default_cd>
 
 	<!-- colormap parameters -->
 	<custom_cmap>False</custom_cmap>
 	<cmap></cmap>
 
-	<!-- Advanced: ILP when number of clusters differ by 1 -->
-	<enum_comb_k>True</enum_comb_k>
+	<!-- Advanced: merge when number of clusters differ by 1 -->
+	<merge>False</merge>
 
 	<!-- Advanced: leader clustering parameters -->
 	<lc_flag>False</lc_flag>
-	<adaptive_thre_flag>False</adaptive_thre_flag>
 	<lc_cost_thre>0.2</lc_cost_thre>
 
 	<!-- Advanced: plotting parameters -->
-	<plot_flag_all_modes>True</plot_flag_all_modes>
+	<plot_flag_all_modes>False</plot_flag_all_modes>
 	<plot_flag_all_within_mode>False</plot_flag_all_within_mode>
 	<plot_flag_mode_within_K>False</plot_flag_mode_within_K>
-	<plot_flag_mode_across_K_multipartite>True</plot_flag_mode_across_K_multipartite>
-	<plot_flag_mode_across_K_chains>False</plot_flag_mode_across_K_chains>
+	<plot_flag_mode_across_K_multipartite>False</plot_flag_mode_across_K_multipartite>
+	<!-- <plot_flag_mode_across_K_chains>False</plot_flag_mode_across_K_chains> -->
 
 </parameters>

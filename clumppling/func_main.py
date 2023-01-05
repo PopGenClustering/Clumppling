@@ -183,6 +183,25 @@ def alignQ_wrtP(P,Q,idxQ2P,merge=True):
             
     return aligned_Q
 
+def cost_membership_sep(P,Q,idxQ2P):
+    N_ind = P.shape[0]
+    cost_col = list()
+    for p_idx in range(P.shape[1]):
+        cost_col.append(list())
+    for q_idx in range(Q.shape[1]):
+        p_idx = idxQ2P[q_idx]
+        cost_col[p_idx].append([np.sum((P[:,p_idx]-Q[:,q_idx])**2)])
+    cost = 0    
+    for p_idx in range(P.shape[1]):
+        if len(cost_col[p_idx])==1:
+            cost += np.mean(cost_col[p_idx])
+    cost /= 2*N_ind
+    return cost
+
+def cost_membership_unmerged(P,Q_aligned):
+    assert(P.shape[1]<=Q_aligned.shape[1])
+    return cost_membership(P,Q_aligned[:,:P.shape[1]],P.shape[0])
+
 
 def align_ILP_withinK(ILP_withinK_filename,output_path,Q_list,K_range,k2ids):
 
@@ -304,134 +323,134 @@ def cd_custom(G):
     return partition_map
 
 
-def detect_modes_AC(Q_list, cost_ILP_res,K_range, k2ids,pop_n_ind,ind2pop):
+# def detect_modes_AC(Q_list, cost_ILP_res,K_range, k2ids,pop_n_ind,ind2pop):
     
-    modes_allK_list = dict()
-    msg = ""
+#     modes_allK_list = dict()
+#     msg = ""
 
-    n_ind_list = []
-    for p in pop_n_ind.keys():
-        n_ind_list.append(len(pop_n_ind.values()))
+#     n_ind_list = []
+#     for p in pop_n_ind.keys():
+#         n_ind_list.append(len(pop_n_ind.values()))
     
 
-    for K in K_range:
-        perms = np.array(list(permutations(range(0,K))))
+#     for K in K_range:
+#         perms = np.array(list(permutations(range(0,K))))
 
         
 
-        ids = k2ids[K]
-        n_ids = len(ids)
+#         ids = k2ids[K]
+#         n_ids = len(ids)
 
-        AC_AUC = list()
+#         AC_AUC = list()
 
-        # infer Dir parameters, compute AC & AC_AUC        
-        for r in np.arange(1,n_ids):
-            Q = Q_list[ids[r]]
+#         # infer Dir parameters, compute AC & AC_AUC        
+#         for r in np.arange(1,n_ids):
+#             Q = Q_list[ids[r]]
 
-            a_vec_list = get_Dir_params(Q,pop_n_ind,ind2pop)
-            the_C_total = compute_cost_total(a_vec_list,n_ind_list,perms)
+#             a_vec_list = get_Dir_params(Q,pop_n_ind,ind2pop)
+#             the_C_total = compute_cost_total(a_vec_list,n_ind_list,perms)
 
-            sorted_idx, sorted_val = sort_ignore_tie(the_C_total)
-            AC_AUC.append(np.trapz(sorted_val,np.linspace(0,1,len(sorted_val))))
+#             sorted_idx, sorted_val = sort_ignore_tie(the_C_total)
+#             AC_AUC.append(np.trapz(sorted_val,np.linspace(0,1,len(sorted_val))))
         
-        # split and get modes
+#         # split and get modes
 
-        AC_AUC = np.array(AC_AUC)
+#         AC_AUC = np.array(AC_AUC)
 
-        # sort then find gap
-        sorted_AUC_idx = np.argsort(AC_AUC)
-        sorted_AC_AUC = np.sort(AC_AUC)
-        diff_AUC = np.diff(sorted_AC_AUC,prepend=sorted_AC_AUC[0])
-        break_idx_diff = np.where(diff_AUC>0.01)[0]
-        break_idx_diff = np.insert(break_idx_diff, 0, 0)
-        break_idx_diff = np.insert(break_idx_diff, len(break_idx_diff), len(diff_AUC))
-        partition = [sorted_AUC_idx[np.arange(idx1,break_idx_diff[iidx+1])] for iidx,idx1 in enumerate(break_idx_diff[:-1])]
-        partition = [sorted(l) for l in partition]
-        partition = sorted(partition, key=lambda x: -len(x))
+#         # sort then find gap
+#         sorted_AUC_idx = np.argsort(AC_AUC)
+#         sorted_AC_AUC = np.sort(AC_AUC)
+#         diff_AUC = np.diff(sorted_AC_AUC,prepend=sorted_AC_AUC[0])
+#         break_idx_diff = np.where(diff_AUC>0.01)[0]
+#         break_idx_diff = np.insert(break_idx_diff, 0, 0)
+#         break_idx_diff = np.insert(break_idx_diff, len(break_idx_diff), len(diff_AUC))
+#         partition = [sorted_AUC_idx[np.arange(idx1,break_idx_diff[iidx+1])] for iidx,idx1 in enumerate(break_idx_diff[:-1])]
+#         partition = [sorted(l) for l in partition]
+#         partition = sorted(partition, key=lambda x: -len(x))
 
-        # check and merge (if necessary)
-        n_modes_orig = len(partition)
-        cost_mat = cost_ILP_res[K]
-        merge_cost = np.ones((n_modes_orig,n_modes_orig))*2
-        for i_mode in range(0,n_modes_orig-1):
-            idx_mode1 = partition[i_mode]
-            if len(idx_mode1)>1:
-                cost_wt_mode1 = avg_tril(cost_mat[idx_mode1, :][:, idx_mode1])
-            else:
-                cost_wt_mode1 = 0
+#         # check and merge (if necessary)
+#         n_modes_orig = len(partition)
+#         cost_mat = cost_ILP_res[K]
+#         merge_cost = np.ones((n_modes_orig,n_modes_orig))*2
+#         for i_mode in range(0,n_modes_orig-1):
+#             idx_mode1 = partition[i_mode]
+#             if len(idx_mode1)>1:
+#                 cost_wt_mode1 = avg_tril(cost_mat[idx_mode1, :][:, idx_mode1])
+#             else:
+#                 cost_wt_mode1 = 0
                 
-            for j_mode in range(1,n_modes_orig):
+#             for j_mode in range(1,n_modes_orig):
                 
-                idx_mode2 = partition[j_mode]
-                if len(idx_mode2)>1:
-                    cost_wt_mode2 = avg_tril(cost_mat[idx_mode2, :][:, idx_mode2])
-                else:
-                    cost_wt_mode2 = 0
+#                 idx_mode2 = partition[j_mode]
+#                 if len(idx_mode2)>1:
+#                     cost_wt_mode2 = avg_tril(cost_mat[idx_mode2, :][:, idx_mode2])
+#                 else:
+#                     cost_wt_mode2 = 0
 
-                cost_btw = np.mean(cost_mat[idx_mode1, :][:, idx_mode2])
-                if abs(cost_btw-cost_wt_mode1)+abs(cost_btw-cost_wt_mode2)<0.01:
-                # if 2*cost_btw/(cost_wt_mode1+cost_wt_mode2)<1.5:
-                    merge_cost[i_mode,j_mode]=cost_btw #abs(cost_btw-cost_wt_mode1)+abs(cost_btw-cost_wt_mode2)
+#                 cost_btw = np.mean(cost_mat[idx_mode1, :][:, idx_mode2])
+#                 if abs(cost_btw-cost_wt_mode1)+abs(cost_btw-cost_wt_mode2)<0.01:
+#                 # if 2*cost_btw/(cost_wt_mode1+cost_wt_mode2)<1.5:
+#                     merge_cost[i_mode,j_mode]=cost_btw #abs(cost_btw-cost_wt_mode1)+abs(cost_btw-cost_wt_mode2)
 
-        merged_mode = list()
-        for j in np.arange(n_modes_orig-1,-1,-1):
-            min_idx = np.argmin(merge_cost[:,j])
-            # if merge_cost[min_idx,j]<0.005: # merge
-            if merge_cost[min_idx,j]!=2:
-                msg = "K={}: merging some modes".format(K)
-                partition[min_idx].extend(partition[j])
-                merged_mode.append(j)
-        partition = [item for i, item in enumerate(partition) if i not in merged_mode]
-        partition = [sorted(l) for l in partition]
-        partition = sorted(partition, key=lambda x: -len(x))
+#         merged_mode = list()
+#         for j in np.arange(n_modes_orig-1,-1,-1):
+#             min_idx = np.argmin(merge_cost[:,j])
+#             # if merge_cost[min_idx,j]<0.005: # merge
+#             if merge_cost[min_idx,j]!=2:
+#                 msg = "K={}: merging some modes".format(K)
+#                 partition[min_idx].extend(partition[j])
+#                 merged_mode.append(j)
+#         partition = [item for i, item in enumerate(partition) if i not in merged_mode]
+#         partition = [sorted(l) for l in partition]
+#         partition = sorted(partition, key=lambda x: -len(x))
 
-        # merge_pairs = list()
-        # for i_mode in range(0,n_modes_orig-1):
-        #     idx_mode1 = partition[i_mode]
-        #     if len(idx_mode1)>1:
-        #         cost_wt_mode1 = avg_tril(cost_mat[idx_mode1, :][:, idx_mode1])
+#         # merge_pairs = list()
+#         # for i_mode in range(0,n_modes_orig-1):
+#         #     idx_mode1 = partition[i_mode]
+#         #     if len(idx_mode1)>1:
+#         #         cost_wt_mode1 = avg_tril(cost_mat[idx_mode1, :][:, idx_mode1])
                 
-        #         for j_mode in range(1,n_modes_orig):
+#         #         for j_mode in range(1,n_modes_orig):
                     
-        #             idx_mode2 = partition[j_mode]
-        #             if len(idx_mode2)>1:
-        #                 cost_wt_mode2 = avg_tril(cost_mat[idx_mode2, :][:, idx_mode2])
-        #                 cost_btw = np.mean(cost_mat[idx_mode1, :][:, idx_mode2])
-        #                 # if abs(cost_btw-cost_wt_mode1)+abs(cost_btw-cost_wt_mode2)<0.01:
-        #                 if 2*cost_btw/(cost_wt_mode1+cost_wt_mode2)<1.5:
-        #                     merge_pairs.append((i_mode,j_mode))
+#         #             idx_mode2 = partition[j_mode]
+#         #             if len(idx_mode2)>1:
+#         #                 cost_wt_mode2 = avg_tril(cost_mat[idx_mode2, :][:, idx_mode2])
+#         #                 cost_btw = np.mean(cost_mat[idx_mode1, :][:, idx_mode2])
+#         #                 # if abs(cost_btw-cost_wt_mode1)+abs(cost_btw-cost_wt_mode2)<0.01:
+#         #                 if 2*cost_btw/(cost_wt_mode1+cost_wt_mode2)<1.5:
+#         #                     merge_pairs.append((i_mode,j_mode))
 
-        # if len(merge_pairs)>0:
-        #     msg = "K={}: merging some modes".format(K)
+#         # if len(merge_pairs)>0:
+#         #     msg = "K={}: merging some modes".format(K)
         
-        # merge_to = dict()
-        # for m1,m2 in merge_pairs:
-        #     if m1 in merge_to:
-        #         merge_to[m2] = merge_to[m1]
-        #     else:
-        #         if m2 not in merge_to:
-        #             merge_to[m2] = m1
+#         # merge_to = dict()
+#         # for m1,m2 in merge_pairs:
+#         #     if m1 in merge_to:
+#         #         merge_to[m2] = merge_to[m1]
+#         #     else:
+#         #         if m2 not in merge_to:
+#         #             merge_to[m2] = m1
 
-        # for k in merge_to:
-        #     partition[merge_to[k]].extend(partition[k])
-        # partition = [item for i, item in enumerate(partition) if i not in merge_to]
-        # partition = [sorted(l) for l in partition]
-        # partition = sorted(partition, key=lambda x: -len(x))
+#         # for k in merge_to:
+#         #     partition[merge_to[k]].extend(partition[k])
+#         # partition = [item for i, item in enumerate(partition) if i not in merge_to]
+#         # partition = [sorted(l) for l in partition]
+#         # partition = sorted(partition, key=lambda x: -len(x))
 
-        partition_map = {i:i_s for i_s,s in enumerate(partition) for i in s}
+#         partition_map = {i:i_s for i_s,s in enumerate(partition) for i in s}
 
 
-        ########################################
-        # separate modes
-        ########################################
+#         ########################################
+#         # separate modes
+#         ########################################
         
-        modes = defaultdict(list)
-        for r in partition_map.keys():
-            modes[partition_map[r]].append(r)
+#         modes = defaultdict(list)
+#         for r in partition_map.keys():
+#             modes[partition_map[r]].append(r)
         
-        modes_allK_list[K] = modes
+#         modes_allK_list[K] = modes
 
-    return modes_allK_list, msg
+#     return modes_allK_list, msg
 
 
 def detect_modes(cost_ILP_res,K_range,default_cd,cd_mod_thre,cd_param=1.05):
@@ -743,130 +762,130 @@ def align_leader_clustering(cost_thre,Q_list,K_range,N_ind,k2ids,save_modes=Fals
     return modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats 
 
 
-def align_leader_clustering_adaptive(cost_thre_base,Q_list,K_range,N_ind,k2ids,ind2pop, pop_n_ind,save_modes=False, save_path=None,ILP_modes_filename=None):
+# def align_leader_clustering_adaptive(cost_thre_base,Q_list,K_range,N_ind,k2ids,ind2pop, pop_n_ind,save_modes=False, save_path=None,ILP_modes_filename=None):
 
-    modes_allK_list = dict()
-    rep_modes = defaultdict(list)
-    repQ_modes = dict()
-    meanQ_modes = dict()
-    average_stats = dict()
-    align_ILP_res = dict()
+#     modes_allK_list = dict()
+#     rep_modes = defaultdict(list)
+#     repQ_modes = dict()
+#     meanQ_modes = dict()
+#     average_stats = dict()
+#     align_ILP_res = dict()
     
-    theo_cost_list = list()
-    for Q in Q_list:
-        theo_cost_list.append(get_theoretical_cost(Q, pop_n_ind, ind2pop))
-    theo_cost_list = np.array(theo_cost_list)
+#     theo_cost_list = list()
+#     for Q in Q_list:
+#         theo_cost_list.append(get_theoretical_cost(Q, pop_n_ind, ind2pop))
+#     theo_cost_list = np.array(theo_cost_list)
 
-    for K in K_range:
+#     for K in K_range:
         
-        repQ_modes[K] = dict()
-        meanQ_modes[K] = dict()
-        average_stats[K] = dict()
-        align_in_K = defaultdict(dict)
+#         repQ_modes[K] = dict()
+#         meanQ_modes[K] = dict()
+#         average_stats[K] = dict()
+#         align_in_K = defaultdict(dict)
         
-        ids = k2ids[K]
-        n_ids = len(ids)
+#         ids = k2ids[K]
+#         n_ids = len(ids)
         
-        ct = np.mean(theo_cost_list[ids])
+#         ct = np.mean(theo_cost_list[ids])
 
-        leaders = list()
-        leader_followers = dict()
-        lc_cost = dict()
-        lc_aligned = dict()
-        # lc_theo_cost = dict()
+#         leaders = list()
+#         leader_followers = dict()
+#         lc_cost = dict()
+#         lc_aligned = dict()
+#         # lc_theo_cost = dict()
         
-        l = 0
-        leaders.append(l)
-        leader_followers[l] = list()
-        lc_aligned[l] = list()
-        lc_cost[l] = list()
-        # lc_theo_cost[l] = [theo_cost_list[0]]
+#         l = 0
+#         leaders.append(l)
+#         leader_followers[l] = list()
+#         lc_aligned[l] = list()
+#         lc_cost[l] = list()
+#         # lc_theo_cost[l] = [theo_cost_list[0]]
         
-        for r in np.arange(1,n_ids):
-            Q = Q_list[ids[r]]
+#         for r in np.arange(1,n_ids):
+#             Q = Q_list[ids[r]]
             
-            perm_to_leaders = list()
-            cost_to_leaders = list()
+#             perm_to_leaders = list()
+#             cost_to_leaders = list()
             
-            for l in leaders:
-                P = Q_list[ids[l]]
-                opt_obj, idxQ2P = align_ILP(P, Q)
-                cost_to_leaders.append(opt_obj)
-                perm_to_leaders.append(idxQ2P)
+#             for l in leaders:
+#                 P = Q_list[ids[l]]
+#                 opt_obj, idxQ2P = align_ILP(P, Q)
+#                 cost_to_leaders.append(opt_obj)
+#                 perm_to_leaders.append(idxQ2P)
             
-            min_cost_idx = np.argmin(cost_to_leaders)
-            min_cost = cost_to_leaders[min_cost_idx]
+#             min_cost_idx = np.argmin(cost_to_leaders)
+#             min_cost = cost_to_leaders[min_cost_idx]
 
-            cost_thre = 8*ct #cost_thre_base+10*np.mean([theo_cost_list[ids[r]],theo_cost_list[ids[leaders[min_cost_idx]]]]) #lc_theo_cost[leaders[min_cost_idx]]
-            # print(cost_thre_base,cost_thre,min_cost)
+#             cost_thre = 8*ct #cost_thre_base+10*np.mean([theo_cost_list[ids[r]],theo_cost_list[ids[leaders[min_cost_idx]]]]) #lc_theo_cost[leaders[min_cost_idx]]
+#             # print(cost_thre_base,cost_thre,min_cost)
             
-            if min_cost>(cost_thre): #*1.2**(K-K_range[0])
-                leaders.append(r)
-                leader_followers[r] = list()
-                lc_aligned[r] = list()
-                lc_cost[r] = list()
-                # lc_theo_cost[r] = [theo_cost_list[ids[r]]]
+#             if min_cost>(cost_thre): #*1.2**(K-K_range[0])
+#                 leaders.append(r)
+#                 leader_followers[r] = list()
+#                 lc_aligned[r] = list()
+#                 lc_cost[r] = list()
+#                 # lc_theo_cost[r] = [theo_cost_list[ids[r]]]
                 
-            else:
-                l = leaders[min_cost_idx]
-                leader_followers[l].append(r)
-                lc_aligned[l].append(perm_to_leaders[min_cost_idx])
-                lc_cost[l].append(min_cost)
-                # lc_theo_cost[l].append(theo_cost_list[ids[r]])
+#             else:
+#                 l = leaders[min_cost_idx]
+#                 leader_followers[l].append(r)
+#                 lc_aligned[l].append(perm_to_leaders[min_cost_idx])
+#                 lc_cost[l].append(min_cost)
+#                 # lc_theo_cost[l].append(theo_cost_list[ids[r]])
                 
-        # add to modes
-        modes = defaultdict(list)
-        for i_l,l in enumerate(leaders):
-            modes[i_l].append(l)
-            rep_modes[K].append(ids[l])
-            P = Q_list[ids[l]]
-            repQ_modes[K][i_l] = P
+#         # add to modes
+#         modes = defaultdict(list)
+#         for i_l,l in enumerate(leaders):
+#             modes[i_l].append(l)
+#             rep_modes[K].append(ids[l])
+#             P = Q_list[ids[l]]
+#             repQ_modes[K][i_l] = P
             
             
-            Q_sum = np.zeros_like(P)
-            Q_sum += P
+#             Q_sum = np.zeros_like(P)
+#             Q_sum += P
             
-            ########################################
-            # compute the average cost/similarity
-            ########################################
-            if len(leader_followers[l])==0:
-                average_stats[K][i_l] = {"cost":0,"Hprime":1} 
+#             ########################################
+#             # compute the average cost/similarity
+#             ########################################
+#             if len(leader_followers[l])==0:
+#                 average_stats[K][i_l] = {"cost":0,"Hprime":1} 
                 
-            else:
-                avg_cost = np.mean(lc_cost[l])
-                h_prime = np.mean(C2Gprime(lc_cost[l]))
-                average_stats[K][i_l] = {"cost":avg_cost,"Hprime":h_prime}     
+#             else:
+#                 avg_cost = np.mean(lc_cost[l])
+#                 h_prime = np.mean(C2Gprime(lc_cost[l]))
+#                 average_stats[K][i_l] = {"cost":avg_cost,"Hprime":h_prime}     
             
-                ############################################
-                # get modes and mean Q over all in the mode
-                ############################################
+#                 ############################################
+#                 # get modes and mean Q over all in the mode
+#                 ############################################
         
-                for i_fol, follower in enumerate(leader_followers[l]):
-                    modes[i_l].append(follower)
+#                 for i_fol, follower in enumerate(leader_followers[l]):
+#                     modes[i_l].append(follower)
                     
-                    Q = Q_list[ids[follower]]
-                    aligned_idxQ2P = lc_aligned[l][i_fol]
-                    align_in_K[follower][l] = aligned_idxQ2P
+#                     Q = Q_list[ids[follower]]
+#                     aligned_idxQ2P = lc_aligned[l][i_fol]
+#                     align_in_K[follower][l] = aligned_idxQ2P
                     
-                    aligned_Q = np.zeros_like(P)
-                    for q_idx in range(Q.shape[1]):
-                        aligned_Q[:,aligned_idxQ2P[q_idx]] += Q[:,q_idx]
-                    Q_sum += aligned_Q
+#                     aligned_Q = np.zeros_like(P)
+#                     for q_idx in range(Q.shape[1]):
+#                         aligned_Q[:,aligned_idxQ2P[q_idx]] += Q[:,q_idx]
+#                     Q_sum += aligned_Q
                 
-            meanQ_modes[K][i_l] = Q_sum/(len(leader_followers[l])+1)
+#             meanQ_modes[K][i_l] = Q_sum/(len(leader_followers[l])+1)
         
-        align_ILP_res[K] = align_in_K
-        modes_allK_list[K] = modes  
+#         align_ILP_res[K] = align_in_K
+#         modes_allK_list[K] = modes  
         
-    if save_modes:
-        # write the by-mode alignment into file
-        file_name = os.path.join(save_path,ILP_modes_filename)
-        write_modes_to_file(file_name,K_range,N_ind,modes_allK_list,meanQ_modes)
+#     if save_modes:
+#         # write the by-mode alignment into file
+#         file_name = os.path.join(save_path,ILP_modes_filename)
+#         write_modes_to_file(file_name,K_range,N_ind,modes_allK_list,meanQ_modes)
             
-    return modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats 
+#     return modes_allK_list,align_ILP_res,rep_modes,repQ_modes,meanQ_modes,average_stats 
 
 
-def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_filename,enum_comb_k=True,ind2pop=None):
+def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_filename,merge=False,ind2pop=None):
     
     K_range_sorted = sorted(K_range,reverse=True)
     K_comb = list([(K_range_sorted[i],K_range_sorted[i+1]) for i in range(len(K_range_sorted)-1)])
@@ -898,7 +917,7 @@ def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_fil
                 # identical alignment (dummy)
                 opt_obj = 0
                 idxQ2P = np.arange(K1)
-            elif enum_comb_k and (K1-K2)==1:
+            elif merge and (K1-K2)==1:
                 opt_obj, idxQ2P = align_ILP_diff1(P, Q)
             else:
                 opt_obj, idxQ2P = align_ILP(P, Q)
@@ -920,7 +939,7 @@ def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_fil
     # best alignments
     best_ILP_acrossK = list()
     f = open(os.path.join(save_path,ILP_acrossK_filename.split(".")[0]+"_best."+ILP_acrossK_filename.split(".")[1]),"w")
-    stats = ['cost', 'Hprime']
+    stats = ['cost_merge', 'Hprime_merge','cost_sep', 'Hprime_sep']
     f.write('best_pair\t{}\n'.format("\t".join(stats)))
     for i_K1 in range(len(K_range_sorted)-1):
         K1 = K_range_sorted[i_K1]
@@ -932,7 +951,12 @@ def align_ILP_modes_acrossK(consensusQ_modes,K_range,N,save_path,ILP_acrossK_fil
         aligned_Q = alignQ_wrtP(P,Q,perm_ILP_acrossK_Q2P["{}#{}-{}#{}".format(K2,rj,K1,ri)],merge=True)
         cost_bali = cost_membership(P,aligned_Q,P.shape[0])
         best_ILP_acrossK.append(bali)
-        f.write("{}\t{}\t{}\n".format(bali,cost_bali,C2Gprime(cost_bali)))
+
+        Q_aligned_unmerged = alignQ_wrtP(P,Q,perm_ILP_acrossK_Q2P["{}#{}-{}#{}".format(K2,rj,K1,ri)],merge=False)
+        # cost_sep = cost_membership(P,aligned_Q,P.shape[0]) #cost_membership(P,Q_aligned_unmerged[:,:P.shape[1]],P.shape[0])
+        cost_sep = cost_membership_sep(P,Q,perm_ILP_acrossK_Q2P["{}#{}-{}#{}".format(K2,rj,K1,ri)])
+        
+        f.write("{}\t{}\t{}\t{}\t{}\n".format(bali,cost_bali,C2Gprime(cost_bali),cost_sep,C2Gprime(cost_sep)))
     f.close()
     
     return perm_ILP_acrossK_Q2P, cost_acrossK_ILP, best_ILP_acrossK
