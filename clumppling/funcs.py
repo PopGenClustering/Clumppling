@@ -5,7 +5,7 @@ import shutil
 import json
 import sys
 
-from itertools import combinations, product #,combinations_with_replacement, permutations
+from itertools import combinations, product 
 from collections import defaultdict, Counter
 from scipy.spatial.distance import cdist
 import cvxpy as cp
@@ -24,7 +24,7 @@ def load_parameters(params_path):
     with open(params_path) as f:
         parameters = json.load(f)
         
-    bool_params = ['merge_cls','plot_modes','plot_modes_withinK','plot_acrossK']
+    bool_params = ['merge_cls','cd_default','plot_modes','plot_modes_withinK','plot_acrossK']
     for par in bool_params:
         if par in parameters:
             parameters[par] = True if parameters[par] in ['T','t','True','true','Yes','Y','y',1] else False
@@ -42,6 +42,7 @@ def display_parameters(input_path,input_format,output_path,params_path,parameter
     disp.append("----------  ----------  ----------")
     disp.append("Community detection parameter: {}".format(parameters['cd_parameter']))
     disp.append("Community detection modularity threshold: {}".format(parameters['cd_modularity_threshold']))
+    disp.append("Using default community detection method: {}".format(parameters['cd_default']))
     disp.append("Merging all possible pairs of clusters when aligning two replicates with K differing by one: {}".format(parameters['merge_cls']))
     disp.append("----------  ----------  ----------")
     disp.append("Providing customized colormap: {}".format("False" if parameters['custom_cmap']=='' else parameters['custom_cmap']))
@@ -427,6 +428,20 @@ def exponentiate_matrix(W,t):
     return W_exp
 
 def test_comm_struc(W, alpha = 0.05):
+    """Test for the existence of community structure in the graph (implementing Tokuda 2018)
+
+    Parameters
+    ----------
+    W : edge-weight matrix of the graph
+        The adjacency matrix of the the similarity network of replicates, with edges weighted by similarity after optimal alignment
+    alpha : the p-value threshold for the test
+
+    Returns
+    -------
+    has_comm_struc
+        a boolean indicating whether there exists community structure in the graph
+        True if the null hypothesis is rejected; False if there is no community structure.
+    """
     
     # standardization mapping
     W_standardized = standardize_matrix(W)
@@ -455,7 +470,6 @@ def test_comm_struc(W, alpha = 0.05):
     has_comm_struc = s!=4
     
     return has_comm_struc
-
 
 
 def reorder_partition_map(partition_map):
@@ -736,6 +750,7 @@ def align_ILP_modes_acrossK(consensusQ_modes,mode_labels,K_range,acrossK_path,co
     cost_acrossK = dict()
     
     f = open(os.path.join(acrossK_path,"alignment_acrossK_{}.txt".format(cons_suffix)),"w")
+    f.write("Mode1-Mode2,Cost,Alignment\n")
     
     best_alignments = dict()
     
@@ -770,7 +785,7 @@ def align_ILP_modes_acrossK(consensusQ_modes,mode_labels,K_range,acrossK_path,co
             cost = cost_membership(P,aligned_Q,P.shape[0])
             f.write("{}-{},{},{}\n".format(mode_labels[K2][rj],mode_labels[K1][ri],cost," ".join([str(id+1) for id in idxQ2P])))
 
-            cost_acrossK[pair_label] = opt_obj
+            cost_acrossK[pair_label] = cost
             alignment_acrossK[pair_label] = idxQ2P
             
         best_alignments[(K1,K2)] = rijs[best_alignment_idx]

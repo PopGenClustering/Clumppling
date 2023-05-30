@@ -106,7 +106,7 @@ def main(args):
     alignment_withinK, cost_withinK = align_withinK(output_path,Q_list,Q_files,K_range,K2IDs)
 
     # detect mode
-    modes_allK, cost_matrices, msg = detect_modes(cost_withinK,Q_files,K_range,K2IDs,cd_default,cd_mod_thre=parameters['cd_modularity_threshold'],cd_param=parameters['cd_parameter'])
+    modes_allK, cost_matrices, msg = detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd=parameters['cd_default'],cd_mod_thre=parameters['cd_modularity_threshold'],cd_param=parameters['cd_parameter'])
     
     if msg!="":
         logging.info(">>>"+msg)
@@ -124,8 +124,8 @@ def main(args):
     tic = time.time()
     # align across-K
     acrossK_path = os.path.join(output_path,"alignment_acrossK")
-    alignment_acrossK_mean, cost_acrossK_mean, best_acrossK_mean = align_ILP_modes_acrossK(meanQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="mean",merge=False)
-    alignment_acrossK_rep, cost_acrossK_rep, best_acrossK_rep = align_ILP_modes_acrossK(repQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="rep",merge=False)
+    alignment_acrossK_mean, cost_acrossK_mean, best_acrossK_mean = align_ILP_modes_acrossK(meanQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="mean",merge=parameters['merge_cls'])
+    alignment_acrossK_rep, cost_acrossK_rep, best_acrossK_rep = align_ILP_modes_acrossK(repQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="rep",merge=parameters['merge_cls'])
     toc = time.time()
     logging.info("Time: %.3fs", toc-tic)
     
