@@ -24,7 +24,7 @@ def load_parameters(params_path):
     with open(params_path) as f:
         parameters = json.load(f)
         
-    bool_params = ['merge_cls','cd_default','plot_modes','plot_modes_withinK','plot_acrossK']
+    bool_params = ['merge_cls','cd_default','plot_major_modes','plot_modes','plot_modes_withinK','plot_acrossK']
     for par in bool_params:
         if par in parameters:
             parameters[par] = True if parameters[par] in ['T','t','True','true','Yes','Y','y',1] else False
@@ -46,6 +46,7 @@ def display_parameters(input_path,input_format,output_path,params_path,parameter
     disp.append("Merging all possible pairs of clusters when aligning two replicates with K differing by one: {}".format(parameters['merge_cls']))
     disp.append("----------  ----------  ----------")
     disp.append("Providing customized colormap: {}".format("False" if parameters['custom_cmap']=='' else parameters['custom_cmap']))
+    disp.append("Plotting major modes: {}".format(parameters['plot_major_modes']))
     disp.append("Plotting all modes: {}".format(parameters['plot_modes']))
     # disp.append("Plotting all replicates within each mode: {}".format(parameters['plot_replicates']))
     disp.append("Plotting modes of the same K: {}".format(parameters['plot_modes_withinK']))
@@ -819,7 +820,6 @@ def align_ILP_modes_acrossK(consensusQ_modes,mode_labels,K_range,acrossK_path,co
     return alignment_acrossK, cost_acrossK, best_acrossK
 
 
-
 def plot_acrossK_multipartite(K_range,mode_labels,stats,cost_acrossK_mean,fig_path,cons_suffix):
     
     # layer_color = ["gray"]*len(K_range)
@@ -836,7 +836,7 @@ def plot_acrossK_multipartite(K_range,mode_labels,stats,cost_acrossK_mean,fig_pa
     km2nid = dict()
     max_s = 0
     
-    for K in K_range_sorted:
+    for K in K_range_sorted[::-1]:
         for m in range(len(stats[K])):
             s = stats[K][m]['size']
             G.add_node(nid, layer=K, label="{}\n({})".format(mode_labels[K][m],s))
@@ -850,7 +850,7 @@ def plot_acrossK_multipartite(K_range,mode_labels,stats,cost_acrossK_mean,fig_pa
     
     nid = 0
     nodes_sizes = list()
-    for K in K_range_sorted:
+    for K in K_range_sorted[::-1]:
         for m in range(len(stats[K])):   
             s = mode_sizes[K][m]/sum(mode_sizes[K])
             G.nodes[nid]["size"] = s
@@ -1003,6 +1003,50 @@ def alignQ_wrtP_pattern(P,Q,idxQ2P,merge=True):
             
     return aligned_Q, new_pattern
 
+
+def plot_major_modes(K_range,consensusQ_modes,alignment_acrossK,output_path,cons_suffix,cmap):
+    
+    num_major_modes = len(K_range) 
+    K_max = max(K_range)
+    base_patterns = dict()
+
+    fig_path = os.path.join(output_path,"visualization")
+    fig, axes = plt.subplots(num_major_modes,1,figsize=(15,1.5*num_major_modes),facecolor='white')
+    fig_idx = 0
+
+    K = K_range[0]
+    m1 = "K{}M1".format(K)
+    base_Q = consensusQ_modes[K][0]
+    base_patterns[m1] = [i for i in range(K)]
+    
+    plot_membership(axes[fig_idx],base_Q,K_max,cmap,m1) 
+    fig_idx += 1
+    
+    prev_K = K
+
+    for K in K_range[1:]:
+        m1 = "K{}M1".format(prev_K)
+        m2 = "K{}M1".format(K)
+        P = consensusQ_modes[prev_K][0]
+        Q = consensusQ_modes[K][0]
+        pattern = alignment_acrossK["K{}M1-K{}M1".format(prev_K,K)]
+        aligned_Q, new_pattern = alignQ_wrtP_pattern(P,Q,pattern,merge=False)
+        pat = [base_patterns[m1][i] if i<prev_K else i for i in new_pattern]
+
+        aligned_Q = np.zeros_like(aligned_Q)
+        for q_idx in range(Q.shape[1]):
+            aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
+        base_patterns[m2] = pat
+        
+        plot_membership(axes[fig_idx],aligned_Q,K_max,cmap,m2)
+        fig_idx += 1
+        
+        prev_K = K
+
+    fig.savefig(os.path.join(fig_path,"major_modes_aligned_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
+    plt.close(fig)
+
+    return
 
     
 def align_all_modes(K_range,mode_labels,consensusQ_modes,alignment_acrossK,best_acrossK,output_path,cons_suffix,plot_flag,cmap):

@@ -88,7 +88,7 @@ def main(args):
     # visualize results
     fig_path = os.path.join(output_path,"visualization")
     if not os.path.exists(fig_path):
-        os.mkdir(fig_path)
+        os.makedirs(fig_path)
 
     plot_colorbar(cmap,K_max,fig_path)
 
@@ -143,6 +143,11 @@ def main(args):
     #%% Visualization of alignment across-K
     tic = time.time()
     logging.info("---------- Plotting alignment across K ...")
+    
+    if parameters['plot_major_modes']:
+        plot_major_modes(K_range,meanQ_modes,alignment_acrossK_mean,output_path,"mean",cmap)
+        plot_major_modes(K_range,repQ_modes,alignment_acrossK_rep,output_path,"rep",cmap)
+    
     if parameters['plot_modes']:
         align_all_modes(K_range,mode_labels,meanQ_modes,alignment_acrossK_mean,best_acrossK_mean,output_path,"mean",True,cmap)
         align_all_modes(K_range,mode_labels,repQ_modes,alignment_acrossK_rep,best_acrossK_rep,output_path,"rep",True,cmap)
