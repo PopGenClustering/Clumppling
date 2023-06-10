@@ -1,12 +1,10 @@
-{
+{"cd_modularity_threshold": 0.2,
 "cd_parameter": 1.0,
-"cd_modularity_threshold": -1,
 "cd_default": "T",
-"use_rep": "F",
 "merge_cls": "F",
+"plot_major_modes": "T",
 "plot_modes": "T",
 "plot_modes_withinK": "F",
-"plot_major_modes": "F",
-"plot_all_modes": "F",
+"plot_acrossK": "T",
 "custom_cmap": ""
 }

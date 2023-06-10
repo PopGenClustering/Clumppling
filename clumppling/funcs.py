@@ -16,7 +16,17 @@ import community.community_louvain as community_louvain
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+from matplotlib.patches import ConnectionPatch
 
+
+def load_default_parameters(parameters):
+        
+    bool_params = ['merge_cls','use_rep','cd_default','plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
+    for par in bool_params:
+        if par in parameters:
+            parameters[par] = True if parameters[par] in ['T','t','True','true','Yes','Y','y',1] else False
+        
+    return parameters
 
 
 def load_parameters(params_path):
@@ -24,7 +34,7 @@ def load_parameters(params_path):
     with open(params_path) as f:
         parameters = json.load(f)
         
-    bool_params = ['merge_cls','cd_default','plot_major_modes','plot_modes','plot_modes_withinK','plot_acrossK']
+    bool_params = ['merge_cls','use_rep','cd_default','plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
     for par in bool_params:
         if par in parameters:
             parameters[par] = True if parameters[par] in ['T','t','True','true','Yes','Y','y',1] else False
@@ -34,25 +44,26 @@ def load_parameters(params_path):
 
 def display_parameters(input_path,input_format,output_path,params_path,parameters):
     disp = []
-    disp.append("========== [Parameters] ========== ")
+    disp.append("=========== Parameters ===========")
+    disp.append("----------- [Required] -----------")
     disp.append("Input path: {}".format(input_path))
     disp.append("Input data format: {}".format(input_format))
     disp.append("Output path: {}".format(output_path))
     disp.append("Parameter file path: {}".format(params_path))
-    disp.append("----------  ----------  ----------")
+    disp.append("------------ [Methods] -----------")
+    disp.append("Using default community detection method: {}".format(parameters['cd_default']))
     disp.append("Community detection parameter: {}".format(parameters['cd_parameter']))
     disp.append("Community detection modularity threshold: {}".format(parameters['cd_modularity_threshold']))
-    disp.append("Using default community detection method: {}".format(parameters['cd_default']))
+    disp.append("Using a representative replicate as the mode consensus: {}".format(parameters['use_rep']))
     disp.append("Merging all possible pairs of clusters when aligning two replicates with K differing by one: {}".format(parameters['merge_cls']))
-    disp.append("----------  ----------  ----------")
+    disp.append("----------- [Plotting] -----------")
     disp.append("Providing customized colormap: {}".format("False" if parameters['custom_cmap']=='' else parameters['custom_cmap']))
-    disp.append("Plotting major modes: {}".format(parameters['plot_major_modes']))
-    disp.append("Plotting all modes: {}".format(parameters['plot_modes']))
-    # disp.append("Plotting all replicates within each mode: {}".format(parameters['plot_replicates']))
+    disp.append("Plotting aligned modes on top of a multipartitie graph: {}".format(parameters['plot_modes']))
     disp.append("Plotting modes of the same K: {}".format(parameters['plot_modes_withinK']))
-    disp.append("Plotting alignment relationships between modes across K: {}".format(parameters['plot_acrossK']))
-    disp.append("----------  ----------  ----------")
-    disp.append("")
+    disp.append("Plotting major modes: {}".format(parameters['plot_major_modes']))
+    disp.append("Plotting all modes: {}".format(parameters['plot_all_modes']))
+    disp.append("----------------------------------")
+    disp.append("==================================")
     
     return "\n".join(disp)
 
@@ -407,8 +418,11 @@ def align_withinK(output_path,Q_list,Q_files,K_range,K2IDs):
 
 def get_adj_mat(cost_mat):
     adj_mat = 1-(cost_mat-np.nanmin(cost_mat))/(np.nanmax(cost_mat)-np.nanmin(cost_mat))
+    # adj_mat = 1-(cost_mat-np.nanmin(cost_mat))/(np.nanmax(cost_mat)-np.nanmin(cost_mat))*0.9
     adj_mat = np.nan_to_num(adj_mat,copy=True,nan=0)
-    adj_mat = adj_mat + np.diag(np.ones(adj_mat.shape[0]))
+    np.fill_diagonal(adj_mat, 1)
+    assert(np.mean(np.diag(adj_mat))==1)
+    # adj_mat = adj_mat + np.diag(np.ones(adj_mat.shape[0]))
     return adj_mat
 
 
@@ -473,9 +487,23 @@ def test_comm_struc(W, alpha = 0.05):
     return has_comm_struc
 
 
-def reorder_partition_map(partition_map):
-    modes_by_size = Counter(partition_map.values()).most_common()
-    reindex_modes = {mbs[0]:i for i,mbs in enumerate(modes_by_size)}
+def reorder_partition_map(partition_map,G):
+    pm_keys = np.array(list(partition_map.keys()))
+    pm_vals = np.array(list(partition_map.values()))
+
+    modes_by_size = Counter(pm_vals).most_common()
+    to_sort = list()
+    for i,mbs in enumerate(modes_by_size):
+        mode = mbs[0]
+        node_indices = pm_keys[np.where(pm_vals==mode)[0]]
+        # break tie based on within-mode similarity
+        subG = G.subgraph(node_indices)
+        subG_weight = list(nx.get_edge_attributes(subG,'weight').values())
+        subG_avg_weight = np.mean(subG_weight)
+        to_sort.append((mode,mbs[1],subG_avg_weight))
+    sorted_list = sorted(to_sort, key=lambda x: (x[1], x[2]), reverse=True)
+    reindex_modes = {mode[0]:i for i,mode in enumerate(sorted_list)}
+    
     for k in partition_map:
         partition_map[k] = reindex_modes[partition_map[k]]
     return partition_map
@@ -494,9 +522,9 @@ def cd_default(G,res=1.05):
         a dictionary where keys are the indices of replicates and values are the indices of the communities they belong to
     """
 
-    resolution = res #1 #1.05
+    resolution = res 
     partition_map = community_louvain.best_partition(G,resolution=resolution,random_state=6)
-    return reorder_partition_map(partition_map)
+    return partition_map
 
 def cd_custom(G):
     """Customized community detection method (need to be modified)
@@ -528,14 +556,14 @@ def cd_custom(G):
     partition = coms.communities
     partition_map = {i:i_s for i_s,s in enumerate(partition) for i in s}
     
-    return reorder_partition_map(partition_map)
+    return partition_map
 
 
 def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_mod_thre,cd_param=1.05):
 
     modes_allK = dict()
     cost_matrices = dict()
-    msg = ""
+    msg = []
             
     for K in K_range:
     
@@ -552,7 +580,8 @@ def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_mod_thre,cd_pa
         n_nodes = cost_mat.shape[0]
         if np.nanmean(cost_mat)<1e-6:
             # adj_mat = np.zeros(cost_mat.shape)
-            partition_map = {i:0 for i in range(n_nodes)}         
+            partition_map = {i:0 for i in range(n_nodes)} 
+            msg.append("K={}: average pairwise cost close to 0 -> set to single mode".format(K))          
         else:
             adj_mat = get_adj_mat(cost_mat)
 
@@ -560,7 +589,7 @@ def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_mod_thre,cd_pa
             has_comm_struc = test_comm_struc(adj_mat, alpha = 0.01)
             if not has_comm_struc:
                 partition_map = {i:0 for i in range(n_nodes)} 
-                msg = "K={}: no significant community structure -> set to single mode".format(K)
+                msg.append("K={}: no significant community structure -> set to single mode".format(K))
 
             else: # having community structure
                 # create graph
@@ -578,12 +607,14 @@ def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_mod_thre,cd_pa
                         partition_map = cd_default(G,cd_param)
                     else:
                         partition_map = cd_custom(G)
+                    
                     if cd_mod_thre!=-1:
                         mod_res = community_louvain.modularity(partition_map, G)
                         if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
-                            msg = "K={}: low community detection quality (below modularity threshold) -> set to single mode".format(K)
+                            msg.append("K={}: low community detection quality (below modularity threshold) -> set to single mode".format(K))
                             partition_map = {i:0 for i in range(G.number_of_nodes())} 
-                
+
+                    partition_map = reorder_partition_map(partition_map, G)
         ########################################
         # separate modes
         ########################################
@@ -593,7 +624,12 @@ def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_mod_thre,cd_pa
             modes[partition_map[r]].append(r)
         
         modes_allK[K] = modes
-        
+
+    if len(msg)>0:
+        msg = "\n".join(msg)
+    else:
+        msg = ""
+            
     return modes_allK, cost_matrices, msg
 
 
@@ -609,7 +645,7 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
  
     rep_modes = defaultdict(list)
     repQ_modes = defaultdict(list)
-    meanQ_modes = defaultdict(list)
+    avgQ_modes = defaultdict(list)
     alignment_to_modes = defaultdict(list)
     stats = defaultdict(list)
     
@@ -636,7 +672,7 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
                 minC_rep_idx = idx+K2IDs[K][0]
                 P = Q_list[minC_rep_idx]
                 repQ_modes[K].append(P)
-                meanQ_modes[K].append(P)
+                avgQ_modes[K].append(P)
                 
                 mode_alignment= {Q_files[minC_rep_idx]: np.arange(P.shape[1])}
                 alignment_to_modes[K].append(mode_alignment)
@@ -664,7 +700,7 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
                 stats[K].append({"size":len(all_indices),"cost":avg_tril(comm_cost_mat),"perf":avg_tril(Gprime_mat)})
             
                 ########################################
-                # get mean Q over all in the mode
+                # get average Q over all in the mode
                 ########################################
                 mode_alignment = dict()
                 
@@ -683,7 +719,7 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
 
                     Q_sum += aligned_Q
 
-                meanQ_modes[K].append(Q_sum/len(all_indices))
+                avgQ_modes[K].append(Q_sum/len(all_indices))
                 
                 alignment_to_modes[K].append(mode_alignment)
 
@@ -706,7 +742,7 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
             mode_label = "K{}M{}".format(K,mode_idx+1)
             mode_labels[K].append(mode_label)
             np.savetxt(os.path.join(modes_path,"{}_rep.Q".format(mode_label)), repQ_modes[K][mode_idx], delimiter=' ')
-            np.savetxt(os.path.join(modes_path,"{}_mean.Q".format(mode_label)), meanQ_modes[K][mode_idx], delimiter=' ')
+            np.savetxt(os.path.join(modes_path,"{}_avg.Q".format(mode_label)), avgQ_modes[K][mode_idx], delimiter=' ')
             
             rep = Q_files[rep_modes[K][mode_idx]]
             f1.write('{},{},{},{},{}\n'.format(mode_label,rep,stats[K][mode_idx]["size"],stats[K][mode_idx]["cost"],stats[K][mode_idx]["perf"]))
@@ -733,7 +769,7 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
             # avg_perf += s/len(K2IDs[K])*stats[K][mode_idx]['perf']
             f.write('{},{},{},{},{}\n'.format(K,len(K2IDs[K]),non_singleton_s,total_cost/non_singleton_s,total_perf/non_singleton_s))
 
-    return mode_labels,rep_modes,repQ_modes,meanQ_modes,alignment_to_modes,stats  
+    return mode_labels,rep_modes,repQ_modes,avgQ_modes,alignment_to_modes,stats  
 
 
 def align_ILP_modes_acrossK(consensusQ_modes,mode_labels,K_range,acrossK_path,cons_suffix,merge=False):
@@ -820,77 +856,414 @@ def align_ILP_modes_acrossK(consensusQ_modes,mode_labels,K_range,acrossK_path,co
     return alignment_acrossK, cost_acrossK, best_acrossK
 
 
-def plot_acrossK_multipartite(K_range,mode_labels,stats,cost_acrossK_mean,fig_path,cons_suffix):
-    
-    # layer_color = ["gray"]*len(K_range)
-    layer_color = {K:"silver" for i,K in enumerate(K_range)}
+def plot_structure_on_multipartite(K_range,mode_labels,stats,consensusQ_modes,alignment_acrossK,cost_acrossK_cons,best_acrossK,cons_suffix,output_path,plot_flag,cmap):
+    mode_numbers = [len(mode_labels[K]) for K in K_range]
 
-    K_range_sorted = sorted(K_range,reverse=True)
-    # max_cost = max([float(c) for c in cost_acrossK_mean.values()])
-    max_mode_num = 0
-    mode_sizes = defaultdict(list)
-    
-    G = nx.Graph()
-    # add nodes 
-    nid = 0
-    km2nid = dict()
-    max_s = 0
-    
-    for K in K_range_sorted[::-1]:
-        for m in range(len(stats[K])):
-            s = stats[K][m]['size']
-            G.add_node(nid, layer=K, label="{}\n({})".format(mode_labels[K][m],s))
-            km2nid[mode_labels[K][m]] = nid
-            nid += 1
-            mode_sizes[K].append(s)
-            if max_s<s:
-                max_s = s
-        if len(mode_labels[K])>max_mode_num:
-            max_mode_num = len(mode_labels[K])
-    
-    nid = 0
-    nodes_sizes = list()
-    for K in K_range_sorted[::-1]:
-        for m in range(len(stats[K])):   
-            s = mode_sizes[K][m]/sum(mode_sizes[K])
-            G.nodes[nid]["size"] = s
-            nodes_sizes.append(s)
-            nid += 1
-    
-    # add edges (edge weight: 1-norm cost)
-    for k1k2_pair in cost_acrossK_mean:
-        k1m = k1k2_pair.split("-")[0]
-        k2m = k1k2_pair.split("-")[1]
-        k1 = int(k1m.split("M")[0].strip("K"))
-        k2 = int(k2m.split("M")[0].strip("K"))
-        k1, k2 = min([k1,k2]), max([k1,k2])
-        if K_range_sorted.index(k1)-1==K_range_sorted.index(k2):
-            cost = float(cost_acrossK_mean[k1k2_pair])
-            # norm_cost = 0.9-cost/(max_cost*1.25)
-            G.add_edge(km2nid[k1m],km2nid[k2m],weight=1-cost,cost=round(cost,3))
+    n_row = len(K_range)
+    n_col = max(mode_numbers)
 
-    # plot the network of modes 
-    colors = [layer_color[data["layer"]] for v, data in G.nodes(data=True)]
-    # widths = [G[u][v]['weight']*5 for u,v in G.edges()]
-    s_adjust = 16000/np.sqrt(max_s)
-    size = [np.sqrt(s) * s_adjust for s in nodes_sizes]
-    fig, ax = plt.subplots(figsize=(2.5*len(K_range_sorted), 2*max_mode_num+1),facecolor='white')
+    # use the best alignment mode as the anchors to align all the modes
+    best_acrossK = best_acrossK[::-1]
+    mode2fig_idx = dict()
+    for i_K,K in enumerate(K_range): 
+        for i_lb,lb in enumerate(mode_labels[K]):
+            if n_col==1:
+                mode2fig_idx[lb] = i_K
+            else:
+                mode2fig_idx[lb] = (i_K,i_lb)
+
+    modeQ_path = os.path.join(output_path,"modes_aligned")
+    fig_path = os.path.join(output_path,"visualization")
+    if not os.path.exists(modeQ_path):
+        os.mkdir(modeQ_path)
+        
+    all_modes_alignment = {lb:[] for K in K_range for lb in mode_labels[K]}
+    base_patterns = dict()
     
-    pos = nx.multipartite_layout(G, subset_key="layer")
-    node_labels = nx.get_node_attributes(G, 'label') 
-    weights = list(nx.get_edge_attributes(G,'weight').values())
-    edge_labels = nx.get_edge_attributes(G,'cost')
-    nx.draw(G, pos, node_color=colors, node_size=size, 
-            font_size=11, font_color="black", labels=node_labels, with_labels = True,  #whitesmoke
-            edge_color=weights, width=5, edge_cmap=plt.cm.Oranges) #width=2, 
-    # nx.draw_networkx_edges(G, pos,edge_color="black", width=0.1)
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, label_pos=0.6, alpha=1, font_size=8)
-    # save 
-    fig.savefig(os.path.join(fig_path,"acrossK_graph_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
-    plt.close(fig)
+    if plot_flag:
+        fig, axes = plt.subplots(n_row,n_col,figsize=(5*n_col,2*n_row),facecolor='white')
     
-    # return G
+    K = K_range[0]
+    m1 = best_acrossK[0].split("-")[0]
+    assert(m1.split("M")[0].strip("K")==str(K))
+    m_m1 = int(m1.split("M")[1])-1
+    K_max = max(K_range)
+    base_Q = consensusQ_modes[K][m_m1]
+    base_patterns[m1] = [i for i in range(K)]
+    if plot_flag:
+        ax = axes[mode2fig_idx[m1]]
+        plot_membership(ax,base_Q,K_max,cmap,"")   
+    all_modes_alignment[m1] = [i+1 for i in range(base_Q.shape[1])]
+    np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m1,cons_suffix)), base_Q, delimiter=' ')
     
+    modes = range(len(consensusQ_modes[K]))
+    if len(modes)>1:
+        for m in modes:
+            if m!=m_m1:
+                m2 = "K{}M{}".format(K,m+1)
+                # retrieve alignment pattern
+                ali_pat = alignment_acrossK["{}-{}".format(m1,m2)]
+                Q = consensusQ_modes[K][m]
+                aligned_Q = np.zeros_like(Q)
+                for q_idx in range(Q.shape[1]):
+                    aligned_Q[:,ali_pat[q_idx]] += Q[:,q_idx]
+                base_patterns[m2] = ali_pat
+                if plot_flag:
+                    ax = axes[mode2fig_idx[m2]]
+                    plot_membership(ax,aligned_Q,K_max,cmap,"")
+                all_modes_alignment[m2] = [i+1 for i in ali_pat]
+                np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
+    
+    for best_pair in best_acrossK:
+        m1 = best_pair.split("-")[0]
+        m2 = best_pair.split("-")[1]
+        
+        K = int(m2.split("M")[0].strip("K"))
+        
+        modes = range(len(consensusQ_modes[K]))
+        m_m2 = int(m2.split("M")[1])-1
+        Q = consensusQ_modes[K][m_m2]
+        m1_K = int(m1.split("M")[0].strip("K"))
+        P = consensusQ_modes[m1_K][int(m1.split("M")[1])-1]
+        pattern = alignment_acrossK[best_pair]
+        aligned_Q, new_pattern = alignQ_wrtP_pattern(P,Q,pattern,merge=False)
+
+        pat = [base_patterns[m1][i] if i<m1_K else i for i in new_pattern]
+        aligned_Q = np.zeros_like(aligned_Q)
+        for q_idx in range(Q.shape[1]):
+            aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
+        base_patterns[m2] = pat
+        
+        if plot_flag:
+            ax = axes[mode2fig_idx[m2]]     
+            plot_membership(ax,aligned_Q,K_max,cmap,"")
+        all_modes_alignment[m2] = [i+1 for i in pat]
+        np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
+        
+        if len(modes)>1:
+            for m in modes:
+                if m!=m_m2:
+                    m3 = "K{}M{}".format(K,m+1)
+                    ali_pat = alignment_acrossK["{}-{}".format(m2,m3)]
+                    Q = consensusQ_modes[K][m]
+                    P = consensusQ_modes[K][m_m2]
+                    aligned_Q, new_pattern = alignQ_wrtP_pattern(P,Q,ali_pat,merge=False)
+                    
+                    pat = [base_patterns[m2][i] for i in new_pattern ]
+                    aligned_Q = np.zeros_like(aligned_Q)
+                    for q_idx in range(Q.shape[1]):
+                        aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
+                    base_patterns[m3] = pat
+                    
+                    if plot_flag:
+                        ax = axes[mode2fig_idx[m3]]  
+                        plot_membership(ax,aligned_Q,K_max,cmap,"")
+                    all_modes_alignment[m3] = [i+1 for i in pat]
+                    np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m3,cons_suffix)), aligned_Q, delimiter=' ')            
+    
+    # write the alignment pattern to result file
+    with open(os.path.join(modeQ_path,"all_modes_alignment_{}.txt".format(cons_suffix)),'w') as f:
+        for k in all_modes_alignment:
+            f.write('{}:{}\n'.format(k," ".join([str(i) for i in all_modes_alignment[k]])))
+
+
+    if plot_flag:
+        # polish the figure
+        if n_col>1:
+            for j in range(n_col):
+                axes[0,j].set_title("Mode {}".format(j+1), fontsize=18, y=1.05)
+            for i in range(n_row):
+                axes[i,0].set_ylabel("K={}".format(K_range[i]), rotation=0, fontsize=18, labelpad=30, va="center")
+        else:
+            axes[0].set_title("Mode 1", fontsize=18, y=1.05)
+            for i in range(n_row):
+                axes[i].set_ylabel("K={}".format(K_range[i]), rotation=0, fontsize=18, labelpad=30, va="center")
+        
+        plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.2, hspace=1.2)
+        textbox_props = dict(boxstyle='round', facecolor='white', alpha=0.6, edgecolor='none', pad=0.1)
+        
+        def get_center_coord(coord1,coord2,frac):
+          return (coord2-coord1)*frac+coord1
+
+        if n_col>1:
+            for i in range(n_row):
+                for j in range(n_col):
+                    ax = axes[i,j]
+                    ax.set_xticks([])
+                    if j>0:
+                        ax.set_yticks([])
+                    else:
+                        ax.set_yticks([0,0.5,1])     
+                    if (i,j) not in mode2fig_idx.values():
+                        for pos in ['right', 'top', 'bottom', 'left']:
+                            ax.spines[pos].set_visible(False)  
+
+            # add edges
+            transFigure = fig.transFigure.inverted()
+            cost_max = max(cost_acrossK_cons.values())
+            cost_min = min(cost_acrossK_cons.values())
+            N = Q.shape[0]
+            for i in range(n_row-1):
+                for j in range(mode_numbers[i]):
+                    for jj in range(mode_numbers[i+1]):
+
+                        k1k2_pair = "{}-{}".format(mode_labels[K_range[i]][j],mode_labels[K_range[i+1]][jj])
+                        cost = float(cost_acrossK_cons[k1k2_pair])
+                        edge_w = 0.9-(cost-cost_min)/(cost_max-cost_min)*0.7
+                        
+                        cpatch = ConnectionPatch((.5, 0), (.5, 1), "axes fraction", "axes fraction",
+                          axesA=axes[i,j], axesB=axes[i+1,jj], zorder=0, 
+                          color=plt.cm.Greys(edge_w), linewidth=5, alpha=0.8)
+                        axes[0,0].add_artist(cpatch)
+
+                        coord1 = transFigure.transform(axes[i,j].transData.transform([N//2,-0.05]))
+                        coord2 = transFigure.transform(axes[i+1,jj].transData.transform([N//2,1.05]))
+
+                        text_frac = 0.25+(jj%2)*0.5 # make the text sparse when edges are dense
+                        plt.text(get_center_coord(coord1[0],coord2[0],text_frac),get_center_coord(coord1[1],coord2[1],text_frac), 
+                            "{:.3f}".format(cost), fontsize=14, transform=fig.transFigure, bbox=textbox_props, 
+                            zorder=9, verticalalignment='center',horizontalalignment='center')
+        else:
+            transFigure = fig.transFigure.inverted()
+            cost_max = max(cost_acrossK_cons.values())
+            cost_min = min(cost_acrossK_cons.values())
+            N = Q.shape[0]
+
+            for i in range(n_row-1):
+                k1k2_pair = "{}-{}".format(mode_labels[K_range[i]][0],mode_labels[K_range[i+1]][0])
+                cost = float(cost_acrossK_cons[k1k2_pair])
+                edge_w = 0.9-(cost-cost_min)/(cost_max-cost_min)*0.7
+                
+                cpatch = ConnectionPatch((.5, 0), (.5, 1), "axes fraction", "axes fraction",
+                  axesA=axes[i], axesB=axes[i+1], zorder=0, 
+                  color=plt.cm.Greys(edge_w), linewidth=5, alpha=0.8)
+                axes[0].add_artist(cpatch)
+                coord1 = transFigure.transform(axes[i].transData.transform([N//2,-0.05]))
+                coord2 = transFigure.transform(axes[i+1].transData.transform([N//2,1.05]))
+                text_frac = 0.5 # make the text sparse when edges are dense
+                plt.text(get_center_coord(coord1[0],coord2[0],text_frac),get_center_coord(coord1[1],coord2[1],text_frac), 
+                    "{:.3f}".format(cost), fontsize=14, transform=fig.transFigure, bbox=textbox_props, 
+                    zorder=9, verticalalignment='center',horizontalalignment='center')
+
+
+        fig.savefig(os.path.join(fig_path,"modes_aligned_multipartite_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
+        plt.close(fig)
+    
+
+# Just for CV data
+def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensusQ_modes,alignment_acrossK,cost_acrossK_cons,best_acrossK,cons_suffix,output_path,plot_flag,cmap):
+    
+
+    mode_numbers = [len(mode_labels[K]) for K in K_range]
+    if plot_flag:
+        n_row = len(K_range)
+        n_col = max(mode_numbers)
+
+    # use the best alignment mode as the anchors to align all the modes
+    best_acrossK = best_acrossK[::-1]
+    mode2fig_idx = dict()
+    for i_K,K in enumerate(K_range): 
+        for i_lb,lb in enumerate(mode_labels[K]):
+            if n_col==1:
+                mode2fig_idx[lb] = i_K
+            else:
+                mode2fig_idx[lb] = (i_K,i_lb)
+
+    modeQ_path = os.path.join(output_path,"modes_aligned")
+    fig_path = os.path.join(output_path,"visualization")
+    if not os.path.exists(modeQ_path):
+        os.mkdir(modeQ_path)
+        
+    all_modes_alignment = {lb:[] for K in K_range for lb in mode_labels[K]}
+    base_patterns = dict()
+    
+    if plot_flag:
+        fig, axes = plt.subplots(n_row,n_col,figsize=(5*n_col,2*n_row),facecolor='white')
+    
+    K = K_range[0]
+    m1 = best_acrossK[0].split("-")[0]
+    assert(m1.split("M")[0].strip("K")==str(K))
+    m_m1 = int(m1.split("M")[1])-1
+    K_max = max(K_range)
+    base_Q = consensusQ_modes[K][m_m1]
+    base_patterns[m1] = [i for i in range(K)]
+    if plot_flag:
+        ax = axes[mode2fig_idx[m1]]
+        plot_membership(ax,base_Q,K_max,cmap,"") 
+
+    all_modes_alignment[m1] = [i+1 for i in range(base_Q.shape[1])]
+    np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m1,cons_suffix)), base_Q, delimiter=' ')
+    
+    modes = range(len(consensusQ_modes[K]))
+    if len(modes)>1:
+        for m in modes:
+            if m!=m_m1:
+                m2 = "K{}M{}".format(K,m+1)
+                # retrieve alignment pattern
+                ali_pat = alignment_acrossK["{}-{}".format(m1,m2)]
+                Q = consensusQ_modes[K][m]
+                aligned_Q = np.zeros_like(Q)
+                for q_idx in range(Q.shape[1]):
+                    aligned_Q[:,ali_pat[q_idx]] += Q[:,q_idx]
+                base_patterns[m2] = ali_pat
+                if plot_flag:
+                    ax = axes[mode2fig_idx[m2]]
+                    # plot_membership(ax,aligned_Q,K_max,cmap,"")
+                    if m2 in ["K5M1","K5M2","K5M3"]:    
+                        plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"") 
+                    else:
+                        plot_membership(ax,aligned_Q,K_max,cmap,"") 
+                all_modes_alignment[m2] = [i+1 for i in ali_pat]
+                np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
+    
+    for best_pair in best_acrossK:
+        m1 = best_pair.split("-")[0]
+        m2 = best_pair.split("-")[1]
+        
+        K = int(m2.split("M")[0].strip("K"))
+        
+        modes = range(len(consensusQ_modes[K]))
+        m_m2 = int(m2.split("M")[1])-1
+        Q = consensusQ_modes[K][m_m2]
+        m1_K = int(m1.split("M")[0].strip("K"))
+        P = consensusQ_modes[m1_K][int(m1.split("M")[1])-1]
+        pattern = alignment_acrossK[best_pair]
+        aligned_Q, new_pattern = alignQ_wrtP_pattern(P,Q,pattern,merge=False)
+
+        pat = [base_patterns[m1][i] if i<m1_K else i for i in new_pattern]
+        aligned_Q = np.zeros_like(aligned_Q)
+        for q_idx in range(Q.shape[1]):
+            aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
+        base_patterns[m2] = pat
+        
+        if plot_flag:
+            ax = axes[mode2fig_idx[m2]]     
+            # plot_membership(ax,aligned_Q,K_max,cmap,"")
+            if m2 in ["K5M1","K5M2","K5M3"]:    
+                plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"") 
+            else:
+                plot_membership(ax,aligned_Q,K_max,cmap,"") 
+        all_modes_alignment[m2] = [i+1 for i in pat]
+        np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
+        
+        if len(modes)>1:
+            for m in modes:
+                if m!=m_m2:
+                    m3 = "K{}M{}".format(K,m+1)
+                    ali_pat = alignment_acrossK["{}-{}".format(m2,m3)]
+                    Q = consensusQ_modes[K][m]
+                    P = consensusQ_modes[K][m_m2]
+                    aligned_Q, new_pattern = alignQ_wrtP_pattern(P,Q,ali_pat,merge=False)
+                    
+                    pat = [base_patterns[m2][i] for i in new_pattern ]
+                    aligned_Q = np.zeros_like(aligned_Q)
+                    for q_idx in range(Q.shape[1]):
+                        aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
+                    base_patterns[m3] = pat
+                    
+                    if plot_flag:
+                        ax = axes[mode2fig_idx[m3]]  
+                        # plot_membership(ax,aligned_Q,K_max,cmap,"")
+                        if m3=="K4M1":
+                            plot_membership(ax,aligned_Q[:,[3,0,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,1,2,4])),"")
+                        elif m3 in ["K5M1","K5M2","K5M3"]:    
+                            plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"") 
+                        else:
+                            plot_membership(ax,aligned_Q,K_max,cmap,"") 
+                    all_modes_alignment[m3] = [i+1 for i in pat]
+                    np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m3,cons_suffix)), aligned_Q, delimiter=' ')            
+    
+    # write the alignment pattern to result file
+    with open(os.path.join(modeQ_path,"all_modes_alignment_{}.txt".format(cons_suffix)),'w') as f:
+        for k in all_modes_alignment:
+            f.write('{}:{}\n'.format(k," ".join([str(i) for i in all_modes_alignment[k]])))
+
+
+    if plot_flag:
+        # polish the figure
+        if n_col>1:
+            for j in range(n_col):
+                axes[0,j].set_title("Mode {}".format(j+1), fontsize=22, y=1.05)
+            for i in range(n_row):
+                axes[i,0].set_ylabel("K={}".format(K_range[i]), rotation=0, fontsize=22, labelpad=30, va="center")
+        else:
+            axes[0].set_title("Mode 1", fontsize=22, y=1.05)
+            for i in range(n_row):
+                axes[i].set_ylabel("K={}".format(K_range[i]), rotation=0, fontsize=22, labelpad=30, va="center")
+        
+        plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.2, hspace=2)
+        textbox_props = dict(boxstyle='round', facecolor='white', alpha=0.6, edgecolor='none', pad=0.1)
+        
+        def get_center_coord(coord1,coord2,frac):
+          return (coord2-coord1)*frac+coord1
+
+        if n_col>1:
+            for i in range(n_row):
+                for j in range(n_col):
+                    ax = axes[i,j]
+                    ax.set_xticks([])
+                    if j>0:
+                        ax.set_yticks([])
+                    else:
+                        ax.set_yticks([0,0.5,1]) 
+                        ax.tick_params(axis='y', labelsize=18)    
+                    if (i,j) not in mode2fig_idx.values():
+                        for pos in ['right', 'top', 'bottom', 'left']:
+                            ax.spines[pos].set_visible(False)  
+
+            # add edges
+            transFigure = fig.transFigure.inverted()
+            cost_max = max(cost_acrossK_cons.values())
+            cost_min = min(cost_acrossK_cons.values())
+            N = Q.shape[0]
+            for i in range(n_row-1):
+                for j in range(mode_numbers[i]):
+                    for jj in range(mode_numbers[i+1]):
+
+                        k1k2_pair = "{}-{}".format(mode_labels[K_range[i]][j],mode_labels[K_range[i+1]][jj])
+                        cost = float(cost_acrossK_cons[k1k2_pair])
+                        edge_w = 0.9-(cost-cost_min)/(cost_max-cost_min)*0.7
+                        
+                        cpatch = ConnectionPatch((.5, 0), (.5, 1), "axes fraction", "axes fraction",
+                          axesA=axes[i,j], axesB=axes[i+1,jj], zorder=0, 
+                          color=plt.cm.Greys(edge_w), linewidth=5, alpha=0.8)
+                        axes[0,0].add_artist(cpatch)
+
+                        coord1 = transFigure.transform(axes[i,j].transData.transform([N//2,-0.05]))
+                        coord2 = transFigure.transform(axes[i+1,jj].transData.transform([N//2,1.05]))
+
+                        text_frac = 0.2+(jj%2)*0.6 # make the text sparse when edges are dense
+                        plt.text(get_center_coord(coord1[0],coord2[0],text_frac),get_center_coord(coord1[1],coord2[1],text_frac), 
+                            "{:.3f}".format(cost), fontsize=18, transform=fig.transFigure, bbox=textbox_props, 
+                            zorder=9, verticalalignment='center',horizontalalignment='center')
+        else:
+            transFigure = fig.transFigure.inverted()
+            cost_max = max(cost_acrossK_cons.values())
+            cost_min = min(cost_acrossK_cons.values())
+            N = Q.shape[0]
+
+            for i in range(n_row-1):
+                k1k2_pair = "{}-{}".format(mode_labels[K_range[i]][0],mode_labels[K_range[i+1]][0])
+                cost = float(cost_acrossK_cons[k1k2_pair])
+                edge_w = 0.9-(cost-cost_min)/(cost_max-cost_min)*0.8
+                
+                cpatch = ConnectionPatch((.5, 0), (.5, 1), "axes fraction", "axes fraction",
+                  axesA=axes[i], axesB=axes[i+1], zorder=0, 
+                  color=plt.cm.Greys(edge_w), linewidth=5, alpha=0.8)
+                axes[0].add_artist(cpatch)
+                coord1 = transFigure.transform(axes[i].transData.transform([N//2,-0.05]))
+                coord2 = transFigure.transform(axes[i+1].transData.transform([N//2,1.05]))
+                text_frac = 0.5 # make the text sparse when edges are dense
+                plt.text(get_center_coord(coord1[0],coord2[0],text_frac),get_center_coord(coord1[1],coord2[1],text_frac), 
+                    "{:.3f}".format(cost), fontsize=18, transform=fig.transFigure, bbox=textbox_props, 
+                    zorder=9, verticalalignment='center',horizontalalignment='center')
+
+
+        fig.savefig(os.path.join(fig_path,"modes_aligned_multipartite_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
+        plt.close(fig)
+    
+
+   
 
 # get colormap for visualization
 def get_random_cmap(base_cmap,K_max,seed=999):
@@ -920,6 +1293,32 @@ def plot_membership(ax,P,K_max,cmap,title):
     for k in range(K):
         ax.bar(range(N), P_aug[:,(k+1)], bottom=np.sum(P_aug[:,:(k+1)],axis=1), 
                width=1.0, edgecolor='w', linewidth=0, facecolor=cmap(k/K_max))
+
+    ax.set_xticks([])
+    ax.set_xlim([-0.5,N-0.5])
+    ax.set_ylim([0,1])
+    ax.set_yticks([0,0.5,1])
+    ax.set_xticks([])
+    if title:
+        ax.set_ylabel("\n".join(title.split()), rotation=0, fontsize=18, labelpad=30, va="center" )
+    else:
+        ax.set_ylabel("")
+    return
+
+
+def plot_membership_sorted(ax,P,K_max,cmap,title):
+
+    N = P.shape[0]
+    P_aug = np.hstack((np.zeros((N,1)),P))
+
+    K = P.shape[1]
+    for i in range(N):
+      q = P[i,:]
+      indices = np.argsort(-q)
+      q_sorted = np.concatenate(([0],q[indices]))
+      for k in range(K):
+        ax.bar(i, q_sorted[(k+1)], bottom=np.sum(q_sorted[:(k+1)]), 
+                  width=1.0, edgecolor='w', linewidth=0, facecolor=cmap(indices[k]/K))
 
     ax.set_xticks([])
     ax.set_xlim([0,N])
@@ -1004,157 +1403,67 @@ def alignQ_wrtP_pattern(P,Q,idxQ2P,merge=True):
     return aligned_Q, new_pattern
 
 
-def plot_major_modes(K_range,consensusQ_modes,alignment_acrossK,output_path,cons_suffix,cmap):
+def plot_replicates(Q_list,K_range,output_path,cmap):
+
+    K_max = max(K_range)
+    num_figs = len(Q_list)
+    fig_path = os.path.join(output_path,"visualization")
+
+    fig, axes = plt.subplots(num_figs//2,2,figsize=(20,num_figs//2),facecolor='white')
+    for fig_idx in range(num_figs):
+        plot_membership(axes[fig_idx//2,fig_idx%2],Q_list[fig_idx],K_max,cmap,"") 
+
+    fig.savefig(os.path.join(fig_path,"all_replicates_unaligned.png"), bbox_inches='tight',dpi=300)
+    plt.close(fig)
+
+    return
+
+
+def plot_major_modes(K_range,output_path,cons_suffix,cmap):
     
     num_major_modes = len(K_range) 
     K_max = max(K_range)
     base_patterns = dict()
 
     fig_path = os.path.join(output_path,"visualization")
+    modeQ_path = os.path.join(output_path,"modes_aligned")
+
     fig, axes = plt.subplots(num_major_modes,1,figsize=(15,1.5*num_major_modes),facecolor='white')
     fig_idx = 0
 
-    K = K_range[0]
-    m1 = "K{}M1".format(K)
-    base_Q = consensusQ_modes[K][0]
-    base_patterns[m1] = [i for i in range(K)]
-    
-    plot_membership(axes[fig_idx],base_Q,K_max,cmap,m1) 
-    fig_idx += 1
-    
-    prev_K = K
-
-    for K in K_range[1:]:
-        m1 = "K{}M1".format(prev_K)
-        m2 = "K{}M1".format(K)
-        P = consensusQ_modes[prev_K][0]
-        Q = consensusQ_modes[K][0]
-        pattern = alignment_acrossK["K{}M1-K{}M1".format(prev_K,K)]
-        aligned_Q, new_pattern = alignQ_wrtP_pattern(P,Q,pattern,merge=False)
-        pat = [base_patterns[m1][i] if i<prev_K else i for i in new_pattern]
-
-        aligned_Q = np.zeros_like(aligned_Q)
-        for q_idx in range(Q.shape[1]):
-            aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
-        base_patterns[m2] = pat
-        
-        plot_membership(axes[fig_idx],aligned_Q,K_max,cmap,m2)
+    for K in K_range:
+        Q = np.loadtxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format("K{}M1".format(K),cons_suffix)), delimiter=' ')
+        plot_membership(axes[fig_idx],Q,K_max,cmap,"K={}".format(K)) 
         fig_idx += 1
-        
-        prev_K = K
 
     fig.savefig(os.path.join(fig_path,"major_modes_aligned_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
     plt.close(fig)
 
     return
 
+def plot_all_modes(K_range,mode_labels,output_path,cons_suffix,cmap):
     
-def align_all_modes(K_range,mode_labels,consensusQ_modes,alignment_acrossK,best_acrossK,output_path,cons_suffix,plot_flag,cmap):
-    
-    # use the best alignment mode as the anchors to align all the modes
-    best_acrossK = best_acrossK[::-1]
-    num_modes = sum([len(mode_labels[K]) for K in K_range])  
-    mode2fig_idx = [lb for K in K_range for lb in mode_labels[K]]
-    mode2fig_idx = {lb:i for i,lb in enumerate(mode2fig_idx)}
-    
-    modeQ_path = os.path.join(output_path,"modes_aligned")
-    fig_path = os.path.join(output_path,"visualization")
-    if not os.path.exists(modeQ_path):
-        os.mkdir(modeQ_path)
-        
-    all_modes_alignment = {lb:[] for K in K_range for lb in mode_labels[K]}
-    base_patterns = dict()
-    
-    if plot_flag:
-        fig, axes = plt.subplots(num_modes,1,figsize=(15,1.5*num_modes),facecolor='white')
-    
-    K = K_range[0]
-    m1 = best_acrossK[0].split("-")[0]
-    assert(m1.split("M")[0].strip("K")==str(K))
-    m_m1 = int(m1.split("M")[1])-1
+    num_modes = sum([len(mode_labels[k]) for k in K_range]) 
     K_max = max(K_range)
-    base_Q = consensusQ_modes[K][m_m1]
-    base_patterns[m1] = [i for i in range(K)]
-    if plot_flag:
-        ax = axes[mode2fig_idx[m1]]
-        plot_membership(ax,base_Q,K_max,cmap,m1) 
-    all_modes_alignment[m1] = [i+1 for i in range(base_Q.shape[1])]
-    np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m1,cons_suffix)), base_Q, delimiter=' ')
-    
-    modes = range(len(consensusQ_modes[K]))
-    if len(modes)>1:
-        for m in modes:
-            if m!=m_m1:
-                m2 = "K{}M{}".format(K,m+1)
-                # retrieve alignment pattern
-                ali_pat = alignment_acrossK["{}-{}".format(m1,m2)]
-                Q = consensusQ_modes[K][m]
-                aligned_Q = np.zeros_like(Q)
-                for q_idx in range(Q.shape[1]):
-                    aligned_Q[:,ali_pat[q_idx]] += Q[:,q_idx]
-                base_patterns[m2] = ali_pat
-                if plot_flag:
-                    ax = axes[mode2fig_idx[m2]]
-                    plot_membership(ax,aligned_Q,K_max,cmap,m2)
-                all_modes_alignment[m2] = [i+1 for i in ali_pat]
-                np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
-    
-    for best_pair in best_acrossK:
-        m1 = best_pair.split("-")[0]
-        m2 = best_pair.split("-")[1]
-        
-        K = int(m2.split("M")[0].strip("K"))
-        
-        modes = range(len(consensusQ_modes[K]))
-        m_m2 = int(m2.split("M")[1])-1
-        Q = consensusQ_modes[K][m_m2]
-        m1_K = int(m1.split("M")[0].strip("K"))
-        P = consensusQ_modes[m1_K][int(m1.split("M")[1])-1]
-        pattern = alignment_acrossK[best_pair]
-        aligned_Q, new_pattern = alignQ_wrtP_pattern(P,Q,pattern,merge=False)
+    base_patterns = dict()
 
-        pat = [base_patterns[m1][i] if i<m1_K else i for i in new_pattern]
-        aligned_Q = np.zeros_like(aligned_Q)
-        for q_idx in range(Q.shape[1]):
-            aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
-        base_patterns[m2] = pat
-        
-        if plot_flag:
-            ax = axes[mode2fig_idx[m2]]     
-            plot_membership(ax,aligned_Q,K_max,cmap,m2)
-        all_modes_alignment[m2] = [i+1 for i in pat]
-        np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
-        
-        if len(modes)>1:
-            for m in modes:
-                if m!=m_m2:
-                    m3 = "K{}M{}".format(K,m+1)
-                    ali_pat = alignment_acrossK["{}-{}".format(m2,m3)]
-                    Q = consensusQ_modes[K][m]
-                    P = consensusQ_modes[K][m_m2]
-                    aligned_Q, new_pattern = alignQ_wrtP_pattern(P,Q,ali_pat,merge=False)
-                    
-                    pat = [base_patterns[m2][i] for i in new_pattern ]
-                    aligned_Q = np.zeros_like(aligned_Q)
-                    for q_idx in range(Q.shape[1]):
-                        aligned_Q[:,pat[q_idx]] += Q[:,q_idx]
-                    base_patterns[m3] = pat
-                    
-                    if plot_flag:
-                        ax = axes[mode2fig_idx[m3]]  
-                        plot_membership(ax,aligned_Q,K_max,cmap,m3)
-                    all_modes_alignment[m3] = [i+1 for i in pat]
-                    np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m3,cons_suffix)), aligned_Q, delimiter=' ')            
-    
-    # write the alignment pattern to result file
-    with open(os.path.join(modeQ_path,"all_modes_alignment_{}.txt".format(cons_suffix)),'w') as f:
-        for k in all_modes_alignment:
-            f.write('{}:{}\n'.format(k," ".join([str(i) for i in all_modes_alignment[k]])))
+    fig_path = os.path.join(output_path,"visualization")
+    modeQ_path = os.path.join(output_path,"modes_aligned")
 
-    if plot_flag:    
-        fig.savefig(os.path.join(fig_path,"modes_aligned_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
-        plt.close(fig)
-    
+    fig, axes = plt.subplots(num_modes,1,figsize=(15,1.5*num_modes),facecolor='white')
+    fig_idx = 0
+
+    for K in K_range:
+        for i_m,m in enumerate(mode_labels[K]):
+            Q = np.loadtxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m,cons_suffix)), delimiter=' ')
+            plot_membership(axes[fig_idx],Q,K_max,cmap,"K={}".format(K) if i_m==0 else "") 
+            fig_idx += 1
+
+    fig.savefig(os.path.join(fig_path,"all_modes_aligned_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
+    plt.close(fig)
+
+    return
+ 
     
 def load_Q(Q_path,Q_files):
 
@@ -1356,29 +1665,6 @@ def align_popwise_membership(input_names, Q_all, K_all, ind2pop_all, output_path
         
     fig.savefig(os.path.join(output_path,"aligned_all.png"), bbox_inches='tight',dpi=300)
     plt.close(fig)
-
-
-# def load_Q_multiple(input_base_path,cons_suffix):
-    
-#     input_names = [f for f in os.listdir(input_base_path) if os.path.isdir(os.path.join(input_base_path, f))]
-    
-#     # load mode Q and ind pop info    
-#     N_all = list()
-#     R_all = list()
-#     Q_all = list()
-#     K_all = list()
-
-#     for input_name in input_names:
-#         Q_path = os.path.join(input_base_path, input_name,"modes_aligned")
-#         Q_files = [i for i in os.listdir(Q_path) if i.endswith('{}.Q'.format(cons_suffix))]
-#         N, R, Q_list, K_list, file_list = load_Q(Q_path,Q_files)
-
-#         N_all.append(N)
-#         R_all.append(R)
-#         Q_all.append(Q_list)
-#         K_all.append(K_list)
-        
-#     return input_names,N_all, R_all, Q_all, K_all
 
 
 def align_multiple_model(input_names, Q_all, K_all, output_path, cmap):

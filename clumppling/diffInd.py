@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun 1 14:45:25 2022
+Clumppling diffInd function: not yet ready for beta version.
 
-@author: xiranliu
+@author: Xiran Liu
 """
 
 import numpy as np
