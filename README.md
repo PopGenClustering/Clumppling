@@ -4,7 +4,7 @@ This is the GitHub repository for the program ***Clumppling*** (CLUster Matching
 
 > Current version **v 0.1.0 (beta version)**.
 > 
-> The current version has been tested on Windows 10 with Python 3.8.0.
+> The current version has been tested on Windows 10 with Python 3.8.0 and Ubuntu 20.04.5 LTS with Python 3.10.12.
 
 ## How to Install
 1. Install [Python3](https://www.python.org/downloads/). Versions above 3.7 are recommended. 
@@ -71,6 +71,11 @@ The data files should be available in the zip file ```input/chicken.zip```.
 
 
 **Detailed instructions to run the program can be found in the Manual.**
+
+## Online Notebook (no need to download and install)
+An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). 
+
+You may upload the input files, run the program by following the instructions in the notebook without needing to code, and download the results directly.
 
 ## Reference
 Manuscript in prep.
