@@ -1,5 +1,5 @@
 python clumppling \
--i G:/My\ Drive/Projects/ImprClsAlign/input/capeverde \
--o G:/My\ Drive/Projects/ImprClsAlign/output/capeverde \
--p G:/My\ Drive/Projects/ImprClsAlign/input/capeverde_params.json \
--f admixture 
+-i input/capeverde \
+-o output/capeverde \
+-f admixture \
+--custom_cmap "#FFA453,#00BCEC,#007B46,#FF0058,#8843A5"

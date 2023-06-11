@@ -5,17 +5,16 @@ Clumppling main function
 @author: Xiran Liu
 """
 
-import numpy as np
 import os
 import sys
 import json
-# import matplotlib.cm as cm
 import time
-import logging
 import shutil
+import logging
 import builtins   
 import argparse
 from pkg_resources import resource_stream
+import numpy as np
 
 from clumppling.funcs import *
 # import warnings
@@ -27,7 +26,6 @@ def main(args):
 
     input_path = args.input_path
     output_path = args.output_path
-    # params_path = args.params
     input_format = args.input_format
     
     # sanity check for arguments
@@ -36,7 +34,7 @@ def main(args):
     if os.path.exists(input_path+".zip"):
         shutil.unpack_archive(input_path+".zip",input_path)
     if not os.path.exists(input_path):
-        sys.exit("ERROR: Input file doesn't exist.")
+        sys.exit("ERROR: Input file {} doesn't exist.".format(input_path))
     if not input_format in ["structure","fastStructure","admixture","generalQ"]:
         sys.exit("ERROR: Input data format is not supported. \nPlease specify input_format as one of the following: structure, admixture, fastStructure, and generalQ.")
 
@@ -46,27 +44,31 @@ def main(args):
         visualization = True
 
 
-    if args.params is None:
-        params_path = 'default parameters'
-        params_default = json.load(resource_stream('clumppling', 'files/default_params.json'))
-        parameters = load_default_parameters(params_default)
-    else:
-        params_path = args.params_path
-        if not os.path.exists(params_path):
-            sys.exit("ERROR: Parameter file doesn't exist.")
-        parameters = load_parameters(params_path)
+    # if args.params is None:
+    #     params_path = 'default parameters'
+    #     params_default = json.load(resource_stream('clumppling', 'files/default_params.json'))
+    #     parameters = load_default_parameters(params_default)
+    # else:
+    #     params_path = args.params_path
+    #     if not os.path.exists(params_path):
+    #         sys.exit("ERROR: Parameter file doesn't exist.")
+    #     parameters = load_parameters(params_path)
+
+    parameters = vars(args)
+    parameters = process_parameters(parameters)
     
-    if args.cd_param is not None:
-        parameters['cd_parameter'] = args.cd_param if args.cd_param>0 else 1.0
-    if args.use_rep is not None:
-        parameters['use_rep'] = bool(args.use_rep) 
-    if args.merge_cls is not None:
-        parameters['merge_cls'] = bool(args.merge_cls) 
+    # if args.cd_param is not None:
+    #     parameters['cd_parameter'] = args.cd_param if args.cd_param>0 else 1.0
+    # if args.use_rep is not None:
+    #     parameters['use_rep'] = bool(args.use_rep) 
+    # if args.merge_cls is not None:
+    #     parameters['merge_cls'] = bool(args.merge_cls) 
+
     plot_params = ['plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
     if visualization==False:
         for param in plot_params:
             parameters[param] = False
-    disp = display_parameters(input_path,input_format,output_path,params_path,parameters)
+    disp = display_parameters(input_path,input_format,output_path,parameters)
     
     #%% Set-up 
     tot_tic = time.time()
@@ -98,14 +100,8 @@ def main(args):
                                                                    output_path=output_path, 
                                                                    input_format=input_format)
     
-    distruct_cmap = [
-        '#FF994D','#0099E6','#E6FF00','#FF99E6','#339933','#800080','#FF004D','#00FF00','#0000FF','#FF00FF',
-        '#FFE699','#B24D00','#00FFFF','#808000','#FF9999','#008080','#99BF26','#7326E6','#26BF99','#808080',
-        '#0D660D','#BFBFBF','#FF0000','#99E6FF','#FF9966','#404040','#FFE6E6','#993333','#FF6600','#33004D',
-        '#FFFFFF','#FF4D00','#FF9900','#FF4D99','#FF99E6','#FFFF99','#FFFFE6','#FEB1B1','#E6FF4D','#E6E6FF',
-        '#E699FF','#99FF4D','#99FF99','#99FFE6','#99FFFF','#99E6FF','#9999FF','#994DFF','#4D99FF','#00FF99',
-        '#00FFE6','#00E6FF','#CC1A1A','#B24D00','#B2331A','#B21A33','#996600','#994D1A','#4D664D','#4D664D']
-    
+    distruct_cmap = np.loadtxt(resource_stream('clumppling', 'files/default_colors.txt'),dtype=str,comments=None)
+
     # set colormap
     if parameters['custom_cmap']!='':
         custom_cmap = [s.strip() for s in parameters['custom_cmap'].split(",")]
@@ -137,7 +133,7 @@ def main(args):
     alignment_withinK, cost_withinK = align_withinK(output_path,Q_list,Q_files,K_range,K2IDs)
 
     # detect mode
-    modes_allK, cost_matrices, msg = detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd=parameters['cd_default'],cd_mod_thre=parameters['cd_modularity_threshold'],cd_param=parameters['cd_parameter'])
+    modes_allK, cost_matrices, msg = detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd=parameters['cd_default'],cd_param=parameters['cd_param'])
     
     # if msg!="":
     #     logging.info("Mode detection finishes.\n"+msg)
@@ -216,19 +212,26 @@ if __name__ == "__main__":
     required = parser.add_argument_group('required arguments')
     optional = parser.add_argument_group('optional arguments')
 
-    required.add_argument('-i', '--input_path', type=str, required=True, help='path to the input files')
-    required.add_argument('-o', '--output_path', type=str, required=True, help='path to the output files')
+    required.add_argument('-i', '--input_path', type=str, required=True, help='path to load input files')
+    required.add_argument('-o', '--output_path', type=str, required=True, help='path to save output files')
     required.add_argument('-f', '--input_format', type=str, required=True, help='input data format')
-    optional.add_argument('-p', '--params', type=str, required=False, help='path to the parameter file (.json)')
     
+
+    # optional.add_argument('-p', '--params', type=str, required=False, help='path to the parameter file (.json)')
+    optional.add_argument('-v', '--vis', default=1, type=int, required=False, help='whether to generate visualization: 0 for no, 1 for yes (default)')
     
-    optional.add_argument('-v', '--vis', type=int, required=False, help='whether to generate visualization: 0 for no, 1 for yes (default)')
+    optional_arguments = [['cd_param',1.0,'float','the parameter for community detection method (default 1.0)'], \
+        ['use_rep',0,'int','whether to use representative replicate as mode consensus: 0 for no (default), 1 for yes'], \
+        ['merge_cls',0,'int','whether to merge all pairs of clusters to align K+1 and K: 0 for no (default), 1 for yes'], \
+        ['cd_default',1,'int','whether to use default community detection method (Louvain): 0 for no, 1 for yes (default)'], \
+        ['plot_modes',1,'int','whether to display aligned modes in structure plots over a multipartite graph: 0 for no, 1 for yes (default)'],\
+        ['plot_modes_withinK',0,'int','whether to display modes for each K in structure plots: 0 for no (default), 1 for yes'], \
+        ['plot_major_modes',0,'int','whether to display all major modes in a series of structure plots: 0 for no (default), 1 for yes'], \
+        ['plot_all_modes',0,'int','whether to display all aligned modes in a series of structure plots: 0 for no (default), 1 for yes'], \
+        ['custom_cmap','','str','customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap, otherwise use the user-specified colormap']]
     
-    optional_arguments = [['cd_param','float','the parameter for community detection method'], \
-        ['use_rep','int','whether to use representative replicate as mode consensus: 0 for no (default), 1 for yes'], \
-        ['merge_cls','int','whether to merge all pairs of clusters to align K+1 and K: 0 for no (default), 1 for yes']]
     for opt_arg in optional_arguments: 
-        optional.add_argument('--{}'.format(opt_arg[0]), type=getattr(builtins, opt_arg[1]), required=False, help=opt_arg[2])
+        optional.add_argument('--{}'.format(opt_arg[0]), default=opt_arg[1], type=getattr(builtins, opt_arg[2]), required=False, help=opt_arg[3])
 
     args = parser.parse_args()
 

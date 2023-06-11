@@ -1,1 +1,7 @@
 clumppling.egg-info/*
+dist/*
+build/*
+output/*
+input/capeverde/*
+input/chicken/*
+input/chicken_gapK/*

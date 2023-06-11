@@ -1,6 +1,5 @@
-python -m clumppling.main \
--i G:/My\ Drive/Projects/ImprClsAlign/input/capeverde \
--o G:/My\ Drive/Projects/ImprClsAlign/output/capeverde_direct_avg \
--p G:/My\ Drive/Projects/ImprClsAlign/input/capeverde_params.json \
+python -m clumppling \
+-i input/capeverde \
+-o output/capeverde_direct_avg \
 -f admixture \
 --vis 0 --use_rep 0 --merge_cls 0

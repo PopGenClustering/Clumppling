@@ -41,19 +41,26 @@ def load_parameters(params_path):
         
     return parameters
 
+def process_parameters(parameters):
+    bool_params = ['merge_cls','use_rep','cd_default','plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
+    for par in bool_params:
+        if par in parameters:
+            parameters[par] = False if parameters[par]==0 else True
+    return parameters
 
-def display_parameters(input_path,input_format,output_path,params_path,parameters):
+
+def display_parameters(input_path,input_format,output_path,parameters):
     disp = []
     disp.append("=========== Parameters ===========")
     disp.append("----------- [Required] -----------")
     disp.append("Input path: {}".format(input_path))
     disp.append("Input data format: {}".format(input_format))
     disp.append("Output path: {}".format(output_path))
-    disp.append("Parameter file path: {}".format(params_path))
+    # disp.append("Parameter file path: {}".format(params_path))
     disp.append("------------ [Methods] -----------")
     disp.append("Using default community detection method: {}".format(parameters['cd_default']))
-    disp.append("Community detection parameter: {}".format(parameters['cd_parameter']))
-    disp.append("Community detection modularity threshold: {}".format(parameters['cd_modularity_threshold']))
+    disp.append("Community detection parameter: {}".format(parameters['cd_param']))
+    # disp.append("Community detection modularity threshold: {}".format(parameters['cd_modularity_threshold']))
     disp.append("Using a representative replicate as the mode consensus: {}".format(parameters['use_rep']))
     disp.append("Merging all possible pairs of clusters when aligning two replicates with K differing by one: {}".format(parameters['merge_cls']))
     disp.append("----------- [Plotting] -----------")
@@ -555,11 +562,17 @@ def cd_custom(G):
     coms = algorithms.markov_clustering(G,pruning_threshold=0.2) # scipy 1.8.0
     partition = coms.communities
     partition_map = {i:i_s for i_s,s in enumerate(partition) for i in s}
+
+    cd_mod_thre = 1.2
+    mod_res = community_louvain.modularity(partition_map, G)
+    if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
+        msg.append("K={}: low community detection quality (below modularity threshold) -> set to single mode".format(K))
+        partition_map = {i:0 for i in range(G.number_of_nodes())} 
     
     return partition_map
 
 
-def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_mod_thre,cd_param=1.05):
+def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_param=1.05):
 
     modes_allK = dict()
     cost_matrices = dict()
@@ -607,12 +620,6 @@ def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_mod_thre,cd_pa
                         partition_map = cd_default(G,cd_param)
                     else:
                         partition_map = cd_custom(G)
-                    
-                    if cd_mod_thre!=-1:
-                        mod_res = community_louvain.modularity(partition_map, G)
-                        if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
-                            msg.append("K={}: low community detection quality (below modularity threshold) -> set to single mode".format(K))
-                            partition_map = {i:0 for i in range(G.number_of_nodes())} 
 
                     partition_map = reorder_partition_map(partition_map, G)
         ########################################
