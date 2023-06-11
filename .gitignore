@@ -2,7 +2,6 @@ clumppling.egg-info/*
 dist/*
 build/*
 output/*
-input/capeverde.zip
 input/capeverde/*
 input/chicken/*
 input/chicken_gapK/*

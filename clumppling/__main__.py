@@ -15,6 +15,7 @@ import builtins
 import argparse
 from pkg_resources import resource_stream
 import numpy as np
+import random
 
 from clumppling.funcs import *
 # import warnings
@@ -23,6 +24,8 @@ from clumppling.funcs import *
 
 
 def main(args):
+
+    random.seed(42)
 
     input_path = args.input_path
     output_path = args.output_path
@@ -80,9 +83,14 @@ def main(args):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     
-    output_f = os.path.join(output_path,'output.log')
-    handlers = [logging.FileHandler(output_f, 'w'), logging.StreamHandler()]
-    logging.basicConfig(level=logging.INFO, format='', handlers = handlers)
+    # output_f = os.path.join(output_path,'output.log')
+    # handlers = [logging.FileHandler(output_f, 'w'), logging.StreamHandler()]
+    # logging.basicConfig(level=logging.INFO, format='', handlers = handlers)
+
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    logging.basicConfig(filename=os.path.join(output_path,'output.log'), level=logging.INFO, format='')
+    logging.getLogger().addHandler(logging.StreamHandler())
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
 
