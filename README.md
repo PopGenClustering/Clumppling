@@ -25,7 +25,7 @@ This is the GitHub repository for the program ***Clumppling*** (CLUster Matching
        However, **this will not get you the example data files automatically**. To run examples, you will need to download the example files from [the ```input``` folder](input) separately. 
 3. Check the installation by running
       ````
-      python clumppling -h
+      python -m clumppling -h
       ````
       If the installation was successful, you should be prompted by the usage of this function.
       
@@ -51,7 +51,7 @@ The data files should be available in the zip file ```input/capeverde.zip```.
 
 * Once you are in the directory ```Clumppling``` and have downloaded and unzipped the chicken data files (in ``input/capeverde``), run
    ````
-   python clumppling -i input/capeverde -o output/capeverde -f structure 
+   python -m clumppling -i input/capeverde -o output/capeverde -f structure 
    ````
    This will run the program with default parameters on the clustering results from chicken dataset. The outputs will be saved in the directory ``output/chicken`` and a zipped file with the same contents and a same name will also be created.
 
@@ -59,7 +59,7 @@ The data files should be available in the zip file ```input/capeverde.zip```.
 
 * If you want to change the paramters, here is another example with the parameters we used for the chicken example in the manuscript.
    ````
-   python clumppling -i input/chicken -o output/chicken_color -f structure --cd_param 1.05 --custom_cmap #D65859,#00AAC1,#01C0F6,#FDF0C4,#F1B38C,#AAD6BD,#6BB582,#B5DDF7,#AE8557,#FCEC73,#A4A569,#4264AC,#A1CDB2,#DE9D5D,#D9439A,#ABB2BA,#8775B3,#B3865C,#DADDE6,#E7BDD1,#FF9999"
+   python -m clumppling -i input/chicken -o output/chicken_color -f structure --cd_param 1.05 --custom_cmap #D65859,#00AAC1,#01C0F6,#FDF0C4,#F1B38C,#AAD6BD,#6BB582,#B5DDF7,#AE8557,#FCEC73,#A4A569,#4264AC,#A1CDB2,#DE9D5D,#D9439A,#ABB2BA,#8775B3,#B3865C,#DADDE6,#E7BDD1,#FF9999"
    ````
    Here we are setting the community detection parameter ``--cd_param`` to be 1.05 and providing a custom colormap for visualization of the alignment results. The outputs will be saved in the directory ``output/chicken_color`` and a zipped file with the same contents and a same name will also be created.
 
