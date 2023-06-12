@@ -6,6 +6,7 @@ input/capeverde/*
 input/chicken/*
 input/chicken_gapK/*
 input/diffModel/*
+clumppling/__pycache__
 
 # for MacOS users
 **/.DS_Store
