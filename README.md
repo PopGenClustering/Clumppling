@@ -22,7 +22,7 @@ This is the GitHub repository for the program ***Clumppling*** (CLUster Matching
        ````
        pip install git+https://github.com/PopGenClustering/Clumppling
        ```` 
-       However, **this will not get you the example data files automatically**. To run examples, you will need to download the example files from the ```input``` repository separately. 
+       However, **this will not get you the example data files automatically**. To run examples, you will need to download the example files from [the ```input``` folder](input) separately. 
 3. Check the installation by running
       ````
       python clumppling -h
