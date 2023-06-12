@@ -37,7 +37,7 @@ The main module takes in three required arguments and several optional ones. The
 * ``-o`` (``--output_path``) path to save output files
 * ``-f`` (``--input_format``) input data format, have to be one of "structure", "admixture", "fastStructure", and "generalQ"
 
-The optional arguments are ``cd_param``, ``use_rep``, ``merge_cls``, ``cd_default``, ``plot_modes``, ``plot_modes_withinK``, ``plot_major_modes``, ``plot_all_modes``, and ``custom_cmap``. **Detailed explanation of these arguments can be found in the Manual.**
+The optional arguments are ``cd_param``, ``use_rep``, ``merge_cls``, ``cd_default``, ``plot_modes``, ``plot_modes_withinK``, ``plot_major_modes``, ``plot_all_modes``, and ``custom_cmap``. **Detailed explanation of these arguments can be found in the [Manual](Clumppling_Manual_230612.pdf).**
 
     
 ## How to Run (Example: inferred population structure from chicken microsatellite data)
