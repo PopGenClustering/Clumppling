@@ -6,3 +6,6 @@ input/capeverde/*
 input/chicken/*
 input/chicken_gapK/*
 input/diffModel/*
+
+# for MacOS users
+**/.DS_Store
