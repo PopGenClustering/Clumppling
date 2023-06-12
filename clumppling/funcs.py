@@ -17,29 +17,8 @@ import community.community_louvain as community_louvain
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.patches import ConnectionPatch
+from clumppling.custom_funcs import *
 
-
-def load_default_parameters(parameters):
-        
-    bool_params = ['merge_cls','use_rep','cd_default','plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
-    for par in bool_params:
-        if par in parameters:
-            parameters[par] = True if parameters[par] in ['T','t','True','true','Yes','Y','y',1] else False
-        
-    return parameters
-
-
-def load_parameters(params_path):
-
-    with open(params_path) as f:
-        parameters = json.load(f)
-        
-    bool_params = ['merge_cls','use_rep','cd_default','plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
-    for par in bool_params:
-        if par in parameters:
-            parameters[par] = True if parameters[par] in ['T','t','True','true','Yes','Y','y',1] else False
-        
-    return parameters
 
 def process_parameters(parameters):
     bool_params = ['merge_cls','use_rep','cd_default','plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
@@ -515,7 +494,7 @@ def reorder_partition_map(partition_map,G):
         partition_map[k] = reindex_modes[partition_map[k]]
     return partition_map
 
-def cd_default(G,res=1.05):
+def cd_default(G,res=1.00):
     """Community detection using the Louvain method
 
     Parameters
@@ -532,45 +511,6 @@ def cd_default(G,res=1.05):
     resolution = res 
     partition_map = community_louvain.best_partition(G,resolution=resolution,random_state=6)
     return partition_map
-
-def cd_custom(G):
-    """Customized community detection method (need to be modified)
-
-    Parameters
-    ----------
-    G : networkx.Graph
-        the similarity network of replicates, with edges weighted by similarity after optimal alignment
-
-    Returns
-    -------
-    partition_map
-        a dictionary where keys are the indices of replicates and values are the indices of the communities they belong to
-    
-    Example: 
-        # using mcode for cummunity detection
-        # need to install the cdlib package (https://cdlib.readthedocs.io/en/latest/overview.html) and do "from cdlib import algorithms" 
-        def cd_custom(G):
-            coms = algorithms.mcode(G,"weight")
-            partition = coms.communities
-            partition_map = {i:i_s for i_s,s in enumerate(partition) for i in s}
-            return partition_map
-    """
-
-    # Please comment out the following line and customize your community detection method here.
-    # partition_map = {i:0 for i in range(G.number_of_nodes())} 
-    from cdlib import algorithms
-    coms = algorithms.markov_clustering(G,pruning_threshold=0.2) # scipy 1.8.0
-    partition = coms.communities
-    partition_map = {i:i_s for i_s,s in enumerate(partition) for i in s}
-
-    cd_mod_thre = 1.2
-    mod_res = community_louvain.modularity(partition_map, G)
-    if mod_res<cd_mod_thre: # quality of community detection is low --> no community structure
-        msg.append("K={}: low community detection quality (below modularity threshold) -> set to single mode".format(K))
-        partition_map = {i:0 for i in range(G.number_of_nodes())} 
-    
-    return partition_map
-
 
 def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_param=1.05):
 

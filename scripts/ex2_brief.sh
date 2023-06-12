@@ -1,4 +1,4 @@
-python clumppling \
+python -m clumppling \
 -i input/chicken \
 -o output/chicken \
 -f structure \

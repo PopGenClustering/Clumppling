@@ -13,6 +13,7 @@ import shutil
 import logging
 import builtins   
 import argparse
+import datetime
 from pkg_resources import resource_stream
 import numpy as np
 import random
@@ -46,27 +47,9 @@ def main(args):
     else:
         visualization = True
 
-
-    # if args.params is None:
-    #     params_path = 'default parameters'
-    #     params_default = json.load(resource_stream('clumppling', 'files/default_params.json'))
-    #     parameters = load_default_parameters(params_default)
-    # else:
-    #     params_path = args.params_path
-    #     if not os.path.exists(params_path):
-    #         sys.exit("ERROR: Parameter file doesn't exist.")
-    #     parameters = load_parameters(params_path)
-
+    # load default parameters and process
     parameters = vars(args)
     parameters = process_parameters(parameters)
-    
-    # if args.cd_param is not None:
-    #     parameters['cd_parameter'] = args.cd_param if args.cd_param>0 else 1.0
-    # if args.use_rep is not None:
-    #     parameters['use_rep'] = bool(args.use_rep) 
-    # if args.merge_cls is not None:
-    #     parameters['merge_cls'] = bool(args.merge_cls) 
-
     plot_params = ['plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
     if visualization==False:
         for param in plot_params:
@@ -76,17 +59,11 @@ def main(args):
     #%% Set-up 
     tot_tic = time.time()
     
-    # if os.path.exists(output_path):
-    #     shutil.rmtree(output_path)
     if os.path.exists(output_path+".zip"):
         os.remove(output_path+".zip")
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     
-    # output_f = os.path.join(output_path,'output.log')
-    # handlers = [logging.FileHandler(output_f, 'w'), logging.StreamHandler()]
-    # logging.basicConfig(level=logging.INFO, format='', handlers = handlers)
-
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
     logging.basicConfig(filename=os.path.join(output_path,'output.log'), level=logging.INFO, format='')
@@ -94,6 +71,9 @@ def main(args):
     logging.getLogger('matplotlib.font_manager').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
 
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logging.info("{} Program starts.".format(current_time))
+    logging.info("==================================")
     logging.info(disp)
     logging.info("======= Running Clumppling =======")
 
@@ -142,9 +122,6 @@ def main(args):
 
     # detect mode
     modes_allK, cost_matrices, msg = detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd=parameters['cd_default'],cd_param=parameters['cd_param'])
-    
-    # if msg!="":
-    #     logging.info("Mode detection finishes.\n"+msg)
 
     # extract representative/consensus replicates
     mode_labels, rep_modes, repQ_modes, avgQ_modes, alignment_to_modes, stats = extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_range,K2IDs, output_path)
@@ -224,10 +201,7 @@ if __name__ == "__main__":
     required.add_argument('-o', '--output_path', type=str, required=True, help='path to save output files')
     required.add_argument('-f', '--input_format', type=str, required=True, help='input data format')
     
-
-    # optional.add_argument('-p', '--params', type=str, required=False, help='path to the parameter file (.json)')
     optional.add_argument('-v', '--vis', default=1, type=int, required=False, help='whether to generate visualization: 0 for no, 1 for yes (default)')
-    
     optional_arguments = [['cd_param',1.0,'float','the parameter for community detection method (default 1.0)'], \
         ['use_rep',0,'int','whether to use representative replicate as mode consensus: 0 for no (default), 1 for yes'], \
         ['merge_cls',0,'int','whether to merge all pairs of clusters to align K+1 and K: 0 for no (default), 1 for yes'], \
