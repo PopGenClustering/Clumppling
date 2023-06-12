@@ -41,17 +41,17 @@ The optional arguments are ``cd_param``, ``use_rep``, ``merge_cls``, ``cd_defaul
 
     
 ## How to Run (Example: inferred population structure from chicken microsatellite data)
-As a quick start, let's use the chicken data as an example. 
+As a quick start, let's use the Cape Verde data as an example. 
 
-The data files should be available in the zip file ```input/chicken.zip```. 
+The data files should be available in the zip file ```input/capeverde.zip```. 
 
-* Unzip all data files in it to a folder named ```chicken``` under the same directory ```input```.
+* Unzip all data files in it to a folder named ```capeverde``` under the same directory ```input```.
 
 * Navigate to the directory ```Clumppling``` (where the ```README.md``` file is located) if you choose to download and install. Or, navigate to an arbitrary local directory.
 
-* Once you are in the directory ```Clumppling``` and have downloaded and unzipped the chicken data files (in ``input/chicken``), run
+* Once you are in the directory ```Clumppling``` and have downloaded and unzipped the chicken data files (in ``input/capeverde``), run
    ````
-   python clumppling -i input/chicken -o output/chicken -f structure 
+   python clumppling -i input/capeverde -o output/capeverde -f structure 
    ````
    This will run the program with default parameters on the clustering results from chicken dataset. The outputs will be saved in the directory ``output/chicken`` and a zipped file with the same contents and a same name will also be created.
 
@@ -63,9 +63,9 @@ The data files should be available in the zip file ```input/chicken.zip```.
    ````
    Here we are setting the community detection parameter ``--cd_param`` to be 1.05 and providing a custom colormap for visualization of the alignment results. The outputs will be saved in the directory ``output/chicken_color`` and a zipped file with the same contents and a same name will also be created.
 
-* You may also put these command in a bash script ``ex2_brief.sh`` and run the script directly
+* You may also put these command in a bash script ``ex1_default.sh`` and run the script directly
    ````
-   bash scripts/ex2_brief.sh
+   bash scripts/ex1_default.sh
    ````
    More example commands to call the program can be found under the ```scripts``` directory.
 
