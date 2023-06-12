@@ -70,7 +70,7 @@ The data files should be available in the zip file ```input/capeverde.zip```.
    More example commands to call the program can be found under the ```scripts``` directory.
 
 
-**Detailed instructions to run the program can be found in the Manual.**
+**Detailed instructions to run the program can be found in the [Manual](Clumppling_Manual_230612.pdf).**
 
 ## Online Notebook (no need to download and install)
 An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). 
