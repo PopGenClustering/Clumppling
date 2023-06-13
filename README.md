@@ -6,9 +6,23 @@ This is the GitHub repository for the program ***Clumppling*** (CLUster Matching
 > 
 > The current version has been tested on Windows 10 with Python 3.8.0 and Ubuntu 20.04.5 LTS with Python 3.10.12.
 
+## Online Notebook (no need to download and install)
+An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). 
+
+You may upload the input files, run the program by following the instructions in the notebook without needing to code, and download the results directly.
+
 ## How to Install
-1. Install [Python3](https://www.python.org/downloads/). Versions above 3.7 are recommended. 
-2. Install the *Clumppling* package. This can be done by either one of the following two ways:
+1. Install [Python3](https://www.python.org/downloads/). Versions above 3.7 are recommended.
+2. (Recommended) Install [conda](https://www.anaconda.com/download) and create a virtual environment ``clumppling-env`` by
+   ````
+   conda create -n clumppling-env python
+   conda activate clumppling-env 
+   ````
+3. Install the optimization solver [GLPK](https://www.gnu.org/software/glpk/) through Python package [cvxpy](https://www.cvxpy.org/).
+   ````
+   pip install cvxpy[GLPK] # or: conda install cvxpy[GLPK]  
+   ````
+4. Install the *Clumppling* package. This can be done by either one of the following two ways:
     * Download the package files at https://github.com/PopGenClustering/Clumppling/archive/refs/heads/master.zip and unzip to a local directory. Remember to rename the folder named ``Clumppling-master`` to ``Clumppling``.
       
       Or, directly clone this repository to a local directory via ``git clone https://github.com/PopGenClustering/Clumppling.git``.
@@ -23,13 +37,13 @@ This is the GitHub repository for the program ***Clumppling*** (CLUster Matching
        pip install git+https://github.com/PopGenClustering/Clumppling
        ```` 
        However, **this will not get you the example data files automatically**. To run examples, you will need to download the example files from [the ```input``` folder](input) separately. 
-3. Check the installation by running
+5. Check the installation by running
       ````
       python -m clumppling -h
       ````
       If the installation was successful, you should be prompted by the usage of this function.
       
-      Note that on some system, you may need to call ```python3``` instead of ```python```. You can easily set the alias by ```alias python=python3```.
+      Note that on some systems, you may need to call ```python3``` instead of ```python```. You can easily set the alias by ```alias python=python3```.
 
 ## Input Arguments
 The main module takes in three required arguments and several optional ones. The required arguments are
@@ -37,7 +51,7 @@ The main module takes in three required arguments and several optional ones. The
 * ``-o`` (``--output_path``) path to save output files
 * ``-f`` (``--input_format``) input data format, have to be one of "structure", "admixture", "fastStructure", and "generalQ"
 
-The optional arguments are ``cd_param``, ``use_rep``, ``merge_cls``, ``cd_default``, ``plot_modes``, ``plot_modes_withinK``, ``plot_major_modes``, ``plot_all_modes``, and ``custom_cmap``. **Detailed explanation of these arguments can be found in the [Manual](Clumppling_Manual_230612.pdf).**
+The optional arguments are ``cd_param``, ``use_rep``, ``merge_cls``, ``cd_default``, ``plot_modes``, ``plot_modes_withinK``, ``plot_major_modes``, ``plot_all_modes``, and ``custom_cmap``. **Detailed explanation of these arguments can be found in the [Manual](Clumppling_Manual.pdf).**
 
     
 ## How to Run (Example: inferred population structure from chicken microsatellite data)
@@ -51,7 +65,7 @@ The data files should be available in the zip file ```input/capeverde.zip```.
 
 * Once you are in the directory ```Clumppling``` and have downloaded and unzipped the chicken data files (in ``input/capeverde``), run
    ````
-   python -m clumppling -i input/capeverde -o output/capeverde -f structure 
+   python -m clumppling -i input/capeverde -o output/capeverde -f admixture 
    ````
    This will run the program with default parameters on the clustering results from chicken dataset. The outputs will be saved in the directory ``output/chicken`` and a zipped file with the same contents and a same name will also be created.
 
@@ -59,23 +73,18 @@ The data files should be available in the zip file ```input/capeverde.zip```.
 
 * If you want to change the paramters, here is another example with the parameters we used for the chicken example in the manuscript.
    ````
-   python -m clumppling -i input/chicken -o output/chicken_color -f structure --cd_param 1.05 --custom_cmap #D65859,#00AAC1,#01C0F6,#FDF0C4,#F1B38C,#AAD6BD,#6BB582,#B5DDF7,#AE8557,#FCEC73,#A4A569,#4264AC,#A1CDB2,#DE9D5D,#D9439A,#ABB2BA,#8775B3,#B3865C,#DADDE6,#E7BDD1,#FF9999"
+   python -m clumppling -i input/chicken -o output/chicken_color -f admixture --cd_param 1.05 --custom_cmap #D65859,#00AAC1,#01C0F6,#FDF0C4,#F1B38C,#AAD6BD,#6BB582,#B5DDF7,#AE8557,#FCEC73,#A4A569,#4264AC,#A1CDB2,#DE9D5D,#D9439A,#ABB2BA,#8775B3,#B3865C,#DADDE6,#E7BDD1,#FF9999"
    ````
    Here we are setting the community detection parameter ``--cd_param`` to be 1.05 and providing a custom colormap for visualization of the alignment results. The outputs will be saved in the directory ``output/chicken_color`` and a zipped file with the same contents and a same name will also be created.
 
-* You may also put these command in a bash script ``ex1_default.sh`` and run the script directly
+* You may also put these command in a bash script like ``ex1_default.sh`` and run the script directly
    ````
    bash scripts/ex1_default.sh
    ````
    More example commands to call the program can be found under the ```scripts``` directory.
 
 
-**Detailed instructions to run the program can be found in the [Manual](Clumppling_Manual_230612.pdf).**
-
-## Online Notebook (no need to download and install)
-An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). 
-
-You may upload the input files, run the program by following the instructions in the notebook without needing to code, and download the results directly.
+**Detailed instructions to run the program can be found in the [Manual](Clumppling_Manual.pdf).**
 
 ## Reference
 Manuscript in prep.
