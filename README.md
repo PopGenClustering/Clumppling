@@ -9,7 +9,7 @@ This is the GitHub repository for the program ***Clumppling*** (CLUster Matching
 ## Online Notebook (no need to download and install)
 An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). 
 
-You may upload the input files, run the program by following the instructions in the notebook without needing to code, and download the results directly.
+You may upload the input files (e.g., the example files provided [here](input), run the program by following the instructions in the notebook without needing to code, and download the results directly.
 
 ## How to Install
 Open your favorite shell (i.e. command line interpreter), or get one if you do not have one yet.
