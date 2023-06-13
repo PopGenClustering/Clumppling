@@ -12,6 +12,8 @@ An online Colab notebook is available [here](https://colab.research.google.com/d
 You may upload the input files, run the program by following the instructions in the notebook without needing to code, and download the results directly.
 
 ## How to Install
+Open your favorite shell (i.e. command line interpreter), or get one if you do not have one yet.
+
 1. Install [Python3](https://www.python.org/downloads/). Versions above 3.7 are recommended.
 2. (Recommended) Install [conda](https://www.anaconda.com/download) and create a virtual environment ``clumppling-env`` by
    ````
