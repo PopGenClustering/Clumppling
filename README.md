@@ -4,7 +4,7 @@ This is the GitHub repository for the program ***Clumppling*** (CLUster Matching
 
 > Current version **v 0.1.0 (beta version)**.
 > 
-> The current version has been tested on Windows 10 with Python 3.8.0 and Ubuntu 20.04.5 LTS with Python 3.10.12.
+> The current version has been tested on Windows 10 with Python 3.8.0, Ubuntu 20.04.5 LTS with Python 3.10.12, and , MacOS 13.0 with Python 3.11.4.
 
 ## Online Notebook (no need to download and install)
 An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). 
