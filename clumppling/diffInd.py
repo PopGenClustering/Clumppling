@@ -23,15 +23,12 @@ def main(args):
     
     input_base_path = args.input_path
     output_path = args.output_path
-    params_path = args.params_path
 
     # sanity check for arguments
     if not os.path.exists(input_base_path):
         sys.exit("ERROR: Input file path doesn't exist.")
-    if not os.path.exists(params_path):
-        sys.exit("ERROR: Parameter file doesn't exist.")
 
-    parameters = load_parameters(params_path)
+    # parameters = load_parameters(params_path)
     
     # create output directory
     if not os.path.exists(output_path):
@@ -102,7 +99,7 @@ if __name__ == "__main__":
 
     required.add_argument('-i', '--input_path', type=str, required=True, help='path to the input files')
     required.add_argument('-o', '--output_path', type=str, required=True, help='path to the output files')
-    required.add_argument('-p', '--params_path', type=str, required=True, help='path to the parameter file (.json)')
+    
     
     args = parser.parse_args()
     main(args)

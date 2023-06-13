@@ -62,11 +62,6 @@ def main(args):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    if args.vis is not None:
-        visualization = bool(args.vis)
-    else:
-        visualization = True
-
     # load default parameters and process
     parameters = vars(args)
     parameters = process_parameters(parameters)

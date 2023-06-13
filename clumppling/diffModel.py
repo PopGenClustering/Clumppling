@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun 1 14:45:25 2022
+Clumppling diffModel function: not yet ready for beta version.
 
-@author: xiranliu
+@author: Xiran Liu
 """
 
 import numpy as np
@@ -16,27 +16,24 @@ import builtins
 import matplotlib.pyplot as plt
 import argparse
 
-from clumppling.funcs import load_parameters, get_random_cmap, load_Q_and_indinfo, align_multiple_model
+from clumppling.funcs import get_random_cmap, load_Q_and_indinfo, align_multiple_model
 
 
 def main(args):
     
     input_base_path = args.input_path
     output_path = args.output_path
-    params_path = args.params_path
+    cons_suffix = args.consensus
 
     # sanity check for arguments
     if not os.path.exists(input_base_path):
         sys.exit("ERROR: Input file path doesn't exist.")
-    if not os.path.exists(params_path):
-        sys.exit("ERROR: Parameter file doesn't exist.")
-
-    parameters = load_parameters(params_path)
     
     # create output directory
     if not os.path.exists(output_path):
         os.makedirs(output_path) 
     
+
     output_f = os.path.join(output_path,'output.log')
     handlers = [logging.FileHandler(output_f, 'w'), logging.StreamHandler()]
     logging.basicConfig(level=logging.INFO, format='', handlers = handlers)
@@ -46,7 +43,6 @@ def main(args):
     logging.info("========== [Parameters] ========== ")
     logging.info("Input path: {}".format(input_base_path))
     logging.info("Output path: {}".format(output_path))
-    logging.info("Parameter file path: {}".format(params_path))
     
     tot_tic = time.time()
 
@@ -55,12 +51,12 @@ def main(args):
     # determine input directories
     input_names = [f for f in os.listdir(input_base_path) if os.path.isdir(os.path.join(input_base_path, f))]
     logging.info("Input Q files with different models: {}".format(", ".join(input_names)))
-    logging.info("Consensus: {}".format(parameters['cons_suffix']))
+    logging.info("Mode consensus: {}".format(args.consensus))
 
     # load files
     tic = time.time()
     logging.info("---------- Loading files ...")
-    input_names, N_all, R_all, Q_all, K_all = load_Q_and_indinfo(input_base_path,parameters['cons_suffix'],indinfo=False)
+    input_names, N_all, R_all, Q_all, K_all = load_Q_and_indinfo(input_base_path,args.consensus,indinfo=False)
     K_max = max(max(k) for k in K_all)
     toc = time.time()
     logging.info("Time: %.3fs",toc-tic)
@@ -96,10 +92,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
+    optional = parser.add_argument_group('optional arguments')
 
     required.add_argument('-i', '--input_path', type=str, required=True, help='path to the input files')
     required.add_argument('-o', '--output_path', type=str, required=True, help='path to the output files')
     required.add_argument('-p', '--params_path', type=str, required=True, help='path to the parameter file (.json)')
+    optional.add_argument('--consensus', default='avg', type=str, required=False, help='what to use as mode consensus, either avg (default, for average memeberships) or rep (for representative replicate)')
 
     args = parser.parse_args()
     main(args)
