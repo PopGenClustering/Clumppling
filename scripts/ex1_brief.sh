@@ -1,4 +1,4 @@
-python clumppling \
+python -m clumppling \
 -i input/capeverde \
 -o output/capeverde \
 -f admixture \

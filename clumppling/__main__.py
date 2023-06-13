@@ -19,8 +19,7 @@ import numpy as np
 import random
 
 from clumppling.funcs import *
-# import warnings
-# warnings.filterwarnings("ignore")
+import warnings
 
 
 
@@ -33,14 +32,35 @@ def main(args):
     input_format = args.input_format
     
     # sanity check for arguments
-    if os.path.exists(output_path):
-        sys.exit("ERROR: Output directory {} already exists. Please remove the directory before running the program.".format(output_path))
+        # # sys.exit("ERROR: Output directory {} already exists. Please remove the directory before running the program.".format(output_path))
+        # remove_existing = None
+        # while remove_existing is None:
+        #     user_input = input('Output directiory {} already exists. Remove (Y/n)?'.format(output_path))
+        #     if user_input.lower() == 'y':
+        #         remove_existing = True 
+        #     if user_input.lower() == 'n':
+        #         remove_existing = False 
+        # if remove_existing:
+        #     shutil.rmtree(output_path)
+        # else:
+        #     sys.exit("ERROR: Output directory {} already exists. Please remove the directory before running the program.".format(output_path))
+
     if os.path.exists(input_path+".zip"):
         shutil.unpack_archive(input_path+".zip",input_path)
     if not os.path.exists(input_path):
         sys.exit("ERROR: Input file {} doesn't exist.".format(input_path))
     if not input_format in ["structure","fastStructure","admixture","generalQ"]:
-        sys.exit("ERROR: Input data format is not supported. \nPlease specify input_format as one of the following: structure, admixture, fastStructure, and generalQ.")
+        sys.exit("ERROR: Input data format is not supported. \nPlease specify input_format as one of the following: structure, admixture, fastStructure, and generalQ.")  
+
+    overwrite = False
+    if os.path.exists(output_path):
+        overwrite = True
+        shutil.rmtree(output_path)
+
+    if os.path.exists(output_path+".zip"):
+        os.remove(output_path+".zip")
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
     if args.vis is not None:
         visualization = bool(args.vis)
@@ -57,27 +77,25 @@ def main(args):
     disp = display_parameters(input_path,input_format,output_path,parameters)
     
     #%% Set-up 
-    tot_tic = time.time()
-    
-    if os.path.exists(output_path+".zip"):
-        os.remove(output_path+".zip")
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    
+    # log outputs
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
     logging.basicConfig(filename=os.path.join(output_path,'output.log'), level=logging.INFO, format='')
     logging.getLogger().addHandler(logging.StreamHandler())
-    logging.getLogger('matplotlib.font_manager').disabled = True
+    logging.getLogger('matplotlib.pyplot').disabled = True
     logging.getLogger('matplotlib.pyplot').disabled = True
 
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logging.info("{} Program starts.".format(current_time))
+
+    if overwrite:
+        logging.info('\033[93m'+"Overwriting existing output directory {}.".format(output_path)+'\033[0m') 
+    
     logging.info("==================================")
     logging.info(disp)
     logging.info("======= Running Clumppling =======")
 
-
+    tot_tic = time.time()   
     tic = time.time()
     logging.info(">>> Processing input data files and checking arguments")
     

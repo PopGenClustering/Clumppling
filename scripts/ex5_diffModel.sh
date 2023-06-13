@@ -7,6 +7,5 @@ python -m clumppling \
 -o output/diffModel/13loci \
 -f structure --cd_default 0
 # python -m clumppling.diffModel \
-# -i G:/My\ Drive/Projects/ImprClsAlign/output/diffmodel \
-# -o G:/My\ Drive/Projects/ImprClsAlign/output/diffmodel \
-# -p G:/My\ Drive/Projects/ImprClsAlign/Clumppling/scripts/default_params_diff.json
+# -i output/diffmodel \
+# -o output/diffmodel 

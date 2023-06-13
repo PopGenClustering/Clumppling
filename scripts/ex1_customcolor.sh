@@ -1,4 +1,4 @@
-python clumppling \
+python -m clumppling \
 --input_path="input/capeverde" \
 --output_path="output/capeverde_customcolor" \
 --input_format="admixture" \

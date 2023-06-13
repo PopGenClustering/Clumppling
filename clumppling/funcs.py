@@ -937,10 +937,7 @@ def plot_structure_on_multipartite(K_range,mode_labels,stats,consensusQ_modes,al
                 for j in range(n_col):
                     ax = axes[i,j]
                     ax.set_xticks([])
-                    if j>0:
-                        ax.set_yticks([])
-                    else:
-                        ax.set_yticks([0,0.5,1])     
+                    ax.set_yticks([])   
                     if (i,j) not in mode2fig_idx.values():
                         for pos in ['right', 'top', 'bottom', 'left']:
                             ax.spines[pos].set_visible(False)  
@@ -1149,11 +1146,7 @@ def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensu
                 for j in range(n_col):
                     ax = axes[i,j]
                     ax.set_xticks([])
-                    if j>0:
-                        ax.set_yticks([])
-                    else:
-                        ax.set_yticks([0,0.5,1]) 
-                        ax.tick_params(axis='y', labelsize=18)    
+                    ax.set_yticks([])   
                     if (i,j) not in mode2fig_idx.values():
                         for pos in ['right', 'top', 'bottom', 'left']:
                             ax.spines[pos].set_visible(False)  
@@ -1244,7 +1237,6 @@ def plot_membership(ax,P,K_max,cmap,title):
     ax.set_xticks([])
     ax.set_xlim([-0.5,N-0.5])
     ax.set_ylim([0,1])
-    ax.set_yticks([0,0.5,1])
     ax.set_xticks([])
     if title:
         ax.set_ylabel("\n".join(title.split()), rotation=0, fontsize=18, labelpad=30, va="center" )
@@ -1270,7 +1262,6 @@ def plot_membership_sorted(ax,P,K_max,cmap,title):
     ax.set_xticks([])
     ax.set_xlim([0,N])
     ax.set_ylim([0,1])
-    ax.set_yticks([0,0.5,1])
     ax.set_xticks([])
     # ax.set_title(title)
     if title:
@@ -1501,7 +1492,6 @@ def plot_membership_with_pop(ax,P,ind2pop,K_max,cmap,title):
     ax.set_xticks([])
     ax.set_xlim([0,N])
     ax.set_ylim([0,1])
-    ax.set_yticks([0,0.5,1])
     ax.set_xticks([])
     # ax.set_title(title)
     if title:
