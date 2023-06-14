@@ -19,6 +19,7 @@ import cvxpy as cp
 
 import networkx as nx
 from TracyWidom import TracyWidom
+import random
 import community.community_louvain as community_louvain
 
 import matplotlib.pyplot as plt
@@ -516,7 +517,9 @@ def cd_default(G,res=1.00):
     return partition_map
 
 
-def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_param=1.05):
+def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_param=1.0):
+
+    random.seed(42)
 
     modes_allK = dict()
     cost_matrices = dict()
