@@ -19,7 +19,6 @@ import cvxpy as cp
 
 import networkx as nx
 from TracyWidom import TracyWidom
-# import random
 import community.community_louvain as community_louvain
 
 import matplotlib.pyplot as plt
