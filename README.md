@@ -2,14 +2,20 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear ProgrammING), a new framework for aligning clustering results of population structure analysis.
 
-> Current version **v 0.1.0 (beta version)**.
-> 
-> The current version has been tested on Windows 10 with Python 3.8.0, Ubuntu 20.04.5 LTS with Python 3.10.12, and , MacOS 13.0 with Python 3.11.4.
+Current version **v 0.1.0 (beta version)** 
 
+> The current version has been tested on Windows 10 with Python 3.8 to 3.10, Ubuntu 20.04 LTS with Python 3.10, and MacOS 13 with Python 3.11.
+>
+> **Detailed instructions can be found in [the pdf Manual](Clumppling_Manual.pdf).**
+>
+> Questions and feedback are welcome. Contact Xiran Liu at xiranliu@stanford.edu.
+---
 ## Online Notebook (no need to download and install)
-An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). 
+An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). Running *Clumppling* from this notebook does not require downloading or installing the program locally.
 
-You may upload the input files (e.g., the example files provided [here](input), run the program by following the instructions in the notebook without needing to code, and download the results directly.
+You may upload the input files (e.g., the example files provided [here](input)), run the program by following the instructions in the notebook, and download the results directly.
+
+---
 
 ## How to Install
 Open your favorite shell (i.e. command line interpreter), or get one if you do not have one yet.
@@ -20,11 +26,7 @@ Open your favorite shell (i.e. command line interpreter), or get one if you do n
    conda create -n clumppling-env python
    conda activate clumppling-env 
    ````
-3. Install the optimization solver [GLPK](https://www.gnu.org/software/glpk/) through Python package [cvxpy](https://www.cvxpy.org/).
-   ````
-   pip install cvxpy[GLPK] # or: conda install cvxpy[GLPK]  
-   ````
-4. Install the *Clumppling* package. This can be done by either one of the following two ways:
+3. Install the *Clumppling* package. This can be done by either one of the following two ways:
     * Download the package files at https://github.com/PopGenClustering/Clumppling/archive/refs/heads/master.zip and unzip to a local directory. Remember to rename the folder named ``Clumppling-master`` to ``Clumppling``.
       
       Or, directly clone this repository to a local directory via ``git clone https://github.com/PopGenClustering/Clumppling.git``.
@@ -39,7 +41,7 @@ Open your favorite shell (i.e. command line interpreter), or get one if you do n
        pip install git+https://github.com/PopGenClustering/Clumppling
        ```` 
        However, **this will not get you the example data files automatically**. To run examples, you will need to download the example files from [the ```input``` folder](input) separately. 
-5. Check the installation by running
+4. Check the installation by running
       ````
       python -m clumppling -h
       ````
@@ -88,6 +90,9 @@ The data files should be available in the zip file ```input/capeverde.zip```.
 
 **Detailed instructions to run the program can be found in the [Manual](Clumppling_Manual.pdf).**
 
-## Reference
-Manuscript in prep.
+## Citation
+Liu, Kopelman, and Rosenberg, 2023 \[in prep\]
 
+## Acknowledgements
+We thank Egor Lappo for helping with the packaging of the program. 
+We thank Egor Lappo and Maike Morrison for helping with the testing of the program.
