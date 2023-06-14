@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Clumppling main function
+Clumppling: main function
 
 @author: Xiran Liu
 """
@@ -16,7 +16,6 @@ import argparse
 import datetime
 from pkg_resources import resource_stream
 import numpy as np
-import random
 
 from clumppling.funcs import *
 import warnings
@@ -25,26 +24,10 @@ import warnings
 
 def main(args):
 
-    random.seed(42)
-
     input_path = args.input_path
     output_path = args.output_path
     input_format = args.input_format
     
-    # sanity check for arguments
-        # # sys.exit("ERROR: Output directory {} already exists. Please remove the directory before running the program.".format(output_path))
-        # remove_existing = None
-        # while remove_existing is None:
-        #     user_input = input('Output directiory {} already exists. Remove (Y/n)?'.format(output_path))
-        #     if user_input.lower() == 'y':
-        #         remove_existing = True 
-        #     if user_input.lower() == 'n':
-        #         remove_existing = False 
-        # if remove_existing:
-        #     shutil.rmtree(output_path)
-        # else:
-        #     sys.exit("ERROR: Output directory {} already exists. Please remove the directory before running the program.".format(output_path))
-
     if os.path.exists(input_path+".zip"):
         shutil.unpack_archive(input_path+".zip",input_path)
     if not os.path.exists(input_path):
@@ -178,7 +161,6 @@ def main(args):
         if parameters['use_rep']:
             plot_structure_on_multipartite(K_range,mode_labels,stats,repQ_modes,alignment_acrossK_rep,cost_acrossK_rep,best_acrossK_rep,"rep",output_path,True,cmap)
         else:
-            # plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,avgQ_modes,alignment_acrossK_avg,cost_acrossK_avg,best_acrossK_avg,"avg",output_path,True,cmap)
             plot_structure_on_multipartite(K_range,mode_labels,stats,avgQ_modes,alignment_acrossK_avg,cost_acrossK_avg,best_acrossK_avg,"avg",output_path,True,cmap)
     else:
         if parameters['use_rep']:

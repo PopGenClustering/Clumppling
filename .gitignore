@@ -5,6 +5,7 @@ output/*
 input/capeverde/*
 input/chicken/*
 input/chicken_gapK/*
+input/diffInd/*
 input/diffModel/*
 clumppling/__pycache__
 

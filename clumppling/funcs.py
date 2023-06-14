@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Clumppling: functions
+
+@author: Xiran Liu
+"""
+
 import numpy as np
 import pandas as pd
 import os
@@ -35,11 +42,9 @@ def display_parameters(input_path,input_format,output_path,parameters):
     disp.append("Input path: {}".format(input_path))
     disp.append("Input data format: {}".format(input_format))
     disp.append("Output path: {}".format(output_path))
-    # disp.append("Parameter file path: {}".format(params_path))
     disp.append("------------ [Methods] -----------")
     disp.append("Using default community detection method: {}".format(parameters['cd_default']))
     disp.append("Community detection parameter: {}".format(parameters['cd_param']))
-    # disp.append("Community detection modularity threshold: {}".format(parameters['cd_modularity_threshold']))
     disp.append("Using a representative replicate as the mode consensus: {}".format(parameters['use_rep']))
     disp.append("Merging all possible pairs of clusters when aligning two replicates with K differing by one: {}".format(parameters['merge_cls']))
     disp.append("----------- [Plotting] -----------")
@@ -161,8 +166,6 @@ def load_inputs(data_path,output_path,input_format):
     return Q_list, K_list, Q_files, R, N, K_range, K_max, K2IDs
 
 
-
-
 def align_ILP(P,Q):
     
     K_Q = Q.shape[1] # #rows
@@ -203,7 +206,7 @@ def align_ILP(P,Q):
     idxQ2P = np.where(opt_W==1)[1]
     
 
-    return opt_obj, idxQ2P#, idxP2Q
+    return opt_obj, idxQ2P
 
 
 # align P and Q by enumerating all combinations of two clusters when K is differ by 1
@@ -291,7 +294,6 @@ def align_ILP_weighted(P,Q,weight):
 
 
 def alignQ_wrtP(P,Q,idxQ2P,merge=True):
-    # K1, K2 = P.shape[1], Q.shape[1]
     
     if merge:        
         aligned_Q = np.zeros_like(P)
@@ -301,8 +303,6 @@ def alignQ_wrtP(P,Q,idxQ2P,merge=True):
         aligned_Q = np.zeros_like(Q)
         idxQ2P = list(idxQ2P)
         dups = np.unique([i for i in idxQ2P if idxQ2P.count(i)>1])
-
-        
         dups_min = defaultdict(lambda: (float('inf'),None))
 
         for q_idx in range(Q.shape[1]):
@@ -401,7 +401,6 @@ def align_withinK(output_path,Q_list,Q_files,K_range,K2IDs):
     return alignment_withinK, cost_withinK
 
 
-
 def get_adj_mat(cost_mat):
     adj_mat = 1-(cost_mat-np.nanmin(cost_mat))/(np.nanmax(cost_mat)-np.nanmin(cost_mat))
     # adj_mat = 1-(cost_mat-np.nanmin(cost_mat))/(np.nanmax(cost_mat)-np.nanmin(cost_mat))*0.9
@@ -419,8 +418,10 @@ def standardize_matrix(W):
     W_standardized[off_diag_idx] = (off_diag_w-off_diag_w.mean())/off_diag_w.std()
     return W_standardized
 
+
 def normalize_matrix(W):
     return W/np.sqrt(W.shape[0])
+
 
 def exponentiate_matrix(W,t):
     off_diag_idx = np.where(~np.eye(W.shape[0],dtype=bool))
@@ -428,7 +429,8 @@ def exponentiate_matrix(W,t):
     W_exp[off_diag_idx] = np.exp(W[off_diag_idx]*t)
     return W_exp
 
-def test_comm_struc(W, alpha = 0.05):
+
+def test_comm_struc(W, alpha = 0.01):
     """Test for the existence of community structure in the graph (implementing Tokuda 2018)
 
     Parameters
@@ -494,6 +496,7 @@ def reorder_partition_map(partition_map,G):
         partition_map[k] = reindex_modes[partition_map[k]]
     return partition_map
 
+
 def cd_default(G,res=1.00):
     """Community detection using the Louvain method
 
@@ -511,6 +514,7 @@ def cd_default(G,res=1.00):
     resolution = res 
     partition_map = community_louvain.best_partition(G,resolution=resolution,random_state=6)
     return partition_map
+
 
 def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_param=1.05):
 
@@ -580,9 +584,9 @@ def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_param=1.05):
     return modes_allK, cost_matrices, msg
 
 
-
 def C2Gprime(C):
     return 1-np.sqrt(C)
+
 
 def avg_tril(A):
     return np.sum(np.tril(A, k=-1))/(A.shape[0]*(A.shape[0]-1)/2)
@@ -632,10 +636,8 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
                 # minC_self_idx = all_indices[minC_idx]
                 minC_rep_idx = all_indices[minC_idx]+K2IDs[K][0]
                 rep_modes[K].append(minC_rep_idx)
-                # mds_indices.append(all_indices[minC_idx])
 
                 # other non-representative ones
-                # other_self_indices = [m for im,m in enumerate(all_indices) if im!=minC_idx]
                 other_rep_indices = [m+K2IDs[K][0] for im,m in enumerate(all_indices) if im!=minC_idx]
                 
                 ########################################
@@ -712,8 +714,6 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
                     total_cost += stats[K][mode_idx]['cost']*s
                     total_perf += stats[K][mode_idx]['perf']*s
                     non_singleton_s += s
-            # avg_cost += s/len(K2IDs[K])*stats[K][mode_idx]['cost']
-            # avg_perf += s/len(K2IDs[K])*stats[K][mode_idx]['perf']
             f.write('{},{},{},{},{}\n'.format(K,len(K2IDs[K]),non_singleton_s,total_cost/non_singleton_s,total_perf/non_singleton_s))
 
     return mode_labels,rep_modes,repQ_modes,avgQ_modes,alignment_to_modes,stats  
@@ -721,8 +721,6 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
 
 def align_ILP_modes_acrossK(consensusQ_modes,mode_labels,K_range,acrossK_path,cons_suffix,merge=False):
     
-    # if os.path.exists(acrossK_path):
-    #     shutil.rmtree(acrossK_path)
     if not os.path.exists(acrossK_path):
         os.mkdir(acrossK_path)
     
@@ -792,8 +790,6 @@ def align_ILP_modes_acrossK(consensusQ_modes,mode_labels,K_range,acrossK_path,co
         cost_bali = cost_acrossK[bali]
         best_acrossK.append(bali)
 
-        # Q_aligned_unmerged = alignQ_wrtP(P,Q,alignment_acrossK[bali],merge=False)
-        # cost_sep = cost_membership(P,aligned_Q,P.shape[0]) #cost_membership(P,Q_aligned_unmerged[:,:P.shape[1]],P.shape[0])
         cost_sep = cost_membership_sep(P,Q,alignment_acrossK[bali])
         
         f.write("{},{},{},{},{}\n".format(bali,cost_bali,C2Gprime(cost_bali),cost_sep,C2Gprime(cost_sep)))
@@ -989,15 +985,13 @@ def plot_structure_on_multipartite(K_range,mode_labels,stats,consensusQ_modes,al
                     "{:.3f}".format(cost), fontsize=14, transform=fig.transFigure, bbox=textbox_props, 
                     zorder=9, verticalalignment='center',horizontalalignment='center')
 
-
         fig.savefig(os.path.join(fig_path,"modes_aligned_multipartite_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
         plt.close(fig)
     
 
-# Just for CV data
+# Just for CV data in the manuscript
 def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensusQ_modes,alignment_acrossK,cost_acrossK_cons,best_acrossK,cons_suffix,output_path,plot_flag,cmap):
     
-
     mode_numbers = [len(mode_labels[K]) for K in K_range]
     if plot_flag:
         n_row = len(K_range)
@@ -1052,7 +1046,6 @@ def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensu
                 base_patterns[m2] = ali_pat
                 if plot_flag:
                     ax = axes[mode2fig_idx[m2]]
-                    # plot_membership(ax,aligned_Q,K_max,cmap,"")
                     if m2 in ["K5M1","K5M2","K5M3"]:    
                         plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"") 
                     else:
@@ -1082,7 +1075,6 @@ def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensu
         
         if plot_flag:
             ax = axes[mode2fig_idx[m2]]     
-            # plot_membership(ax,aligned_Q,K_max,cmap,"")
             if m2 in ["K5M1","K5M2","K5M3"]:    
                 plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"") 
             else:
@@ -1201,17 +1193,7 @@ def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensu
 
         fig.savefig(os.path.join(fig_path,"modes_aligned_multipartite_{}.png".format(cons_suffix)), bbox_inches='tight',dpi=300)
         plt.close(fig)
-    
 
-   
-
-# get colormap for visualization
-def get_random_cmap(base_cmap,K_max,seed=999):
-    np.random.seed(seed)
-    cmap = base_cmap(np.linspace(0, 1, K_max))
-    np.random.shuffle(cmap)
-    cmap = cm.colors.ListedColormap(cmap)
-    return cmap
 
 def plot_colorbar(cmap,K_max,fig_path):
     colors = cmap(np.arange(K_max))
@@ -1237,7 +1219,7 @@ def plot_membership(ax,P,K_max,cmap,title):
     ax.set_xticks([])
     ax.set_xlim([-0.5,N-0.5])
     ax.set_ylim([0,1])
-    ax.set_xticks([])
+    ax.set_yticks([])
     if title:
         ax.set_ylabel("\n".join(title.split()), rotation=0, fontsize=18, labelpad=30, va="center" )
     else:
@@ -1263,7 +1245,6 @@ def plot_membership_sorted(ax,P,K_max,cmap,title):
     ax.set_xlim([0,N])
     ax.set_ylim([0,1])
     ax.set_xticks([])
-    # ax.set_title(title)
     if title:
         ax.set_ylabel("\n".join(title.split()), rotation=0, fontsize=18, labelpad=30, va="center" )
     else:
@@ -1379,6 +1360,7 @@ def plot_major_modes(K_range,output_path,cons_suffix,cmap):
 
     return
 
+
 def plot_all_modes(K_range,mode_labels,output_path,cons_suffix,cmap):
     
     num_modes = sum([len(mode_labels[k]) for k in K_range]) 
@@ -1432,6 +1414,7 @@ def load_Q(Q_path,Q_files):
 
     return N, R, Q_list, K_list, file_list
 
+
 def load_ind(file_path):
         
     info = pd.read_csv(os.path.join(file_path,'ind_info.txt'),delimiter=" ",index_col=0)
@@ -1443,6 +1426,7 @@ def load_ind(file_path):
     ind2pop = info["Pop"].values
     
     return ind2pop, pop_n_ind
+
 
 def load_Q_and_indinfo(input_base_path,cons_suffix,indinfo=True):
     
@@ -1486,19 +1470,17 @@ def plot_membership_with_pop(ax,P,ind2pop,K_max,cmap,title):
     for k in range(K):
         ax.bar(range(N), P_aug[:,(k+1)], bottom=np.sum(P_aug[:,0:(k+1)],axis=1), 
                width=1.0, edgecolor='w', linewidth=0, facecolor=cmap(k/K_max))
-    # pop_split = np.where(np.diff(ind2pop)==1)[0]
-    # ax.vlines(pop_split+0.5, 0, 1, colors='gray', linewidth=0.6, alpha=0.3)
     
     ax.set_xticks([])
     ax.set_xlim([0,N])
     ax.set_ylim([0,1])
     ax.set_xticks([])
-    # ax.set_title(title)
     if title:
         ax.set_ylabel("\n".join(title.split()), rotation=0, fontsize=18, labelpad=30, va="center" )
     else:
         ax.set_ylabel("")
     return
+
 
 def align_popwise_membership(input_names, Q_all, K_all, ind2pop_all, output_path, cmap):
 
@@ -1555,7 +1537,6 @@ def align_popwise_membership(input_names, Q_all, K_all, ind2pop_all, output_path
                     align_res[K][i_p][i_q] = idxQ2P
     
     # plot alignment
-    
     K_maxcnt = defaultdict(lambda: float('-inf'))
     for d in [Counter(K) for K in K_all]:
         for k, v in d.items():
@@ -1574,6 +1555,7 @@ def align_popwise_membership(input_names, Q_all, K_all, ind2pop_all, output_path
             P = Q_all[i_p][idx]
             ax = axes[k_idx+sep_K_cnt[i_K],i_p]
             plot_membership_with_pop(ax,P,ind2pop_all[i_p],K_max,cmap,"K={}".format(K) if k_idx==0 else "")
+            ax.set_yticks([])
             k_idx += 1
         while k_idx<K_maxcnt[K]:
             ax = axes[k_idx+sep_K_cnt[i_K],i_p]
@@ -1590,6 +1572,7 @@ def align_popwise_membership(input_names, Q_all, K_all, ind2pop_all, output_path
                     aligned_Q[:,idxQ2P[q_idx]] += Q[:,q_idx]
                 ax = axes[k_idx+sep_K_cnt[i_K],i_q]
                 plot_membership_with_pop(ax,aligned_Q,ind2pop_all[i_q],K_max,cmap,"")
+                ax.set_yticks([])
                 k_idx += 1
             while k_idx<K_maxcnt[K]:
                 ax = axes[k_idx+sep_K_cnt[i_K],i_q]
@@ -1664,6 +1647,7 @@ def align_multiple_model(input_names, Q_all, K_all, output_path, cmap):
             P = Q_all[i_p][idx]
             ax = axes[k_idx+sep_K_cnt[i_K],i_p]
             plot_membership(ax,P,K_max,cmap,"K={}".format(K) if k_idx==0 else "")
+            ax.set_yticks([])
             k_idx += 1
         while k_idx<K_maxcnt[K]:
             ax = axes[k_idx+sep_K_cnt[i_K],i_p]
@@ -1680,6 +1664,7 @@ def align_multiple_model(input_names, Q_all, K_all, output_path, cmap):
                     aligned_Q[:,idxQ2P[q_idx]] += Q[:,q_idx]
                 ax = axes[k_idx+sep_K_cnt[i_K],i_q]
                 plot_membership(ax,aligned_Q,K_max,cmap,"")
+                ax.set_yticks([])
                 k_idx += 1
             while k_idx<K_maxcnt[K]:
                 ax = axes[k_idx+sep_K_cnt[i_K],i_q]
