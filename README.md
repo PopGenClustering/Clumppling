@@ -91,10 +91,10 @@ The data files should be available in the zip file ```input/capeverde.zip```.
 **Detailed instructions to run the program can be found in the [Manual](Clumppling_Manual.pdf).**
 
 ## References
-Liu, Kopelman, & Rosenberg (2023). \[in prep\]
+*Liu, Kopelman, & Rosenberg (2023). \[in prep\]*
 
 The Cape Verde data used as the example comes from: \
-Verdu, P., Jewett, E. M., Pemberton, T. J., Rosenberg, N. A., & Baptista, M. (2017). Parallel trajectories of genetic and linguistic admixture in a genetically admixed creole population. Current Biology, 27(16), 2529-2535. [https://doi.org/10.1016/j.cub.2017.07.002.](https://www.sciencedirect.com/science/article/pii/S096098221730859X)
+*Verdu, P., Jewett, E. M., Pemberton, T. J., Rosenberg, N. A., & Baptista, M. (2017). Parallel trajectories of genetic and linguistic admixture in a genetically admixed creole population. Current Biology, 27(16), 2529-2535. [https://doi.org/10.1016/j.cub.2017.07.002.](https://www.sciencedirect.com/science/article/pii/S096098221730859X)*
 
 ## Acknowledgements
 We thank Egor Lappo for helping with the packaging of the program. 
