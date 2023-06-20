@@ -58,8 +58,8 @@ The main module takes in three required arguments and several optional ones. The
 The optional arguments are ``cd_param``, ``use_rep``, ``merge_cls``, ``cd_default``, ``plot_modes``, ``plot_modes_withinK``, ``plot_major_modes``, ``plot_all_modes``, and ``custom_cmap``. **Detailed explanation of these arguments can be found in the [Manual](Clumppling_Manual.pdf).**
 
     
-## How to Run (Example: inferred population structure from chicken microsatellite data)
-As a quick start, let's use the Cape Verde data as an example. 
+## How to Run (with an example)
+As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.2017.07.002) as an example. 
 
 The data files should be available in the zip file ```input/capeverde.zip```. 
 
@@ -90,8 +90,11 @@ The data files should be available in the zip file ```input/capeverde.zip```.
 
 **Detailed instructions to run the program can be found in the [Manual](Clumppling_Manual.pdf).**
 
-## Citation
-Liu, Kopelman, and Rosenberg, 2023 \[in prep\]
+## References
+Liu, Kopelman, & Rosenberg (2023). \[in prep\]
+
+The Cape Verde data used as the example comes from: \
+Verdu, P., Jewett, E. M., Pemberton, T. J., Rosenberg, N. A., & Baptista, M. (2017). Parallel trajectories of genetic and linguistic admixture in a genetically admixed creole population. Current Biology, 27(16), 2529-2535. [https://doi.org/10.1016/j.cub.2017.07.002.](https://www.sciencedirect.com/science/article/pii/S096098221730859X)
 
 ## Acknowledgements
 We thank Egor Lappo for helping with the packaging of the program. 
