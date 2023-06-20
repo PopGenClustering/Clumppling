@@ -98,4 +98,4 @@ The Cape Verde data used as the example comes from: \
 
 ## Acknowledgements
 We thank Egor Lappo for helping with the packaging of the program. 
-We thank Egor Lappo and Maike Morrison for helping with the testing of the program.
+We thank Egor Lappo, Daniel Cotter, and Maike Morrison for helping with the testing of the program.
