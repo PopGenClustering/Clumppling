@@ -26,7 +26,12 @@ Open your favorite shell (i.e. command line interpreter), or get one if you do n
    conda create -n clumppling-env python
    conda activate clumppling-env 
    ````
-3. Install the *Clumppling* package. This can be done by either one of the following two ways:
+3. Install the *Clumppling* package. This can be done by __either one of the following two ways__:
+    * Install the package directly from GitHub via 
+       ````
+       pip install git+https://github.com/PopGenClustering/Clumppling
+       ```` 
+       However, **this will not get you the example data files automatically**. To run examples, you will need to download the example files from [the ```input``` folder](input) separately. 
     * Download the package files at https://github.com/PopGenClustering/Clumppling/archive/refs/heads/master.zip and unzip to a local directory. Remember to rename the folder named ``Clumppling-master`` to ``Clumppling``.
       
       Or, directly clone this repository to a local directory via ``git clone https://github.com/PopGenClustering/Clumppling.git``.
@@ -35,13 +40,7 @@ Open your favorite shell (i.e. command line interpreter), or get one if you do n
       ````
       pip install -e .
       ````
-
-    * Install the package directly from GitHub via 
-       ````
-       pip install git+https://github.com/PopGenClustering/Clumppling
-       ```` 
-       However, **this will not get you the example data files automatically**. To run examples, you will need to download the example files from [the ```input``` folder](input) separately. 
-4. Check the installation by running
+5. Check the installation by running
       ````
       python -m clumppling -h
       ````
