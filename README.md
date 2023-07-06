@@ -1,6 +1,6 @@
 # Clumppling
 
-This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear ProgrammING), a new framework for aligning clustering results of population structure analysis.
+This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear ProgrammING), a framework for aligning clustering results of population structure analysis.
 
 Current version **v 0.1.0 (beta version)** 
 
@@ -9,14 +9,20 @@ Current version **v 0.1.0 (beta version)**
 > **Detailed instructions can be found in [the pdf Manual](Clumppling_Manual.pdf).**
 >
 > Questions and feedback are welcome. Contact Xiran Liu at xiranliu@stanford.edu.
+
+**There are two ways to use *Clumppling*.**
+1. You can run it **remotely** on the server, which does not require downloading or installing the program locally. The remote version provides the core functionalities of the program. Check out the [Remote](#Remote-Version) section.
+2. You can download and install the Python package onto your local machine and run the program **locally**. The local version provides an extended list of functionalities (see [the pdf Manual](Clumppling_Manual.pdf) for details). Check out the [Remote](#Local-Version) section.
+
 ---
-## Online Notebook (no need to download and install)
+# Remote Version
+**Online Notebook (no need to download and install)**
 An online Colab notebook is available [here](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true). Running *Clumppling* from this notebook does not require downloading or installing the program locally.
 
 You may upload the input files (e.g., the example files provided [here](input)), run the program by following the instructions in the notebook, and download the results directly.
 
 ---
-
+# Local Version
 ## How to Install
 Open your favorite shell (i.e. command line interpreter), or get one if you do not have one yet.
 
