@@ -16,11 +16,14 @@ Current version **v 0.1.0 (beta version)**
 
 ---
 # Remote Version
-The remote version is available through an **online Colaboratory notebook**, which is a Jupyter notebook that runs in the cloud served by Google. If you are interested, more details about Colab notebooks can be found here: https://colab.google/
+The remote version is available through an **online Colaboratory notebook**, which is a Jupyter notebook that runs in the cloud served by Google. If you are interested, more details about Colab notebooks can be found here: https://colab.google/.
+
 There is **no need to download and install the program locally**.
 
-To run *Clumppling* remotely, click on [this link](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true) which will bring you to the notebook. Next, follow the instructions in the notebook. \
-Click the run (little round-shaped buttons with a triangle in the middle) buttons next to each block on the left one by one. Upload input files (e.g., the example files provided [here](input)) as a zip folder, specify the input data format, and change input parameters (if needed) per instruction. \
+To run *Clumppling* remotely, click on [this link](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true) which will bring you to the notebook. \
+Next, follow the instructions in the notebook. \
+Click the run (little round-shaped buttons with a triangle in the middle) buttons next to each block on the left one by one. \
+Upload input files (e.g., the example files provided [here](input)) as a zip folder, specify the input data format, and change input parameters (if needed) following the instructions. \
 You will be able to download a zipped file containing the alignment results at the end of the notebook.
 
 ---
@@ -31,25 +34,26 @@ The local version requires downloading and installing the program to your local 
 
 ### 1. Open a **command line interpreter** (i.e., a shell)
    * Linux and macOS users can use the built-in Terminal. 
-   * For Windows users, you may want to get a terminal. For example, you may get Git Bash by downloading the executable Git installer from https://git-scm.com/download/win and running the installer. You may also use the built-in [Windows PowerShell](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell).
+   * For Windows users, you need to get a terminal. For example, you can get Git Bash by downloading and running the executable Git installer from https://git-scm.com/download/win. You may also use the built-in (for Windows 10) [Windows PowerShell](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell).
 
 ### 2. Install **Python** (Version 3.8 and above recommended)
    You can download the Python installer from https://www.python.org/downloads/.
    * For Windows users, go to https://www.python.org/downloads/windows/ to download the installer corresponding to your operating system and run the executable installer (check the box 'Add Python to environment variables' during the installation).
-   * For macOS users, go to https://www.python.org/downloads/macos/ to download the macOS 64-bit universal2 installer and double-click on the python-<version>-macosx.pkg file to start the Python installer.
+   * For macOS users, go to https://www.python.org/downloads/macos/ to download the macOS 64-bit universal2 installer and double-click on the *python-<version>-macosx.pkg* file to start the Python installer.
    * For Linux users, if Python is not pre-installed, you can install it via command lines (``sudo yum install -y python3`` for CentOS and Red Hat Linux and ``sudo apt-get install python3`` for all other Linux systems). 
    
    You can verify the installation by running 
    ````
    python --version
    ```` 
-   in the command line interpreter.
+   in the command line interpreter, which should give you the version of the installed Python.
 
 ### 3. Install conda and create a virtual environment 
-   Go to https://www.anaconda.com/download to download the conda installer and run the installer. Conda is a popular package management system and environment management system.\
+   Go to https://www.anaconda.com/download to download the conda installer and run the installer. Conda is a popular package management system and environment management system.
+   
    > A virtual environment is a Python environment such that the Python interpreter, libraries and scripts installed into it are isolated from those installed in other virtual environments, and (by default) any libraries installed in a “system” Python, i.e., one which is installed as part of your operating system"
    
-   Using a virtual environment helps to keep the dependencies required by different projects separate and avoid conflicts. 
+   Using a virtual environment helps to keep the dependencies required by different projects separate and avoid conflicts between projects. 
    
    Create a virtual environment named ``clumppling-env`` by
    ````
@@ -88,11 +92,11 @@ As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.
 
 1. **Download the zip file** if you haven't yet (click the button on the top right to download raw file).
 
-2. **Extract files** in the zip file to a folder named "capeverde". Create a folder "input" under your current path and put the "capeverde" folder in the "input" folder.
+2. **Extract files** from the zip to a folder named "capeverde". Create a folder "input" under your current path and **put the "capeverde" folder in the "input" folder**.
    
    If you do not know your current path, you may run ``pwd`` to see it in the command window. 
    
-   **The chicken data files should be under ``input/capeverde``.** When you run ``ls input/capeverde``, you should see a list of Cape Verde data files *(CAPEVERDE_Rep1.2.indivq, CAPEVERDE_Rep1.3.indivq, etc.)*
+   The chicken data files should be under ``input/capeverde``. When you run ``ls input/capeverde``, you should see a list of Cape Verde data files *(CAPEVERDE_Rep1.2.indivq, CAPEVERDE_Rep1.3.indivq, etc.)*
 
 3. **Run the program** under the default setting
    ````
