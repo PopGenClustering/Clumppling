@@ -10,7 +10,7 @@ Current version **v 0.1.0 (beta version)**
 >
 > Questions and feedback are welcome. Contact Xiran Liu at xiranliu@stanford.edu.
 
-**There are two ways to use *Clumppling*.**
+**There are two ways to run *Clumppling*.**
 1. You can run it **remotely** on the server, which does not require downloading or installing the program locally. The remote version provides the core functionalities of the program. Check out the [Remote Version](#Remote-Version) section.
 2. You can download and install the Python package onto your local machine and run the program **locally**. The local version provides an extended list of functionalities (see [the pdf Manual](Clumppling_Manual.pdf) for details). Check out the [Local Version](#Local-Version) section.
 
