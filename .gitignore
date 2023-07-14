@@ -3,6 +3,7 @@ dist/*
 build/*
 output/*
 input/capeverde/*
+input/capeverde_admixtureQ/*
 input/chicken/*
 input/chicken_gapK/*
 input/diffInd/*
