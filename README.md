@@ -34,13 +34,16 @@ The local version requires downloading and installing the program to your local 
 
 ### 1. Open a **command line interpreter** (i.e., a shell)
    * Linux and macOS users can use the built-in Terminal. 
-   * For Windows users, you need to get a terminal. For example, you can get Git Bash by downloading and running the executable Git installer from https://git-scm.com/download/win. You may also use the built-in (for Windows 10) [Windows PowerShell](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell).
+   * For Windows users, you need to get a terminal. For example: 
+     - After you follow Step 3 to install Conda, you can use the built-in Anaconda Prompt available from the Anaconda Navigator.
+     - Or, you can use Git Bash after you install Git by downloading and running the executable Git installer from https://git-scm.com/download/win.
+     - You may also use the built-in (for Windows 10) [Windows PowerShell](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell). 
 
 ### 2. Install **Python** (Version 3.8 and above recommended)
    You can download the Python installer from https://www.python.org/downloads/.
-   * For Windows users, go to https://www.python.org/downloads/windows/ to download the installer corresponding to your operating system and run the executable installer (check the box 'Add Python to environment variables' during the installation).
-   * For macOS users, go to https://www.python.org/downloads/macos/ to download the macOS 64-bit universal2 installer and double-click on the *python-<version>-macosx.pkg* file to start the Python installer.
-   * For Linux users, if Python is not pre-installed, you can install it via command lines (``sudo yum install -y python3`` for CentOS and Red Hat Linux and ``sudo apt-get install python3`` for all other Linux systems). 
+   * For **Windows** users, go to https://www.python.org/downloads/windows/ to download the installer corresponding to your operating system, e.g., Windows installer (64-bit). Run the executable installer and check the box 'Add Python to environment variables' during the installation.
+   * For **macOS** users, go to https://www.python.org/downloads/macos/ to download the macOS 64-bit universal2 installer and double-click on the *python-<version>-macosx.pkg* file to start the Python installer.
+   * For **Linux** users, if Python is not pre-installed, you can install it via command lines (``sudo yum install -y python3`` for CentOS and Red Hat Linux and ``sudo apt-get install python3`` for all other Linux systems). 
    
    You can verify the installation by running 
    ````
@@ -66,8 +69,15 @@ The local version requires downloading and installing the program to your local 
 ### 4. Install the *Clumppling* package 
    **(1) Install the package**  
 
-    pip install git+https://github.com/PopGenClustering/Clumppling
-    
+   If you have [Git](https://git-scm.com/) installed, run the following command:
+   ````
+   pip install git+https://github.com/PopGenClustering/Clumppling
+   ````
+   If you don't have Git, run the following command:
+   ````
+   pip install https://github.com/PopGenClustering/Clumppling/archive/master.zip
+   ````
+
    **(2) Download the example files from [the input directory](input) in the GitHub repository** \
    For each example dataset, unzip the files into a folder with the same name, and put it under a folder under your current path called "input". More will be discussed in the section *How to Run (with an example)*.
       
