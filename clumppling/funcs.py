@@ -71,7 +71,8 @@ def load_inputs(data_path,output_path,input_format):
         input_files = [i for i in files if i.endswith('.Q')]
         if len(input_files)==0: # indivq files
             input_files = [i for i in files if i.endswith('.indivq')]
-            indivq_ext = True
+            if len(input_files)>0:
+                indivq_ext = True
     else:
         sys.exit("ERROR: Please specify one of the following for input_format: structure, admixture, fastStructure, and generalQ.")
 
