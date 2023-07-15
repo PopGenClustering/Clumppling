@@ -106,13 +106,13 @@ As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.
    
    If you do not know your current path, you may run ``pwd`` to see it in the command window. 
    
-   The chicken data files should be under ``input/capeverde``. When you run ``ls input/capeverde``, you should see a list of Cape Verde data files *(CAPEVERDE_Rep1.2.indivq, CAPEVERDE_Rep1.3.indivq, etc.)*
+   The chicken data files should be under ``input/capeverde``. I.e., When you run ``ls input/capeverde``, you should see a list of Cape Verde data files *(CAPEVERDE_Rep1.2.indivq, CAPEVERDE_Rep1.3.indivq, etc.)*
 
 3. **Run the program** under the default setting
    ````
    python -m clumppling -i input/capeverde -o output/capeverde -f admixture 
    ````
-   The outputs will be saved in the directory ``output/chicken`` and a zipped file of the same name will also be generated.
+   The outputs will be saved in the directory ``output/capeverde`` and a zipped file of the same name will also be generated.
    
    ***Notes:***
    * The output path (e.g. ''output/capeverde'') has to be different from the input path (e.g. ''input/capeverde'')! Otherwise, the input path will be overwritten by the outputs and this causes issues.
@@ -136,4 +136,4 @@ The Cape Verde data used as the example comes from: \
 
 ## Acknowledgements
 We thank Egor Lappo for helping with the packaging of the program. 
-We thank Egor Lappo, Daniel Cotter, and Maike Morrison for helping with the testing of the program.
+We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteban Rodriguez Rodriguez for helping with the testing of the program.
