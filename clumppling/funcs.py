@@ -716,7 +716,10 @@ def extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_ra
                     total_cost += stats[K][mode_idx]['cost']*s
                     total_perf += stats[K][mode_idx]['perf']*s
                     non_singleton_s += s
-            f.write('{},{},{},{},{}\n'.format(K,len(K2IDs[K]),non_singleton_s,total_cost/non_singleton_s,total_perf/non_singleton_s))
+            if non_singleton_s>0:
+                f.write('{},{},{},{},{}\n'.format(K,len(K2IDs[K]),non_singleton_s,total_cost/non_singleton_s,total_perf/non_singleton_s))
+            else:
+                f.write('{},{},{},{},{}\n'.format(K,len(K2IDs[K]),non_singleton_s,0,1))
 
     return mode_labels,rep_modes,repQ_modes,avgQ_modes,alignment_to_modes,stats  
 
