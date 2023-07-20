@@ -35,9 +35,9 @@ The local version requires downloading and installing the program to your local 
 ### 1. Open a **command line interpreter** (i.e., a shell)
    * Linux and macOS users can use the built-in Terminal. 
    * For Windows users, you need to get a terminal. For example: 
-     - After you follow Step 3 to install Conda, you can use the built-in Anaconda Prompt available from the Anaconda Navigator.
-     - Or, you can use Git Bash after you install Git by downloading and running the executable Git installer from https://git-scm.com/download/win.
-     - You may also use the built-in (for Windows 10) [Windows PowerShell](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell). 
+     - After you follow Step 3 to install Conda, you can use the built-in *Anaconda Prompt* available from the Anaconda Navigator.
+     - You may also use the built-in (for Windows 10) [*Windows PowerShell*](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell). 
+     - Or, you can use *Git Bash* after you install Git by downloading and running the executable Git installer from https://git-scm.com/download/win.
 
 ### 2. Install **Python** (Version 3.8 and above recommended)
    You can download the Python installer from https://www.python.org/downloads/.
@@ -58,7 +58,7 @@ The local version requires downloading and installing the program to your local 
    
    Using a virtual environment helps to keep the dependencies required by different projects separate and avoid conflicts between projects. 
    
-   Create a virtual environment named ``clumppling-env`` by
+   Create a virtual environment named ``clumppling-env`` by type the following command in the command-line interpreter
    ````
    conda create -n clumppling-env python
    ````
@@ -79,14 +79,55 @@ The local version requires downloading and installing the program to your local 
    ````
 
    **(2) Download the example files from [the input directory](input) in the GitHub repository** \
-   For each example dataset, unzip the files into a folder with the same name, and put it under a folder under your current path called "input". More will be discussed in the section *How to Run (with an example)*.
+   For each example dataset, unzip the files into a folder with the same name, and put it under a folder called "input" under a path of your choice. 
+   
+   For example, you may put it under a path ``C:/Users/YOUR_USER_NAME/Clumppling``. Then the path for the example files should be ``C:/Users/YOUR_USER_NAME/Clumppling/input``, and the path for the Cape Verde example data should be ``C:/Users/YOUR_USER_NAME/Clumppling/input/capeverde``.
+   
+   More will be discussed in the section *How to Run (with an example)*.
       
 ### 5. Check whether the installation is successful
    Run the following command:
    ````
    python -m clumppling -h
    ````
-   If the installation was successful, you should see the usage of the program in the command window.
+   If the installation was successful, you should see the usage of the program in the command window which tells you the required and optional arguments to the program. It should look like:
+   ````
+    usage: __main__.py [-h] -i INPUT_PATH -o OUTPUT_PATH -f INPUT_FORMAT [-v VIS] [--cd_param CD_PARAM]
+                       [--use_rep USE_REP] [--merge_cls MERGE_CLS] [--cd_default CD_DEFAULT] [--plot_modes PLOT_MODES]
+                       [--plot_modes_withinK PLOT_MODES_WITHINK] [--plot_major_modes PLOT_MAJOR_MODES]
+                       [--plot_all_modes PLOT_ALL_MODES] [--custom_cmap CUSTOM_CMAP]
+    
+    required arguments:
+      -i INPUT_PATH, --input_path INPUT_PATH
+                            path to load input files
+      -o OUTPUT_PATH, --output_path OUTPUT_PATH
+                            path to save output files
+      -f INPUT_FORMAT, --input_format INPUT_FORMAT
+                            input data format
+    
+    optional arguments:
+      -v VIS, --vis VIS     whether to generate visualization: 0 for no, 1 for yes (default)
+      --cd_param CD_PARAM   the parameter for community detection method (default 1.0)
+      --use_rep USE_REP     whether to use representative replicate as mode consensus: 0 for no (default), 1 for yes
+      --merge_cls MERGE_CLS
+                            whether to merge all pairs of clusters to align K+1 and K: 0 for no (default), 1 for yes
+      --cd_default CD_DEFAULT
+                            whether to use default community detection method (Louvain): 0 for no, 1 for yes (default)
+      --plot_modes PLOT_MODES
+                            whether to display aligned modes in structure plots over a multipartite graph: 0 for no, 1 for
+                            yes (default)
+      --plot_modes_withinK PLOT_MODES_WITHINK
+                            whether to display modes for each K in structure plots: 0 for no (default), 1 for yes
+      --plot_major_modes PLOT_MAJOR_MODES
+                            whether to display all major modes in a series of structure plots: 0 for no (default), 1 for
+                            yes
+      --plot_all_modes PLOT_ALL_MODES
+                            whether to display all aligned modes in a series of structure plots: 0 for no (default), 1 for
+                            yes
+      --custom_cmap CUSTOM_CMAP
+                            customized colormap as a comma-separated string of hex codes for colors: if empty (default),
+                            using the default colormap, otherwise use the user-specified colormap
+   ````
 
 ## Input Arguments
 The main module takes in three required arguments and several optional ones. The required arguments are
@@ -100,28 +141,30 @@ The optional arguments are ``cd_param``, ``use_rep``, ``merge_cls``, ``cd_defaul
 ## How to Run (with an example)
 As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.2017.07.002) as an example. The data files are available in the zip file [input/capeverde.zip](input/capeverde.zip). 
 
-1. **Download the zip file** if you haven't yet (click the button on the top right to download raw file).
+1. **Ensure that the data files have been successfully downloaded and put under the right directory.** Following Step 4(2) from above, you should have already downloaded the zip file "capeverde.zip" and extracted the data files inside the zip file to a folder named "capeverde" under a directory called "input" that you created. \
+For example, the data files are extracted to ``C:/Users/YOUR_USER_NAME/Clumppling/input/capeverde``.
 
-2. **Extract files** from the zip to a folder named "capeverde". Create a folder "input" under your current path and **put the "capeverde" folder in the "input" folder**.
+2. **Ensure that the current path is the parent directory of the "input" folder.** In your command-line interpreter, make sure that you navigate to the directory where the folder "input" locates. For the above example, you should be in the directory ``C:/Users/YOUR_USER_NAME/Clumppling``. 
    
-   If you do not know your current path, you may run ``pwd`` to see it in the command window. 
+   If you do not know your current path, you can run ``pwd`` to see it in the command window. 
    
-   The chicken data files should be under ``input/capeverde``. I.e., When you run ``ls input/capeverde``, you should see a list of Cape Verde data files *(CAPEVERDE_Rep1.2.indivq, CAPEVERDE_Rep1.3.indivq, etc.)*
+   The Cape Verde data files should locate in ``input/capeverde`` under your current path. I.e., When you run ``ls input/capeverde``, you should see a list of Cape Verde data files *(CAPEVERDE_Rep1.2.indivq, CAPEVERDE_Rep1.3.indivq, etc.)*
 
 3. **Run the program** under the default setting
    ````
    python -m clumppling -i input/capeverde -o output/capeverde -f admixture 
    ````
-   The outputs will be saved in the directory ``output/capeverde`` and a zipped file of the same name will also be generated.
+   The outputs will be saved in ``output/capeverde`` under your current and a zipped file of the same name will also be generated. For example, if you are in the directory ``C:/Users/YOUR_USER_NAME/Clumppling``, then the input will be saved in ``C:/Users/YOUR_USER_NAME/Clumppling/output/capeverde`` and zipped in ``C:/Users/YOUR_USER_NAME/Clumppling/output/capeverde.zip``.
    
    ***Notes:***
-   * The output path (e.g. ''output/capeverde'') has to be different from the input path (e.g. ''input/capeverde'')! Otherwise, the input path will be overwritten by the outputs and this causes issues.
-   * If your data files are in a different directory, make sure to specify the corresponding input path after ``-i``.
+   * Make sure that the output path (e.g. ''output/capeverde'') is different from the input path (e.g. ''input/capeverde'')! Otherwise, the input directory will be overwritten by the outputs and this causes issues.
+   * If your data files are in a directory different than the given example, make sure to specify the corresponding input path after ``-i``.
    * You can also change the parameters from those in the default setting. Here is another example for the chicken example (data available in the zip file [input/chicken.zip](input/chicken.zip)) where we specify the parameters ``cd_param`` and ``custom_cmap``:
       ````
       python -m clumppling -i input/chicken -o output/chicken_color -f structure --cd_param 1.05 --custom_cmap #D65859,#00AAC1,#01C0F6,#FDF0C4,#F1B38C,#AAD6BD,#6BB582,#B5DDF7,#AE8557,#FCEC73,#A4A569,#4264AC,#A1CDB2,#DE9D5D,#D9439A,#ABB2BA,#8775B3,#B3865C,#DADDE6,#E7BDD1,#FF9999
       ````
-      Here we are setting the community detection parameter ``cd_param`` to be 1.05 and providing a custom colormap (``custom_cmap``) for visualization of the alignment results. 
+      Here we are setting the community detection parameter ``cd_param`` to be 1.05. This parameter controls the resolution, i.e., the size of the detected communities, of the Louvain algorithm used for community detection. The default value is 1.0, and a larger value will result in smaller communities and more of them, thus detecting more modes. If the default parameter value is giving undesirable mode detection results, for instance, assigning each replicate to its own modes or assigning all obviously different replicates to a single mode, you may vary this parameter to get a desired size and number of the modes. \
+      We are also providing a custom colormap (``custom_cmap``) for visualization of the alignment results. The clusters will be colored based on colors specified by the list of comma-separated HEX codes.
 
    * More example commands to call the program can be found under [the scripts directory](scripts) in the GitHub repository.
 
