@@ -35,7 +35,7 @@ The local version requires downloading and installing the program to your local 
 ### 1. Open a **command line interpreter** (i.e., a shell)
    * Linux and macOS users can use the built-in Terminal. 
    * For Windows users, you need to get a terminal. For example: 
-     - After you follow Step 3 to install Conda, you can use the built-in *Anaconda Prompt* available from the Anaconda Navigator.
+     - After you follow Step 3 to install Conda, you can use the built-in *Anaconda Prompt* available from the Anaconda Navigator. Note that the installation of Python and Conda on Windows only requires running the installers and there is no need for running the commands.
      - You may also use the built-in (for Windows 10) [*Windows PowerShell*](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell). 
      - Or, you can use *Git Bash* after you install Git by downloading and running the executable Git installer from https://git-scm.com/download/win.
 
