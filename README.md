@@ -16,14 +16,16 @@ Current version **v 0.1.0 (beta version)**
 
 ---
 # Remote Version
-The remote version is available through an **online Colaboratory notebook**, which is a Jupyter notebook that runs in the cloud served by Google. If you are interested, more details about Colab notebooks can be found here: https://colab.google/.
+The remote version is available through an **online Colaboratory notebook**, which is a Jupyter notebook that runs in the cloud served by Google. If you are interested, more details about Colab notebooks can be found at https://colab.google/.
 
 There is **no need to download and install the program locally**.
 
-To run *Clumppling* remotely, click on [this link](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true) which will bring you to the notebook. \
-Next, follow the instructions in the notebook. \
-Click the run (little round-shaped buttons with a triangle in the middle) buttons next to each block on the left one by one. \
-Upload input files (e.g., the example files provided [here](input)) as a zip folder, specify the input data format, and change input parameters (if needed) following the instructions. \
+To **run *Clumppling* remotely**, click on [**THIS LINK**](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true) which will bring you to the notebook. Next, follow the instructions in the notebook. 
+
+Click the run (little round-shaped buttons with a triangle in the middle) buttons next to each block on the left one by one. 
+
+Upload input files (e.g., the example files provided [here](input)) as a zip folder, specify the input data format, and change input parameters (if needed) following the instructions. 
+
 You will be able to download a zipped file containing the alignment results at the end of the notebook.
 
 ---
