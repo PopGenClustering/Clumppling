@@ -137,8 +137,10 @@ def main(args):
     tic = time.time()
     # align across-K
     acrossK_path = os.path.join(output_path,"alignment_acrossK")
-    alignment_acrossK_avg, cost_acrossK_avg, best_acrossK_avg = align_ILP_modes_acrossK(avgQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="avg",merge=parameters['merge_cls'])
-    alignment_acrossK_rep, cost_acrossK_rep, best_acrossK_rep = align_ILP_modes_acrossK(repQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="rep",merge=parameters['merge_cls'])
+    if parameters['use_rep']:
+        alignment_acrossK_rep, cost_acrossK_rep, best_acrossK_rep = align_ILP_modes_acrossK(repQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="rep",merge=parameters['merge_cls'])
+    else:
+        alignment_acrossK_avg, cost_acrossK_avg, best_acrossK_avg = align_ILP_modes_acrossK(avgQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="avg",merge=parameters['merge_cls'])
     toc = time.time()
     logging.info("Time: %.3fs", toc-tic)
     
