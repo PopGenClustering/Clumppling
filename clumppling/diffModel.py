@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Clumppling diffModel function: not yet ready for beta version.
+Clumppling: diffModel function
 
 @author: Xiran Liu
 """

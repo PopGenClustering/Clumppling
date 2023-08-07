@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Clumppling diffInd function: not yet ready for beta version.
+Clumppling: diffInd function
 
 @author: Xiran Liu
 """
