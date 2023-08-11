@@ -32,6 +32,8 @@ def main(args):
         shutil.unpack_archive(input_path+".zip",input_path)
     if not os.path.exists(input_path):
         sys.exit("ERROR: Input file {} doesn't exist.".format(input_path))
+    if input_path==output_path:
+        sys.exit("ERROR: The input and output file paths are the same: {}. Please use different paths.".format(input_path))
     if not input_format in ["structure","fastStructure","admixture","generalQ"]:
         sys.exit("ERROR: Input data format is not supported. \nPlease specify input_format as one of the following: structure, admixture, fastStructure, and generalQ.")  
 
