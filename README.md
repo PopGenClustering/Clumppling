@@ -1,6 +1,6 @@
 # *Clumppling*
 
-This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear ProgrammING), a framework for aligning clustering results of population structure analysis.
+This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning clustering results of population structure analysis.
 
 Current version **v 0.1.0 (beta version)** 
 
@@ -22,7 +22,7 @@ There is **no need to download and install the program locally**.
 
 To **run *Clumppling* remotely**, click on [**THIS LINK**](https://colab.research.google.com/drive/1PiM5pUKm9cx-dCz0YLWwaJcNcTQHyUm8#offline=true&sandboxMode=true) which will bring you to the notebook. Next, follow the instructions in the notebook. 
 
-Click the run (little round-shaped buttons with a triangle in the middle) buttons next to each block on the left one by one. 
+One by one, Click the run (little round-shaped buttons with a triangle in the middle) buttons next to each block on the left. 
 
 Upload input files (e.g., the example files provided [here](input)) as a zip folder, specify the input data format, and change input parameters (if needed) following the instructions. 
 
@@ -36,8 +36,8 @@ The local version requires downloading and installing the program to your local 
 
 ### 1. Open a **command line interpreter** (i.e., a shell)
    * Linux and macOS users can use the built-in Terminal. 
-   * For Windows users, you need to get a terminal. For example: 
-     - After you follow Step 3 to install Conda, you can use the built-in *Anaconda Prompt* available from the Anaconda Navigator. Note that the installation of Python and Conda on Windows only requires running the installers and there is no need for running the commands.
+   * For Windows users, you will need to obtain a terminal. For example: 
+     - After you follow Step 3 to install Conda, you can use the built-in *Anaconda Prompt* available from the Anaconda Navigator. Note that the installation of Python and Conda on Windows only requires running the installers and there is no need for running commands in the command window.
      - You may also use the built-in (for Windows 10) [*Windows PowerShell*](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell). 
      - Or, you can use *Git Bash* after you install Git by downloading and running the executable Git installer from https://git-scm.com/download/win.
 
@@ -58,9 +58,9 @@ The local version requires downloading and installing the program to your local 
    
    > A virtual environment is a Python environment such that the Python interpreter, libraries and scripts installed into it are isolated from those installed in other virtual environments, and (by default) any libraries installed in a “system” Python, i.e., one which is installed as part of your operating system"
    
-   Using a virtual environment helps to keep the dependencies required by different projects separate and avoid conflicts between projects. 
+   Using a virtual environment helps to keep the dependencies required by different projects separate and to avoid conflicts between projects. 
    
-   Create a virtual environment named ``clumppling-env`` by type the following command in the command-line interpreter
+   Create a virtual environment named ``clumppling-env`` by typing the following command in the command-line interpreter
    ````
    conda create -n clumppling-env python
    ````
@@ -81,9 +81,9 @@ The local version requires downloading and installing the program to your local 
    ````
 
    **(2) Download the example files from [the input directory](input) in the GitHub repository** \
-   For each example dataset, unzip the files into a folder with the same name, and put it under a folder called "input" under a path of your choice. 
+   For each example dataset, unzip the files into a folder with the same name as the zip file, and put it inside a folder called "input" under a path of your choice. 
    
-   For example, you may put it under a path ``C:/Users/YOUR_USER_NAME/Clumppling``. Then the path for the example files should be ``C:/Users/YOUR_USER_NAME/Clumppling/input``, and the path for the Cape Verde example data should be ``C:/Users/YOUR_USER_NAME/Clumppling/input/capeverde``.
+   For example, you may put it inside a path ``C:/Users/YOUR_USER_NAME/Clumppling``. Then the path for all the example files should be ``C:/Users/YOUR_USER_NAME/Clumppling/input``. The path for the Cape Verde example data should be ``C:/Users/YOUR_USER_NAME/Clumppling/input/capeverde``.
    
    More will be discussed in the section *How to Run (with an example)*.
       
@@ -92,7 +92,7 @@ The local version requires downloading and installing the program to your local 
    ````
    python -m clumppling -h
    ````
-   If the installation was successful, you should see the usage of the program in the command window which tells you the required and optional arguments to the program. It should look like:
+   If the installation was successful, you should see the usage of the program in the command window. The usage tells you the required and optional arguments to the program. It should look like:
    ````
     usage: __main__.py [-h] -i INPUT_PATH -o OUTPUT_PATH -f INPUT_FORMAT [-v VIS] [--cd_param CD_PARAM]
                        [--use_rep USE_REP] [--merge_cls MERGE_CLS] [--cd_default CD_DEFAULT] [--plot_modes PLOT_MODES]
@@ -146,26 +146,27 @@ As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.
 1. **Ensure that the data files have been successfully downloaded and put under the right directory.** Following Step 4(2) from above, you should have already downloaded the zip file "capeverde.zip" and extracted the data files inside the zip file to a folder named "capeverde" under a directory called "input" that you created. \
 For example, the data files are extracted to ``C:/Users/YOUR_USER_NAME/Clumppling/input/capeverde``.
 
-2. **Ensure that the current path is the parent directory of the "input" folder.** In your command-line interpreter, make sure that you navigate to the directory where the folder "input" locates. For the above example, you should be in the directory ``C:/Users/YOUR_USER_NAME/Clumppling``. 
+2. **Ensure that the current path is the parent directory of the "input" folder.** In your command-line interpreter, make sure that you navigate to the directory where the folder "input" is located. For the Cape Verde example, you should be in the directory ``C:/Users/YOUR_USER_NAME/Clumppling``. 
    
    If you do not know your current path, you can run ``pwd`` to see it in the command window. 
    
-   The Cape Verde data files should locate in ``input/capeverde`` under your current path. I.e., When you run ``ls input/capeverde``, you should see a list of Cape Verde data files *(CAPEVERDE_Rep1.2.indivq, CAPEVERDE_Rep1.3.indivq, etc.)*
+   The Cape Verde data files should be located in ``input/capeverde`` under your current path. I.e., When you run
+   ````ls input/capeverde````
+   you should see a list of Cape Verde data files *(CAPEVERDE_Rep1.2.indivq, CAPEVERDE_Rep1.3.indivq, etc.)*
 
-3. **Run the program** under the default setting
+4. **Run the program** under the default setting
    ````
    python -m clumppling -i input/capeverde -o output/capeverde -f admixture 
    ````
-   The outputs will be saved in ``output/capeverde`` under your current and a zipped file of the same name will also be generated. For example, if you are in the directory ``C:/Users/YOUR_USER_NAME/Clumppling``, then the input will be saved in ``C:/Users/YOUR_USER_NAME/Clumppling/output/capeverde`` and zipped in ``C:/Users/YOUR_USER_NAME/Clumppling/output/capeverde.zip``.
+   The outputs will be saved in ``output/capeverde`` under your current directory and a zipped file of the same name will also be generated. For example, if you are in the directory ``C:/Users/YOUR_USER_NAME/Clumppling``, then the input will be saved in ``C:/Users/YOUR_USER_NAME/Clumppling/output/capeverde`` and zipped in ``C:/Users/YOUR_USER_NAME/Clumppling/output/capeverde.zip``.
    
    ***Notes:***
-   * Make sure that the output path (e.g. ''output/capeverde'') is different from the input path (e.g. ''input/capeverde'')! Otherwise, the input directory will be overwritten by the outputs and this causes issues.
-   * If your data files are in a directory different than the given example, make sure to specify the corresponding input path after ``-i``.
-   * You can also change the parameters from those in the default setting. Here is another example for the chicken example (data available in the zip file [input/chicken.zip](input/chicken.zip)) where we specify the parameters ``cd_param`` and ``custom_cmap``:
+   * If your data files are in a directory different from the given example, make sure to specify the corresponding input path after ``-i``.
+   * You can also change the parameters from those in the default setting. Here is another example for the chicken example (data available in the zip file [input/chicken.zip](input/chicken.zip)), where we specify the parameters ``cd_param`` and ``custom_cmap``:
       ````
       python -m clumppling -i input/chicken -o output/chicken_color -f structure --cd_param 1.05 --custom_cmap #D65859,#00AAC1,#01C0F6,#FDF0C4,#F1B38C,#AAD6BD,#6BB582,#B5DDF7,#AE8557,#FCEC73,#A4A569,#4264AC,#A1CDB2,#DE9D5D,#D9439A,#ABB2BA,#8775B3,#B3865C,#DADDE6,#E7BDD1,#FF9999
       ````
-      Here we are setting the community detection parameter ``cd_param`` to be 1.05. This parameter controls the resolution, i.e., the size of the detected communities, of the Louvain algorithm used for community detection. The default value is 1.0, and a larger value will result in smaller communities and more of them, thus detecting more modes. If the default parameter value is giving undesirable mode detection results, for instance, assigning each replicate to its own modes or assigning all obviously different replicates to a single mode, you may vary this parameter to get a desired size and number of the modes. \
+      Here we are setting the community detection parameter ``cd_param`` to be 1.05. This parameter controls the resolution, i.e., the size of the detected communities, of the Louvain algorithm used for community detection. The default value is 1.0, and a larger value will result in smaller communities and more of them, thus detecting more modes. Please see Section 4.3 of the paper. If the default parameter value is giving undesirable mode detection results, for instance, assigning each replicate to its own mode or assigning obviously different replicates to a single mode, you may vary this parameter to get a desired size and number of the modes. We suggest increasing or decreasing the parameter incrementally by 0.05 to search for a good choice of value for your dataset. \
       We are also providing a custom colormap (``custom_cmap``) for visualization of the alignment results. The clusters will be colored based on colors specified by the list of comma-separated HEX codes.
 
    * More example commands to call the program can be found under [the scripts directory](scripts) in the GitHub repository.
