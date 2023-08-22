@@ -103,7 +103,10 @@ def load_inputs(data_path,output_path,input_format):
             lines = lines[:res_end]
             
             # extract membership matrix
-            Q = [[float(i) for i in l.split()[5:]] for l in lines[1:]]
+            # find where the : is
+            l = lines[1]
+            idx = l.split().index(':')
+            Q = [[float(i) for i in l.split()[idx+1:]] for l in lines[1:]]
             Q = np.array(Q)
             K = Q.shape[1]
             Q_list.append(Q)
