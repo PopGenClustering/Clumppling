@@ -843,7 +843,8 @@ def plot_structure_on_multipartite(K_range,mode_labels,stats,consensusQ_modes,al
     base_patterns[m1] = [i for i in range(K)]
     if plot_flag:
         ax = axes[mode2fig_idx[m1]]
-        plot_membership(ax,base_Q,K_max,cmap,"")   
+        size = stats[K][m_m1]['size']
+        plot_membership(ax,base_Q,K_max,cmap,"","({})".format(size))   
     all_modes_alignment[m1] = [i+1 for i in range(base_Q.shape[1])]
     np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m1,cons_suffix)), base_Q, delimiter=' ')
     
@@ -861,7 +862,8 @@ def plot_structure_on_multipartite(K_range,mode_labels,stats,consensusQ_modes,al
                 base_patterns[m2] = ali_pat
                 if plot_flag:
                     ax = axes[mode2fig_idx[m2]]
-                    plot_membership(ax,aligned_Q,K_max,cmap,"")
+                    size = stats[K][m]['size']
+                    plot_membership(ax,aligned_Q,K_max,cmap,"","({})".format(size))
                 all_modes_alignment[m2] = [i+1 for i in ali_pat]
                 np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
     
@@ -887,7 +889,8 @@ def plot_structure_on_multipartite(K_range,mode_labels,stats,consensusQ_modes,al
         
         if plot_flag:
             ax = axes[mode2fig_idx[m2]]     
-            plot_membership(ax,aligned_Q,K_max,cmap,"")
+            size = stats[K][m_m2]['size']
+            plot_membership(ax,aligned_Q,K_max,cmap,"","({})".format(size))
         all_modes_alignment[m2] = [i+1 for i in pat]
         np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
         
@@ -908,7 +911,8 @@ def plot_structure_on_multipartite(K_range,mode_labels,stats,consensusQ_modes,al
                     
                     if plot_flag:
                         ax = axes[mode2fig_idx[m3]]  
-                        plot_membership(ax,aligned_Q,K_max,cmap,"")
+                        size = stats[K][m]['size']
+                        plot_membership(ax,aligned_Q,K_max,cmap,"","({})".format(size))
                     all_modes_alignment[m3] = [i+1 for i in pat]
                     np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m3,cons_suffix)), aligned_Q, delimiter=' ')            
     
@@ -1035,7 +1039,8 @@ def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensu
     base_patterns[m1] = [i for i in range(K)]
     if plot_flag:
         ax = axes[mode2fig_idx[m1]]
-        plot_membership(ax,base_Q,K_max,cmap,"") 
+        size = stats[K][m_m1]['size']
+        plot_membership(ax,base_Q,K_max,cmap,"","({})".format(size)) 
 
     all_modes_alignment[m1] = [i+1 for i in range(base_Q.shape[1])]
     np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m1,cons_suffix)), base_Q, delimiter=' ')
@@ -1054,10 +1059,11 @@ def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensu
                 base_patterns[m2] = ali_pat
                 if plot_flag:
                     ax = axes[mode2fig_idx[m2]]
+                    size = stats[K][m]['size']
                     if m2 in ["K5M1","K5M2","K5M3"]:    
-                        plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"") 
+                        plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"","({})".format(size)) 
                     else:
-                        plot_membership(ax,aligned_Q,K_max,cmap,"") 
+                        plot_membership(ax,aligned_Q,K_max,cmap,"","({})".format(size)) 
                 all_modes_alignment[m2] = [i+1 for i in ali_pat]
                 np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
     
@@ -1082,11 +1088,12 @@ def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensu
         base_patterns[m2] = pat
         
         if plot_flag:
+            size = stats[K][m_m2]['size']
             ax = axes[mode2fig_idx[m2]]     
             if m2 in ["K5M1","K5M2","K5M3"]:    
-                plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"") 
+                plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"","({})".format(size)) 
             else:
-                plot_membership(ax,aligned_Q,K_max,cmap,"") 
+                plot_membership(ax,aligned_Q,K_max,cmap,"","({})".format(size)) 
         all_modes_alignment[m2] = [i+1 for i in pat]
         np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m2,cons_suffix)), aligned_Q, delimiter=' ')
         
@@ -1107,13 +1114,14 @@ def plot_structure_on_multipartite_manuscript(K_range,mode_labels,stats,consensu
                     
                     if plot_flag:
                         ax = axes[mode2fig_idx[m3]]  
+                        size = stats[K][m]['size']
                         # plot_membership(ax,aligned_Q,K_max,cmap,"")
                         if m3=="K4M1":
-                            plot_membership(ax,aligned_Q[:,[3,0,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,1,2,4])),"")
+                            plot_membership(ax,aligned_Q[:,[3,0,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,1,2,4])),"","({})".format(size))
                         elif m3 in ["K5M1","K5M2","K5M3"]:    
-                            plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"") 
+                            plot_membership(ax,aligned_Q[:,[3,0,4,1,2]],K_max,cm.colors.ListedColormap(cmap([3,0,4,1,2])),"","({})".format(size)) 
                         else:
-                            plot_membership(ax,aligned_Q,K_max,cmap,"") 
+                            plot_membership(ax,aligned_Q,K_max,cmap,"","({})".format(size)) 
                     all_modes_alignment[m3] = [i+1 for i in pat]
                     np.savetxt(os.path.join(modeQ_path,'{}_aligned_{}.Q'.format(m3,cons_suffix)), aligned_Q, delimiter=' ')            
     
@@ -1214,7 +1222,7 @@ def plot_colorbar(cmap,K_max,fig_path):
     plt.close(fig)
 
 
-def plot_membership(ax,P,K_max,cmap,title):
+def plot_membership(ax,P,K_max,cmap,title,annot=""):
 
     N = P.shape[0]
     P_aug = np.hstack((np.zeros((N,1)),P))
@@ -1232,10 +1240,12 @@ def plot_membership(ax,P,K_max,cmap,title):
         ax.set_ylabel("\n".join(title.split()), rotation=0, fontsize=18, labelpad=30, va="center" )
     else:
         ax.set_ylabel("")
+    if annot:
+        ax.set_title(annot, fontsize=14, loc="right", pad=5)
     return
 
 
-def plot_membership_sorted(ax,P,K_max,cmap,title):
+def plot_membership_sorted(ax,P,K_max,cmap,title,annot=""):
 
     N = P.shape[0]
     P_aug = np.hstack((np.zeros((N,1)),P))
@@ -1257,10 +1267,12 @@ def plot_membership_sorted(ax,P,K_max,cmap,title):
         ax.set_ylabel("\n".join(title.split()), rotation=0, fontsize=18, labelpad=30, va="center" )
     else:
         ax.set_ylabel("")
+    if annot:
+        ax.set_title(annot, fontsize=14, loc="right", pad=5)
     return
 
 
-def plot_withinK_modes(K,K_max,consQ_modes,alignment_acrossK,fig_path,cmap,fig_suffix=""):
+def plot_withinK_modes(K,K_max,consQ_modes,alignment_acrossK,stats,fig_path,cmap,fig_suffix=""):
     
     modes = range(len(consQ_modes[K]))
     fig, axes = plt.subplots(len(modes),1,figsize=(20,2*len(modes)),facecolor='white')
@@ -1272,7 +1284,8 @@ def plot_withinK_modes(K,K_max,consQ_modes,alignment_acrossK,fig_path,cmap,fig_s
     m = 0
     lb1 = "K{}M{}".format(K,m+1)
     P = consQ_modes[K][m]
-    plot_membership(ax,P,K_max,cmap,lb1)
+    size = stats[K][m]['size']
+    plot_membership(ax,P,K_max,cmap,lb1,"({})".format(size))
     
     
     for i in range(1,len(modes)):
@@ -1284,7 +1297,8 @@ def plot_withinK_modes(K,K_max,consQ_modes,alignment_acrossK,fig_path,cmap,fig_s
         aligned_Q = alignQ_wrtP(Q,Q,alignment,merge=True)
         # plot
         ax = axes[i]
-        plot_membership(ax,aligned_Q,K_max,cmap,lb2)
+        size = stats[K][m]['size']
+        plot_membership(ax,aligned_Q,K_max,cmap,lb2,"({})".format(size))
     
     fig.savefig(os.path.join(fig_path,"K{}_modes_{}.png".format(K,fig_suffix)), bbox_inches='tight',dpi=300)
     plt.close(fig)
@@ -1469,7 +1483,7 @@ def load_Q_and_indinfo(input_base_path,cons_suffix,indinfo=True):
         return input_names,N_all, R_all, Q_all, K_all
 
 
-def plot_membership_with_pop(ax,P,ind2pop,K_max,cmap,title):
+def plot_membership_with_pop(ax,P,ind2pop,K_max,cmap,title,annot=""):
 
     N = P.shape[0]
     P_aug = np.hstack((np.zeros((N,1)),P))
@@ -1487,6 +1501,8 @@ def plot_membership_with_pop(ax,P,ind2pop,K_max,cmap,title):
         ax.set_ylabel("\n".join(title.split()), rotation=0, fontsize=18, labelpad=30, va="center" )
     else:
         ax.set_ylabel("")
+    if annot:
+        ax.set_title(annot, fontsize=14, loc="right", pad=5)
     return
 
 

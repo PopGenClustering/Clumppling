@@ -152,9 +152,9 @@ def main(args):
     if visualization and parameters['plot_modes_withinK']:
         for K in K_range:
             if parameters['use_rep']:
-                plot_withinK_modes(K,K_max,repQ_modes,alignment_acrossK_rep,fig_path,cmap,fig_suffix="rep")
+                plot_withinK_modes(K,K_max,repQ_modes,alignment_acrossK_rep,stats,fig_path,cmap,fig_suffix="rep")
             else:
-                plot_withinK_modes(K,K_max,avgQ_modes,alignment_acrossK_avg,fig_path,cmap,fig_suffix="avg")
+                plot_withinK_modes(K,K_max,avgQ_modes,alignment_acrossK_avg,stats,fig_path,cmap,fig_suffix="avg")
     
 
     #%% Visualization of alignment across-K
