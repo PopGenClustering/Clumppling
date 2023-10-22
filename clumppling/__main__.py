@@ -127,7 +127,7 @@ def main(args):
     modes_allK, cost_matrices, msg = detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd=parameters['cd_default'],cd_param=parameters['cd_param'])
 
     # extract representative/consensus replicates
-    mode_labels, rep_modes, repQ_modes, avgQ_modes, alignment_to_modes, stats = extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_range,K2IDs, output_path)
+    mode_labels, rep_modes, repQ_modes, avgQ_modes, alignment_to_modes, stats, costs = extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_range,K2IDs, output_path)
     
     toc = time.time()
     logging.info("Time: %.3fs", toc-tic)
@@ -162,6 +162,7 @@ def main(args):
     # plot_replicates(Q_list,K_range,output_path,cmap)
     
     if visualization and parameters['plot_modes']:
+        plot_costs_within_modes(K_range,mode_labels,costs,output_path)
         if parameters['use_rep']:
             plot_structure_on_multipartite(K_range,mode_labels,stats,repQ_modes,alignment_acrossK_rep,cost_acrossK_rep,best_acrossK_rep,"rep",output_path,True,cmap)
         else:
