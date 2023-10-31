@@ -13,3 +13,7 @@ clumppling/__pycache__
 
 # for MacOS users
 **/.DS_Store
+
+# for Google Drive
+desktop.ini
+**/desktop.ini
