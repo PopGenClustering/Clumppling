@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning clustering results of population structure analysis.
 
-Current version **v 0.1.0 (beta version)** 
+Current version **v 0.2.0** 
 
 > The current version has been tested on Windows 10 with Python 3.8 to 3.10, Ubuntu 20.04 LTS with Python 3.10, MacOS 13 with Python 3.11, and RHEL (Red Hat Enterprise Linux) 8.6 with Python 3.11.
 >
@@ -71,14 +71,18 @@ The local version requires downloading and installing the program to your local 
 ### 4. Install the *Clumppling* package 
    **(1) Install the package**  
 
-   If you have [Git](https://git-scm.com/) installed, run the following command:
+   Usually, pip is automatically installed when you installed Python. If it is not yet available in the system, follow the instructions from [https://pip.pypa.io/en/stable/installation/](https://pip.pypa.io/en/stable/installation/) to install it.
+   
+   Then run the following command to install the package:
    ````
-   pip install git+https://github.com/PopGenClustering/Clumppling
+   pip install clumppling
    ````
-   If you don't have Git, run the following command:
-   ````
-   pip install https://github.com/PopGenClustering/Clumppling/archive/master.zip
-   ````
+   
+   > **Alternatively**, you may choose to install the package in one of the two other ways: 
+   >
+   > If you have [Git](https://git-scm.com/) installed, run ```pip install git+https://github.com/PopGenClustering/Clumppling```.
+   > 
+   > If you don't have Git, run ```pip install https://github.com/PopGenClustering/Clumppling/archive/master.zip```.
 
    **(2) Download the example files from [the input directory](input) in the GitHub repository** \
    For each example dataset, unzip the files into a folder with the same name as the zip file, and put it inside a folder called "input" under a path of your choice. 
