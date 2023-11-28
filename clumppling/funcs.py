@@ -866,6 +866,67 @@ def plot_costs_within_modes(K_range,mode_labels,costs,output_path):
     plt.close(fig)
 
 
+def plot_costs_within_modes_ex1(K_range,mode_labels,costs,output_path):
+    mode_numbers = [len(mode_labels[K]) for K in K_range]
+
+    n_row = len(K_range)
+    n_col = max(mode_numbers)
+
+    fig, axes = plt.subplots(n_row,n_col,figsize=(3*n_col,2.5*n_row),facecolor='white')
+    
+    mode2fig_idx = dict()
+    for i_K,K in enumerate(K_range): 
+        for i_lb,lb in enumerate(mode_labels[K]):
+            if n_col==1:
+                mode2fig_idx[lb] = i_K
+            else:
+                mode2fig_idx[lb] = (i_K,i_lb)
+
+    for K in K_range:
+        for i_m,m in enumerate(mode_labels[K]):
+            c = costs[K][i_m]
+            ax = axes[mode2fig_idx[m]]
+            if len(c)>0:
+                if len(c)>50:
+                    ax.hist(c, bins=20, edgecolor='black')
+                else:
+                    ax.hist(c, bins=10, edgecolor='black')
+                ax.axvline(np.mean(c), color='r', linestyle='dashed', linewidth=1)
+
+    # polish the figure
+    if n_col>1:
+        for j in range(n_col):
+            axes[0,j].set_title("Mode {}".format(j+1), fontsize=18, y=1.05)
+            axes[n_row-1,j].set_xlabel("Pairwise cost", fontsize=15)
+        for i in range(n_row):
+            axes[i,0].set_ylabel("K={}".format(K_range[i]), rotation=0, fontsize=18, labelpad=30, va="center")
+        for i in range(n_row):
+            for j in range(n_col):
+                ax = axes[i,j]
+                ax.set_xlim([-0.01,1.01])
+                ax.set_xticks(np.arange(0,1.1,0.25))
+                if (i,j) not in mode2fig_idx.values():
+                    ax.set_xticks([])
+                    ax.set_yticks([]) 
+                    for pos in ['right', 'top', 'bottom', 'left']:
+                        ax.spines[pos].set_visible(False) 
+    else:
+        axes[0].set_title("Mode 1", fontsize=18, y=1.05)
+        for i in range(n_row):
+            axes[i].set_ylabel("K={}".format(K_range[i]), rotation=0, fontsize=18, labelpad=30, va="center")
+            axes[i].set_xlim([-0.01,1.01])
+            axes[i].set_xticks(np.arange(0,1.1,0.25))
+
+    for i,j in [(0,0),(1,0),(2,0)]:
+        axes[i,j].set_ylim([0,1000])
+    for i,j in [(2,1),(3,0),(3,1),(3,2)]:
+        axes[i,j].set_ylim([0,25])
+        axes[i,j].set_yticks([0,5,10,15,20,25])
+
+    fig_path = os.path.join(output_path,"visualization")
+    fig.savefig(os.path.join(fig_path,"modes_cost_hist.png"), bbox_inches='tight',dpi=300)
+    plt.close(fig)
+
 def plot_structure_on_multipartite(K_range,mode_labels,stats,consensusQ_modes,alignment_acrossK,cost_acrossK_cons,best_acrossK,cons_suffix,output_path,plot_flag,cmap):
     mode_numbers = [len(mode_labels[K]) for K in K_range]
 
