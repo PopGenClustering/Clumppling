@@ -179,7 +179,7 @@ For example, the data files are extracted to ``C:/Users/YOUR_USER_NAME/Clumpplin
 **Detailed instructions to run the program can be found in the [Manual](Clumppling_Manual.pdf).**
 
 ## References
-*Liu, Kopelman, & Rosenberg (2023). Clumppling: cluster matching and permutation program with integer linear programming. \[in prep\]*
+*Liu X, Kopelman NM, Rosenberg NA. Clumppling: cluster matching and permutation program with integer linear programming. Bioinformatics. 2024 Jan 2;40(1):btad751. doi: 10.1093/bioinformatics/btad751.*
 
 The Cape Verde data used as the example comes from: \
 *Verdu, P., Jewett, E. M., Pemberton, T. J., Rosenberg, N. A., & Baptista, M. (2017). Parallel trajectories of genetic and linguistic admixture in a genetically admixed creole population. Current Biology, 27(16), 2529-2535. [https://doi.org/10.1016/j.cub.2017.07.002.](https://www.sciencedirect.com/science/article/pii/S096098221730859X)*
