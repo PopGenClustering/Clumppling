@@ -158,9 +158,7 @@ def main(args):
     
 
     #%% Visualization of alignment across-K
-    # # plot all replicates
-    # plot_replicates(Q_list,K_range,output_path,cmap)
-    
+    # # plot all replicates    
     if visualization and parameters['plot_modes']:
         if parameters['use_rep']:
             plot_structure_on_multipartite(K_range,mode_labels,stats,repQ_modes,alignment_acrossK_rep,cost_acrossK_rep,best_acrossK_rep,"rep",output_path,True,cmap)
