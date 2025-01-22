@@ -548,7 +548,10 @@ def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_param=1.0):
             adj_mat = get_adj_mat(cost_mat)
 
             # test for community structure
-            has_comm_struc = test_comm_struc(adj_mat, alpha = 0.01)
+            if n_nodes>2:
+                has_comm_struc = test_comm_struc(adj_mat, alpha = 0.01)
+            else:
+                has_comm_struc = False 
             if not has_comm_struc:
                 partition_map = {i:0 for i in range(n_nodes)} 
                 msg.append("K={}: no significant community structure -> set to single mode".format(K))

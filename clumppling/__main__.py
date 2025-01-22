@@ -162,7 +162,6 @@ def main(args):
     # plot_replicates(Q_list,K_range,output_path,cmap)
     
     if visualization and parameters['plot_modes']:
-        plot_costs_within_modes_ex1(K_range,mode_labels,costs,output_path)
         if parameters['use_rep']:
             plot_structure_on_multipartite(K_range,mode_labels,stats,repQ_modes,alignment_acrossK_rep,cost_acrossK_rep,best_acrossK_rep,"rep",output_path,True,cmap)
         else:
