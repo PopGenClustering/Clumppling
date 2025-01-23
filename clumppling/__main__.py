@@ -21,7 +21,6 @@ from clumppling.funcs import *
 import warnings
 
 
-
 def main(args):
 
     input_path = args.input_path
@@ -96,10 +95,9 @@ def main(args):
     # set colormap
     if parameters['custom_cmap']!='':
         custom_cmap = [s.strip() for s in parameters['custom_cmap'].split(",")]
-        while len(custom_cmap) < K_max:
+        if len(custom_cmap) < K_max:
             logging.info("The provided colormap does not have enough colors for all clusters. Colors are recycled.")
-            custom_cmap.extend(custom_cmap)
-        cmap = cm.colors.ListedColormap(custom_cmap)
+        cmap = cm.colors.ListedColormap(custom_cmap, N=K_max)
     else:
         cmap = cm.colors.ListedColormap(distruct_cmap[:K_max])
 
