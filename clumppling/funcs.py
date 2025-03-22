@@ -123,13 +123,13 @@ def load_inputs(data_path,output_path,input_format):
     else: # if input_format =="admixture" or "fastStructure" or "generalQ"
         for r in range(R):
             input_file = input_files[r]
+            Q = np.loadtxt(os.path.join(data_path,input_file)).astype(float)
             try:
-                Q = np.loadtxt(os.path.join(data_path,input_file)).astype(float)
                 K = Q.shape[1]
-                Q_list.append(Q)
-                K_list.append(K)
             except IndexError:
                 continue
+            Q_list.append(Q)
+            K_list.append(K)
     
     # reorder by consecutive K values   
     sorted_idx = list(np.argsort(K_list))
