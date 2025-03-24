@@ -124,7 +124,10 @@ def load_inputs(data_path,output_path,input_format):
         for r in range(R):
             input_file = input_files[r]
             Q = np.loadtxt(os.path.join(data_path,input_file)).astype(float)
-            K = Q.shape[1]
+            try:
+                K = Q.shape[1]
+            except IndexError:
+                continue
             Q_list.append(Q)
             K_list.append(K)
     
