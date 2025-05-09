@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning clustering results of population structure analysis.
 
-Current version **v 0.3.1** 
+Current version **v 0.3.2** 
 
 > The current version has been tested on Windows 10 with Python 3.8 to 3.10, Ubuntu 20.04 LTS with Python 3.10, MacOS 13 with Python 3.11, and RHEL (Red Hat Enterprise Linux) 8.6 with Python 3.11.
 >
@@ -190,7 +190,7 @@ We thank Egor Lappo for helping with the packaging of the program.
 We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteban Rodriguez Rodriguez for helping with the testing of the program.
 
 ## Version Update History
-Version 0.3.1: 
+Version 0.3.2: 
 - Fix the bug in plotting when all replicates have the same K.
 - Add a check (merged from branch) to exclude loading K=1 replicates.
 
