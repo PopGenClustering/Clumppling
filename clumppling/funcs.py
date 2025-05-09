@@ -108,7 +108,10 @@ def load_inputs(data_path,output_path,input_format):
             idx = l.split().index(':')
             Q = [[float(i) for i in l.split()[idx+1:]] for l in lines[1:]]
             Q = np.array(Q)
-            K = Q.shape[1]
+            try:
+                K = Q.shape[1]
+            except IndexError:
+                continue
             Q_list.append(Q)
             K_list.append(K)
 
@@ -116,7 +119,10 @@ def load_inputs(data_path,output_path,input_format):
         for r in range(R):
             input_file = input_files[r]
             Q = np.loadtxt(os.path.join(data_path,input_file),dtype=str)[:,5:].astype(float)
-            K = Q.shape[1]
+            try:
+                K = Q.shape[1]
+            except IndexError:
+                continue
             Q_list.append(Q)
             K_list.append(K)
 
@@ -124,7 +130,10 @@ def load_inputs(data_path,output_path,input_format):
         for r in range(R):
             input_file = input_files[r]
             Q = np.loadtxt(os.path.join(data_path,input_file)).astype(float)
-            K = Q.shape[1]
+            try:
+                K = Q.shape[1]
+            except IndexError:
+                continue
             Q_list.append(Q)
             K_list.append(K)
     
@@ -546,6 +555,7 @@ def detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd,cd_param=1.0):
             msg.append("K={}: average pairwise cost close to 0 -> set to single mode".format(K))          
         else:
             adj_mat = get_adj_mat(cost_mat)
+            print(K, np.max(adj_mat), np.min(adj_mat), np.median(adj_mat))
 
             # test for community structure
             if n_nodes>1:
