@@ -112,7 +112,7 @@ The *.indivq* files for Cape Verde data contains the column indicating their pop
 A file with custom colors is also provided at [examples/custom_colors.txt](examples/custom_colors.txt) for use in examples.
 
 1. **Ensure that the data files have been successfully downloaded and put under the right directory.** 
-Download the example files from [the examples directory](examples) in the GitHub repository. For each example dataset, unzip the files into the folder with the same name as the zip file. 
+Download the example files from [the directory "examples"](examples) in the GitHub repository. For each example dataset, unzip the files into the folder with the same name as the zip file. 
    
 2. **Ensure that the current path is the correct directory.** By default, you should be in the parent directory of the "examples" folder, i.e., in your command-line interpreter, make sure that you navigate to the directory where the folder "exmaples" is located. Alternatively, update the paths correspondingly in the following example scripts.
 
@@ -129,7 +129,7 @@ Download the example files from [the examples directory](examples) in the GitHub
 
     The outputs will be saved in "examples/capeverde_output" under your current directory and a zipped file of the same name will also be generated and zipped in ``examples/capeverde_output.zip``.
 
-Similarly, you can run the program on the chicken data as follows:
+    Similarly, you can run the program on the chicken data as follows:
 
     ````bash
     python -m clumppling \
@@ -148,7 +148,7 @@ These commands are also provided in the [example script for running Clumppling o
 
 
 ### Outputs
-The output folder will contain the following structure (see `tests/test1/output` for reference; suppose `use_rep=True`):
+The output folder will contain the following structure (see `examples/capeverde_output` for reference after finishing running the example; suppose `use_rep=True`):
 
 ```
 output/
@@ -278,7 +278,7 @@ For generating figures, see [examples/plot_submodules.py](examples/plot_submodul
 python examples/plot_submodules.py 
 ````
 
-All commands are also provided in the [example scripts for running Clumppling's submodules](examples/run_submodules.sh). 
+All commands are also provided in [examples/run_submodules.sh](examples/run_submodules.sh). 
 
 
 ## License
