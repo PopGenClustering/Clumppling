@@ -302,6 +302,7 @@ We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteba
 Version 0.3.2: 
 - Fix the bug in plotting when all replicates have the same K.
 - Add a check (merged from branch) to exclude loading K=1 replicates.
+
 Version 1.0.0 (major updates): 
 - Modularize each step.
 - Add visualization of alignment patterns.
