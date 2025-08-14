@@ -23,52 +23,61 @@ Run the following command:
    python -m clumppling -h
    ````
 If the installation was successful, you should see the usage of the program in the command window. The usage tells you the required and optional arguments to the program. It should look like:
-   ````bash
-   usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [-v VIS] [--custom_cmap CUSTOM_CMAP] [--plot_type {graph,list,withinK,major,all}] [--include_cost INCLUDE_COST]
-                   [--include_label INCLUDE_LABEL] [--ind_labels IND_LABELS] [--extension EXTENSION] [--skip_rows SKIP_ROWS] [--remove_missing REMOVE_MISSING]
-                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES] [--test_comm TEST_COMM] [--comm_min COMM_MIN] [--comm_max COMM_MAX]
-                   [--merge MERGE] [--use_rep USE_REP] [--use_best_pair USE_BEST_PAIR]
+````bash
+usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [-v VIS] [--custom_cmap CUSTOM_CMAP] [--plot_type {graph,list,withinK,major,all}]
+                [--include_cost INCLUDE_COST] [--include_label INCLUDE_LABEL] [--ind_labels IND_LABELS] [--reorder_ind REORDER_IND] [--reorder_by_max_k REORDER_BY_MAX_K]
+                [--order_cls_by_label ORDER_CLS_BY_LABEL] [--extension EXTENSION] [--skip_rows SKIP_ROWS] [--remove_missing REMOVE_MISSING]
+                [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES] [--test_comm TEST_COMM] [--comm_min COMM_MIN]
+                [--comm_max COMM_MAX] [--merge MERGE] [--use_rep USE_REP] [--use_best_pair USE_BEST_PAIR]
 
-    Clumppling: a tool for cluster matching and permutation program with integer linear programming
+Clumppling: a tool for cluster matching and permutation program with integer linear programming
 
-    required arguments:
-    -i INPUT, --input INPUT
-                            Input file path
-    -o OUTPUT, --output OUTPUT
-                            Output file directory
-    -f {generalQ,admixture,structure,fastStructure}, --format {generalQ,admixture,structure,fastStructure}
-                            File format
+required arguments:
+-i INPUT, --input INPUT
+                        Input file path
+-o OUTPUT, --output OUTPUT
+                        Output file directory
+-f {generalQ,admixture,structure,fastStructure}, --format {generalQ,admixture,structure,fastStructure}
+                        File format
 
-    optional arguments:
-    -v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
-    --custom_cmap CUSTOM_CMAP
-                            Customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap, otherwise use the user-specified colormap
-    --plot_type {graph,list,withinK,major,all}
-                            Type of plot to generate: 'graph' (default), 'list', 'withinK', 'major', 'all'
-    --include_cost INCLUDE_COST
-                            Whether to include cost values in the graph plot: True (default)/False
-    --include_label INCLUDE_LABEL
-                            Whether to include individual labels in the plot: True (default)/False
-    --ind_labels IND_LABELS
-                            A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3] separated by delimiter)
-    --extension EXTENSION
-                            Extension of input files
-    --skip_rows SKIP_ROWS
-                            Skip top rows in input files
-    --remove_missing REMOVE_MISSING
-                            Remove individuals with missing data: True (default)/False
-    --cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}
-                            Community detection method to use (default: louvain)
-    --cd_res CD_RES       Resolution parameter for the default Louvain community detection (default: 1.0)
-    --test_comm TEST_COMM
-                            Whether to test community structure (default: True)
-    --comm_min COMM_MIN   Minimum threshold for cost matrix (default: 1e-4)
-    --comm_max COMM_MAX   Maximum threshold for cost matrix (default: 1e-2)
-    --merge MERGE         Whther to merge two clusters when aligning K+1 to K (default: True)
-    --use_rep USE_REP     Use representative modes (alternative: average): True (default)/False
-    --use_best_pair USE_BEST_PAIR
-                            Use best pair as anchor for across-K alignment (alternative: major): True (default)/False
-   ````
+optional arguments:
+-v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
+--custom_cmap CUSTOM_CMAP
+                        Customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap, otherwise use the user-specified
+                        colormap
+--plot_type {graph,list,withinK,major,all}
+                        Type of plot to generate: 'graph' (default), 'list', 'withinK', 'major', 'all'
+--include_cost INCLUDE_COST
+                        Whether to include cost values in the graph plot: True (default)/False
+--include_label INCLUDE_LABEL
+                        Whether to include individual labels in the plot: True (default)/False
+--ind_labels IND_LABELS
+                        A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3]
+                        separated by delimiter)
+--reorder_ind REORDER_IND
+                        Whether to reorder individuals within each label group in the plot: True (default)/False
+--reorder_by_max_k REORDER_BY_MAX_K
+                        Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)
+--order_cls_by_label ORDER_CLS_BY_LABEL
+                        Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)
+--extension EXTENSION
+                        Extension of input files
+--skip_rows SKIP_ROWS
+                        Skip top rows in input files
+--remove_missing REMOVE_MISSING
+                        Remove individuals with missing data: True (default)/False
+--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}
+                        Community detection method to use (default: louvain)
+--cd_res CD_RES       Resolution parameter for the default Louvain community detection (default: 1.0)
+--test_comm TEST_COMM
+                        Whether to test community structure (default: True)
+--comm_min COMM_MIN   Minimum threshold for cost matrix (default: 1e-4)
+--comm_max COMM_MAX   Maximum threshold for cost matrix (default: 1e-2)
+--merge MERGE         Whther to merge two clusters when aligning K+1 to K (default: True)
+--use_rep USE_REP     Use representative modes (alternative: average): True (default)/False
+--use_best_pair USE_BEST_PAIR
+                        Use best pair as anchor for across-K alignment (alternative: major): True (default)/False
+````
 
 ## Usage
 Examples:
@@ -93,9 +102,50 @@ The optional arguments are
 * for input parsing: ``extension``, ``skip_rows``, ``remove_missing``
 * for community detection: ``cd_method``,  ``cd_res``, ``test_comm``, ``comm_min``, ``comm_max``
 * for alignment across-K: ``merge``, ``use_rep``,``use_best_pair``
-* for figure generation: ``vis``, ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``.
+* for figure generation: ``vis``, ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``, ``reorder_ind``, ``reorder_by_max_k``, ``order_cls_by_label``.
 
 ### How to Run (with an example)
+As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.2017.07.002) and the [chicken data](https://doi.org/10.1093/genetics/159.2.699) as examples. The data files are available in the zip files [examples/capeverde.zip](examples/capeverde.zip) and [examples/chicken.zip](examples/chicken.zip). 
+
+The *.indivq* files for Cape Verde data contains the column indicating their population indices. The corresponding population labels are provided separately in the file [examples/capeverde_ind_labels.txt](examples/capeverde_ind_labels.txt).
+
+A file with custom colors is also provided at [examples/custom_colors.txt](examples/custom_colors.txt) for use in examples.
+
+1. **Ensure that the data files have been successfully downloaded and put under the right directory.** 
+Download the example files from [the examples directory](examples) in the GitHub repository. For each example dataset, unzip the files into the folder with the same name as the zip file. 
+   
+2. **Ensure that the current path is the correct directory.** By default, you should be in the parent directory of the "examples" folder, i.e., in your command-line interpreter, make sure that you navigate to the directory where the folder "exmaples" is located. Alternatively, update the paths correspondingly in the following example scripts.
+
+3. **Run the program** on the Cape Verde data under the default setting, with user-provided individual labels:
+
+    ````bash
+    python -m clumppling \
+    -i examples/capeverde \
+    -o examples/capeverde_output \
+    -f admixture \
+    --extension .indivq \
+    --ind_labels examples/capeverde_ind_labels.txt
+    ````
+
+    The outputs will be saved in "examples/capeverde_output" under your current directory and a zipped file of the same name will also be generated and zipped in ``examples/capeverde_output.zip``.
+
+Similarly, you can run the program on the chicken data as follows:
+
+    ````bash
+    python -m clumppling \
+    -i examples/chicken \
+    -o examples/chicken_output \
+    -f structure \
+    --extension _f \
+    --plot_type all \
+    --use_best_pair 0 \
+    --custom_cmap examples/custom_colors.txt 
+    ````
+
+    The outputs will be saved in "examples/chicken_output" under your current directory and a zipped file of the same name will also be generated and zipped in ``examples/chicken_output.zip``.
+    
+These commands are also provided in the [example script for running Clumppling on Cape Verde data (Admixture .indviq files)](examples/align_capeverde.sh) and [example script for running Clumppling on chicken data (Structure _f files)](examples/align_chicken.sh). 
+
 
 ### Outputs
 The output folder will contain the following structure (see `tests/test1/output` for reference; suppose `use_rep=True`):
@@ -153,8 +203,8 @@ Handles reading and parsing input files containing clustering results. Supports 
 Example:
 ````bash
 python -m clumppling.parseInput \
--i tests/test1/input \
--o tests/test1/output \
+-i examples/submodules/input \
+-o examples/submodules/output \
 -f generalQ 
 ````
 
@@ -165,8 +215,12 @@ Aligns clusters within a single value of K to ensure consistent labeling and fac
 Example:
 ````bash
 python -m clumppling.alignWithinK \
---qfilelist tests/test1/K5.qfilelist \
--o tests/test1/K5_aligned.txt
+--qfilelist examples/submodules/K3.qfilelist \
+-o examples/submodules/K3_aligned.txt
+
+python -m clumppling.alignWithinK \
+--qfilelist examples/submodules/K5.qfilelist \
+-o examples/submodules/K5_aligned.txt
 ````
 
 ### `detectMode`
@@ -176,10 +230,18 @@ Detects modes (distinct clustering solutions) among multiple runs for a given K,
 Example:
 ````bash
 python -m clumppling.detectMode \
---align_res tests/test1/K5_aligned.txt \
---qnamelist tests/test1/K5.qnamelist \
+--align_res examples/submodules/K3_aligned.txt \
+--qfilelist examples/submodules/K3.qfilelist \
+--qnamelist examples/submodules/K3.qnamelist \
 --cd_method markov_clustering \
--o tests/test1/K5_modes
+-o examples/submodules/K3_modes
+
+python -m clumppling.detectMode \
+--align_res examples/submodules/K5_aligned.txt \
+--qfilelist examples/submodules/K5.qfilelist \
+--qnamelist examples/submodules/K5.qnamelist \
+--cd_method markov_clustering \
+-o examples/submodules/K5_modes
 ````
 
 ### `alignAcrossK`
@@ -188,11 +250,36 @@ Aligns clusters across different values of K, enabling tracking of cluster membe
 
 Example:
 ````bash
+# prepare mode files
+for K in 3 5; do
+    SRC=examples/submodules/K${K}_modes
+    DST=examples/submodules/K3K5_modes
+    mkdir -p $DST
+    for f in "$SRC"/*.Q; do
+        if [ -f "$f" ]; then
+            cp "$f" "$DST/K${K}$(basename "$f")"
+        fi
+    done
+done
+# generate list of mode files and names
+ls examples/submodules/K3K5_modes/*_rep.Q > examples/submodules/K3K5_modes/K3K5_modes.qfilelist
+for f in examples/submodules/K3K5_modes/*_rep.Q; do [ -f "$f" ] && basename "$f" | sed 's/\_rep.Q$//' >> examples/submodules/K3K5_modes/K3K5_modes.qnamelist; done
+
+# run clumppling
 python -m clumppling.alignAcrossK \
---qfilelist tests/test1/K3K5_modes/K3K5_modes.qfilelist \
---qnamelist tests/test1/K3K5_modes/K3K5_modes.qnamelist \
--o tests/test1/K3K5_modes/output
+--qfilelist examples/submodules/K3K5_modes/K3K5_modes.qfilelist \
+--qnamelist examples/submodules/K3K5_modes/K3K5_modes.qnamelist \
+-o examples/submodules/K3K5_acrossK_output
 ````
+
+### Visualizations
+For generating figures, see [examples/plot_submodules.py](examples/plot_submodules.py) as an example. Run
+````bash
+python examples/plot_submodules.py 
+````
+
+All commands are also provided in the [example scripts for running Clumppling's submodules](examples/run_submodules.sh). 
+
 
 ## License
 

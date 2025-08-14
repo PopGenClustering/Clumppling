@@ -6,12 +6,10 @@ import matplotlib.pyplot as plt
 
 from .log_config import setup_logger
 from .core import align_within_k_all_K, detect_modes_all_K, extract_modes_all_K, align_across_k, write_alignment_across_k, reorderQ_within_k, reorderQ_across_k
-from .utils import disp_params,str2bool,parse_strings,load_default_cmap, parse_custom_cmap, get_modes_all_K, write_reordered_across_k, get_mode_sizes, unnest_list
-from .plot import plot_colorbar, plot_memberships_list, plot_graph, plot_alignment
+from .utils import disp_params,str2bool,parse_strings,get_modes_all_K, write_reordered_across_k, get_mode_sizes, unnest_list
+from .plot import load_default_cmap, parse_custom_cmap, plot_colorbar, plot_memberships_list, plot_graph, plot_alignment
 
 from .parseInput import process_files, extract_meta_input
-# from .alignWithinK import load_withinK_qfiles
-# from .detectMode import write_modes_to_file
 
 import logging
 logger = logging.getLogger(__name__)
@@ -118,7 +116,7 @@ def main(args: argparse.Namespace):
         logger.info(f"Plot alignment patterns ({suffix})")
         mode_K = [Q.shape[1] for Q in unnest_list(Q_rep_modes_list)]
         mode_names = unnest_list(mode_names_list)
-        fig = plot_alignment(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=150)
+        fig = plot_alignment(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=200)
         fig.savefig(os.path.join(fig_dir,"alignment_pattern_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
 
@@ -128,18 +126,27 @@ def main(args: argparse.Namespace):
                 logger.info(f"Plot all modes in a graph ({suffix})")
                 mode_labels_list = [[f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names] for mode_names in mode_names_list]
                 Q_modes_reordered_list = [[aligned_Qs_allK[mode_name] for mode_name in mode_names] for mode_names in mode_names_list]
+                if args.reorder_ind:
+                    if args.reorder_by_max_k:
+                        Q_ref = Q_modes_reordered_list[-1][0]
+                    else:
+                        Q_ref = Q_modes_reordered_list[0][0]
+                else:
+                    Q_ref = None
                 if args.include_cost:
                     logger.info(f"Including cost values in the graph")
                     fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
                                     names_list=mode_names_list, labels_list=mode_labels_list,  
                                     cost_acrossK=cost_acrossK, ind_labels=ind_labels, 
-                                    fontsize=14, line_cmap=plt.get_cmap("Greys"))
+                                    fontsize=14, line_cmap=plt.get_cmap("Greys"),
+                                    order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
                 else:
                     logger.info(f"Not including cost values in the graph")
                     fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
                                     names_list=mode_names_list, labels_list=mode_labels_list,  
                                     cost_acrossK=None, ind_labels=ind_labels, 
-                                    fontsize=14, line_cmap=plt.get_cmap("Greys"))
+                                    fontsize=14, line_cmap=plt.get_cmap("Greys"),
+                                    order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
                 fig.savefig(os.path.join(fig_dir,"all_modes_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
             
@@ -152,7 +159,14 @@ def main(args: argparse.Namespace):
                     # # if only align within each mode, but not across K, then use the following line:
                     # Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)
                     mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-                    fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels)
+                    if args.reorder_ind:
+                        if args.reorder_by_max_k:
+                            Q_ref = Q_modes_reordered[-1]
+                        else:
+                            Q_ref = Q_modes_reordered[0]
+                    else:
+                        Q_ref = None
+                    fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
                     fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.png".format(K,suffix)), bbox_inches='tight', dpi=150, transparent=False)
                     plt.close(fig)
             
@@ -162,7 +176,14 @@ def main(args: argparse.Namespace):
                 mode_names = unnest_list(mode_names_list)
                 Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
                 mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-                fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels)
+                if args.reorder_ind:
+                    if args.reorder_by_max_k:
+                        Q_ref = Q_rep_modes_list[-1][0] if args.use_rep else Q_avg_modes_list[-1][0]
+                    else:
+                        Q_ref = Q_modes_list[0]
+                else:
+                    Q_ref = None
+                fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
                 fig.savefig(os.path.join(fig_dir,"all_modes_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
 
@@ -171,7 +192,14 @@ def main(args: argparse.Namespace):
                 major_mode_names = [mode_names[0] for mode_names in mode_names_list]
                 Q_major_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in major_mode_names]
                 major_mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in major_mode_names]
-                fig = plot_memberships_list(Q_major_modes_reordered, cmap, names=major_mode_labels, ind_labels=ind_labels)
+                if args.reorder_ind:
+                    if args.reorder_by_max_k:
+                        Q_ref = Q_major_modes_reordered[-1]
+                    else:
+                        Q_ref = Q_major_modes_reordered[0]
+                else:
+                    Q_ref = None
+                fig = plot_memberships_list(Q_major_modes_reordered, cmap, names=major_mode_labels, ind_labels=ind_labels, order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
                 fig.savefig(os.path.join(fig_dir,"major_modes_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)      
         else:
@@ -184,7 +212,14 @@ def main(args: argparse.Namespace):
             # Q_modes = cd_res[0]['repQ_modes'] if args.use_rep else cd_res[0]['avgQ_modes']
             suffix = "rep" if args.use_rep else "avg"
             mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-            fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels)
+            if args.reorder_ind:
+                if args.reorder_by_max_k:
+                    Q_ref = Q_modes_reordered[-1]
+                else:
+                    Q_ref = Q_modes_reordered[0]
+            else:
+                Q_ref = None
+            fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
             fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.png".format(K,suffix)), bbox_inches='tight', dpi=150, transparent=False)
             plt.close(fig)
 
@@ -216,9 +251,15 @@ def parse_args():
                           help="Type of plot to generate: 'graph' (default), 'list', 'withinK', 'major', 'all'")
     optional.add_argument("--include_cost", type=str2bool, default=True, required=False, help="Whether to include cost values in the graph plot: True (default)/False")
     optional.add_argument("--include_label", type=str2bool, default=True, required=False, help="Whether to include individual labels in the plot: True (default)/False")
-    optional.add_argument("--ind_labels", type=str, default="",
+    optional.add_argument("--ind_labels", type=str, default="", required=False, 
                         help="A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3] separated by delimiter)")
-    
+    optional.add_argument("--reorder_ind", type=str2bool, default=True, required=False, 
+                        help="Whether to reorder individuals within each label group in the plot: True (default)/False")
+    optional.add_argument("--reorder_by_max_k", type=str2bool, default=True, required=False, 
+                        help="Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)")
+    optional.add_argument("--order_cls_by_label", type=str2bool, default=False, required=False, 
+                        help="Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)")
+
     optional.add_argument("--extension", type=str, default="", required=False, help="Extension of input files")
     optional.add_argument("--skip_rows", type=int, default=0, required=False, help="Skip top rows in input files")
     optional.add_argument("--remove_missing", type=str2bool, default=True, required=False, help="Remove individuals with missing data: True (default)/False")

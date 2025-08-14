@@ -17,13 +17,11 @@ include = [
 python = ">=3.9,<3.13"
 matplotlib = "^3.7"
 numpy = "^1.24"
+TracyWidom = "0.4.0"
 scipy = "^1.10"
-cvxopt = "1.3"
 cvxpy = { version = "1.5", extras = ["GLPK"] }
 cdlib = "^0.3"
 networkx = "^3.0"
-TracyWidom = "0.3.0"
-
 
 [tool.poetry.scripts]
 parseInput = "clumppling.parseInput.__main__:main"

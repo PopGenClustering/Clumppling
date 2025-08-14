@@ -2,9 +2,8 @@ import os
 import shutil
 import numpy as np
 import argparse
-import importlib.resources
-from typing import List, Any, Tuple, Optional #, Optional, Tuple
-import matplotlib.colors as mcolors
+from typing import List, Any, Tuple
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -39,39 +38,6 @@ def disp_msg(msg: str, level: str = "info"):
         logger.error(s)
     else:
         logger.info(s)
-
-def load_default_cmap(K:int):
-    """
-    Load the default color map from the resource file.
-    
-    Returns:
-        A list of colors (in hex code) loaded from the resource file.
-    """
-    resource_file = importlib.resources.files('clumppling.files').joinpath('default_colors.txt')
-    with resource_file.open('r') as f:
-        colors = f.readlines()
-    colors = [color.strip() for color in colors if color.strip()]  # Clean up empty lines
-    cmap = mcolors.ListedColormap(colors[:K])
-    rgb_list = [mcolors.to_rgb(c) for c in np.array(cmap.colors)]
-    return rgb_list
-
-def parse_custom_cmap(colors: list, K: int) -> list[tuple[float, float, float]]:
-    """
-    Parse a custom color map string into a list of colors.
-    
-    Args:
-        cmap_str: A string of comma-separated color codes (e.g., "#FF0000,#00FF00,#0000FF").
-        K: The number of colors to return.
-        
-    Returns:
-        A list of colors (in hex code) parsed from the input string.
-    """
-    # colors = [color.strip() for color in cmap_str.split(',') if color.strip()]
-    if len(colors) < K:
-        raise ValueError(f"WARNING: Custom color map has only {len(colors)} colors, but K={K} is requested. Recycling colors.")
-    cmap = mcolors.ListedColormap(colors, N=K)
-    rgb_list = [mcolors.to_rgb(c) for c in np.array(cmap.colors)]
-    return rgb_list
 
 
 def load_matrix(file_path: str, delimiter: str = " ", skip_rows: int = 0) -> np.ndarray:
@@ -248,11 +214,18 @@ def write_reordered_across_k(aligned_Qs_allK: dict, all_modes_alignment: dict, o
         logger.info(f"Aligned membership matrices output directory '{output_dir}' already exists and is not empty. Removed existing directory.")
     os.makedirs(output_dir, exist_ok=True)
 
-    with open(os.path.join(output_dir, f"all_modes_alignment_{suffix}.txt"), "w") as f:
-        for mode_label, aligned_Q in aligned_Qs_allK.items():
-            np.savetxt(os.path.join(output_dir, f"{mode_label}_{suffix}.Q"), aligned_Q, delimiter=' ')
-            alignment_pattern = all_modes_alignment[mode_label]
-            f.write(f"{mode_label}:{pattern_to_str(alignment_pattern)}\n")
+    if suffix!= "":
+        with open(os.path.join(output_dir, f"all_modes_alignment_{suffix}.txt"), "w") as f:
+            for mode_label, aligned_Q in aligned_Qs_allK.items():
+                np.savetxt(os.path.join(output_dir, f"{mode_label}_{suffix}.Q"), aligned_Q, delimiter=' ')
+                alignment_pattern = all_modes_alignment[mode_label]
+                f.write(f"{mode_label}:{pattern_to_str(alignment_pattern)}\n")
+    else:
+        with open(os.path.join(output_dir, "all_modes_alignment.txt"), "w") as f:
+            for mode_label, aligned_Q in aligned_Qs_allK.items():
+                np.savetxt(os.path.join(output_dir, f"{mode_label}.Q"), aligned_Q, delimiter=' ')
+                alignment_pattern = all_modes_alignment[mode_label]
+                f.write(f"{mode_label}:{pattern_to_str(alignment_pattern)}\n")
 
 def get_mode_sizes(cd_res: list) -> dict:
     """ Get sizes of modes for each K value.
@@ -309,3 +282,52 @@ def get_uniq_lb_sep(labels: list) -> Tuple[list, list, list]:
         uniq_lbs_indices.append(mean_idx)
         uniq_lbs_sep_idx.append(indices[-1])
     return uniq_lbs, uniq_lbs_indices, uniq_lbs_sep_idx
+
+
+def reorder_ind_within_group(Q: np.ndarray, lbs: list) -> Tuple[np.ndarray, dict]:
+    """ Reorder individuals within each group based on their membership patterns.
+        Args:
+            Q: Membership matrix of shape (N_ind, K).
+            lbs: List of labels for each individual.
+        Returns:
+            ind_sorted_indices: Indices that reorder individuals within each group.
+            mbsp_sort_indices: Dictionary of sorted cluster indices for each group.
+    """
+    uniq_lbs = list(np.unique(lbs))
+    assert labels_are_grouped(lbs, uniq_lbs), "Labels are not grouped together."
+    mbsp_sort_indices = dict()
+    ind_sorted_indices = np.zeros(len(lbs)).astype(int)
+    for lb in uniq_lbs:
+        lb_indices = [i for i, val in enumerate(lbs) if val == lb]
+        lb_indices = np.array(lb_indices)
+        lb_Q = Q[lb_indices,:]
+        # sort clusters by total membership
+        mbsp_sum = lb_Q.sum(axis=0)
+        mbsp_sortidx = np.argsort(-mbsp_sum) # from largest to smallest
+        lb_Q = lb_Q[:,mbsp_sortidx]
+        # sort individuals by their membership in largest clusters (decreasingly)
+        sorted_ind = np.lexsort(-lb_Q[:,::-1].T)
+        ind_sorted_indices[lb_indices] = lb_indices[sorted_ind]  # add the offset of the group start index
+        mbsp_sort_indices[lb] = mbsp_sortidx
+    return ind_sorted_indices, mbsp_sort_indices
+
+# def order_mbsp(Q: np.ndarray, lbs: list) -> dict:
+#     """ Order the membership matrix Q based on the labels.
+#         Args:
+#             Q: Membership matrix of shape (N_ind, K).
+#             lbs: List of labels for each individual.
+#         Returns:
+#             Ordered indices for each group.
+#     """
+#     uniq_lbs = list(np.unique(lbs))
+#     assert labels_are_grouped(lbs, uniq_lbs), "Labels are not grouped together."
+#     mbsp_sortindices = dict()
+#     for lb in uniq_lbs:
+#         lb_indices = [i for i, val in enumerate(lbs) if val == lb]
+#         lb_indices = np.array(lb_indices)
+#         lb_Q = Q[lb_indices,:]
+#         # get total membership for each cluster
+#         mbsp_sum = lb_Q.sum(axis=0)
+#         mbsp_sortidx = np.argsort(-mbsp_sum) # from largest to smallest
+#         mbsp_sortindices[lb] = mbsp_sortidx
+#     return mbsp_sortindices

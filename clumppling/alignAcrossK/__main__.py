@@ -3,8 +3,8 @@ import shutil
 import argparse
 
 from clumppling.log_config import setup_logger
-from clumppling.utils import disp_params, disp_msg, parse_strings
-from clumppling.core import align_across_k, write_alignment_across_k
+from clumppling.utils import disp_params, disp_msg, parse_strings, str2bool, write_reordered_across_k
+from clumppling.core import align_across_k, write_alignment_across_k, reorderQ_across_k
 from . import load_any_qfiles, extract_K_range_from_Qs, separate_Qs_by_K
 
 import logging
@@ -19,6 +19,8 @@ def parse_args():
     parser.add_argument("-o", "--output", type=str, required=True, help="Directory to save output files")
     parser.add_argument("--qnamelist", type=str, default=[],
                         help="A plain text file containing replicate names (one per line) (default: file base from qfilelist)")
+    parser.add_argument("--use_best_pair", type=str2bool, default=True, required=False, help="Use best pair as anchor for across-K alignment (alternative: major): True (default)/False")
+    
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -51,4 +53,15 @@ if __name__ == "__main__":
     best_acrossK_out.to_csv(os.path.join(args.output,"best_pairs_acrossK.txt"), index=False)
     major_acrossK_out.to_csv(os.path.join(args.output,"major_pairs_acrossK.txt"), index=False)
     
+    # Reorder Q matrices across K
+    logger.info(f"Reordering membership matrices according to alignment".center(50, '-'))
+    modeQ_dir = os.path.join(args.output,"modes_aligned")
+    anchor_pairs = best_acrossK_out["Best Pair"].tolist() if args.use_best_pair else major_acrossK_out["Major Pair"].tolist()
+    aligned_Qs_allK, all_modes_alignment = reorderQ_across_k(K_range, Q_modes_list, mode_names_list, 
+                                                            alignment_acrossK, anchor_pairs)
+    write_reordered_across_k(aligned_Qs_allK, all_modes_alignment, output_dir=modeQ_dir, suffix="")
+    if len(K_range)==1:
+        logger.warning(f"Only one K value found: K={K_range[0]}." )
 
+    logger.info(f"Completed".center(50, '-'))
+    logger.info(f"".center(50, '=')) 

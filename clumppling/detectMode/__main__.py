@@ -71,7 +71,7 @@ if __name__ == "__main__":
                                   Q_list, alignment_withinK)
     disp_msg(f"Saving modes and statistics")
     avg_stat = write_modes_to_file(res, output_dir=args.output, compute_avg=True)
-    print(avg_stat)
 
-    
+    logger.info(f"Completed".center(50, '-'))
+    logger.info(f"".center(50, '=')) 
     

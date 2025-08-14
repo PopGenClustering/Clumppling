@@ -1,11 +1,11 @@
 import os
 import argparse
-from typing import List
 from clumppling.log_config import setup_logger
 from clumppling.utils import disp_params, disp_msg, parse_strings
 from clumppling.core import align_within_k
 from . import load_withinK_qfiles, write_aligned_within_k
-
+import logging
+logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="clumppling.alignWithinK")
@@ -34,3 +34,6 @@ if __name__ == "__main__":
     alined_results = align_within_k(Q_list)
     disp_msg(f"Writing aligned results to {args.output}")
     write_aligned_within_k(alined_results, Q_names, args.output)
+
+    logger.info(f"Completed".center(50, '-'))
+    logger.info(f"".center(50, '=')) 

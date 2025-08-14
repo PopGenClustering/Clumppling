@@ -3,6 +3,8 @@ import argparse
 from clumppling.log_config import setup_logger
 from clumppling.utils import disp_msg, str2bool, disp_params
 from . import process_files
+import logging
+logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="clumppling.parseInput")
@@ -28,3 +30,5 @@ if __name__ == "__main__":
                   fmt=args.format,extension=args.extension, 
                   skip_missing=args.remove_missing,
                   delimiter=" ", skip_rows=0)
+    logger.info(f"Completed".center(50, '-'))
+    logger.info(f"".center(50, '=')) 
