@@ -19,8 +19,8 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    setup_logger()
     args = parse_args()
+    setup_logger(os.path.join(os.path.dirname(args.output), "alignWithinK.log"))
     disp_params(args, title="Alignment within K")
 
     if not os.path.exists(os.path.dirname(args.output)):

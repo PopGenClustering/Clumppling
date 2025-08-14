@@ -1,6 +1,7 @@
 import argparse
 import os
 import shutil
+import time
 import matplotlib.pyplot as plt
 
 from .log_config import setup_logger
@@ -16,6 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def main(args: argparse.Namespace):
+    tot_tic = time.time()
     # load and process input files
     processed_input_dir = os.path.join(args.output, "input")
     labels = process_files(input_dir=args.input, output_dir=processed_input_dir, 
@@ -189,6 +191,13 @@ def main(args: argparse.Namespace):
     logger.info(f"Completed".center(50, '-'))
     logger.info(f"".center(50, '='))   
 
+    # zip all files
+    logger.info(f"Zipping outputs".center(50, '-'))
+    shutil.make_archive(args.output, "zip", args.output)
+    logger.info(f"".center(50, '='))  
+    tot_toc = time.time()
+    logger.info("Total Time: %.3fs", tot_toc-tot_tic)
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Clumppling: a tool for cluster matching and permutation program with integer linear programming")
     parser._action_groups.pop()
@@ -230,11 +239,10 @@ def parse_args():
     optional.add_argument("--use_rep", type=str2bool, default=True, required=False, help="Use representative modes (alternative: average): True (default)/False")
     optional.add_argument("--use_best_pair", type=str2bool, default=True, required=False, help="Use best pair as anchor for across-K alignment (alternative: major): True (default)/False")
     
-    
     return parser.parse_args()
 
 if __name__ == "__main__":
-    setup_logger()
     args = parse_args()
+    setup_logger(os.path.join(args.output, "clumppling.log"))
     disp_params(args, title="CLUMPPLING")
     main(args)

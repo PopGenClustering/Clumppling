@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning mixed-membership clustering results of population structure analysis.
 
-Current version **v 1.0.0** 
+Current version **v 1.0.0** (Last update: Aug 13, 2025)
 
 ## Features
 
@@ -73,32 +73,126 @@ If the installation was successful, you should see the usage of the program in t
 ## Usage
 Examples:
 ````bash
-python -m clumppling.parseInput \
+python -m clumppling.clumppling \
         -i tests/test1/input \
         -o tests/test1/output \
         -f generalQ 
 ````
 
-
 ## Main Function
 
+**Detailed explanation will be available in the [Manual](Clumppling_Manual.pdf).**
+
+### Input Arguments
+The main module takes in three required arguments and several optional ones. The required arguments are
+* ``-i`` (``--input``) path to load input files
+* ``-o`` (``--output``) path to save output files
+* ``-f`` (``--format``) input data format. This choice must be one of "generalQ", "admixture", "structure", or "fastStructure".
+
+The optional arguments are 
+* for input parsing: ``extension``, ``skip_rows``, ``remove_missing``
+* for community detection: ``cd_method``,  ``cd_res``, ``test_comm``, ``comm_min``, ``comm_max``
+* for alignment across-K: ``merge``, ``use_rep``,``use_best_pair``
+* for figure generation: ``vis``, ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``.
+
+### How to Run (with an example)
+
+### Outputs
+The output folder will contain the following structure (see `tests/test1/output` for reference; suppose `use_rep=True`):
+
+```
+output/
+├── input/
+│   ├── input_meta.txt
+│   ├── input_labels.txt (optional)
+│   ├── 1_K2R1.Q
+│   └── ...
+├── alignment_withinK/
+│   ├── K2.txt
+│   ├── K3.txt
+│   └── ...
+├── modes/
+│   ├── mode_alignment.txt
+│   ├── mode_stats.txt
+│   ├── mode_average_stats.txt
+│   ├── K2M1_avg.Q
+│   ├── K2M1_rep.Q
+│   └── ...
+├── modes_aligned/
+│   ├── all_modes_alignment_rep.txt
+│   ├── K2M1_rep.Q
+│   └── ...
+├── alignment_acrossK/
+│   ├── alignment_acrossK_rep.txt
+│   ├── best_pairs_acrossK_rep.txt
+│   └── major_pairs_acrossK_rep.txt
+├── visualization/
+│   ├── colorbar.png
+│   ├── alignment_pattern_rep.png
+│   ├── all_modes_graph_rep.png
+│   └── ...
+└── clumppling.log
+```
+
+- `aligned_modes/`: Contains files with clusters aligned within each K.
+- `modes/`: Contains detected modes for each K.
+- `acrossK_alignment/`: Contains results of cluster alignment across different K values.
+- `plots/`: Contains generated visualizations (structure plots, alignment graphs).
+- `logs/`: Contains log files from the run.
+
+File names and subfolders may vary depending on your input and options.
+
 ## Submodules
+
+Each submodule is callable independently.
 
 ### `parseInput`
 
 Handles reading and parsing input files containing clustering results. Supports various formats and prepares data for downstream analysis.
 
+Example:
+````bash
+python -m clumppling.parseInput \
+-i tests/test1/input \
+-o tests/test1/output \
+-f generalQ 
+````
+
 ### `aligneWithinK`
 
 Aligns clusters within a single value of K to ensure consistent labeling and facilitate comparison across replicates.
+
+Example:
+````bash
+python -m clumppling.alignWithinK \
+--qfilelist tests/test1/K5.qfilelist \
+-o tests/test1/K5_aligned.txt
+````
 
 ### `detectMode`
 
 Detects modes (distinct clustering solutions) among multiple runs for a given K, helping to identify stable and alternative solutions.
 
+Example:
+````bash
+python -m clumppling.detectMode \
+--align_res tests/test1/K5_aligned.txt \
+--qnamelist tests/test1/K5.qnamelist \
+--cd_method markov_clustering \
+-o tests/test1/K5_modes
+````
+
 ### `alignAcrossK`
 
 Aligns clusters across different values of K, enabling tracking of cluster membership changes as K varies.
+
+Example:
+````bash
+python -m clumppling.alignAcrossK \
+--qfilelist tests/test1/K3K5_modes/K3K5_modes.qfilelist \
+--qnamelist tests/test1/K3K5_modes/K3K5_modes.qnamelist \
+-o tests/test1/K3K5_modes/output
+````
 
 ## License
 

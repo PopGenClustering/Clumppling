@@ -20,8 +20,8 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == "__main__":
-    setup_logger()
     args = parse_args()
+    setup_logger(os.path.join(args.output, "parseInput.log"))
     disp_params(args, title="Input Parsing")
     disp_msg(f"Processing input files")
     process_files(input_dir=args.input, output_dir=os.path.join(args.output,"input"), 

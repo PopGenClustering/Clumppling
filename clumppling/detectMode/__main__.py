@@ -39,8 +39,8 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    setup_logger()
     args = parse_args()
+    setup_logger(os.path.join(args.output, "detectMode.log"))
     disp_params(args, title="Mode Detection")
 
     if os.path.exists(args.output) and os.listdir(args.output):
