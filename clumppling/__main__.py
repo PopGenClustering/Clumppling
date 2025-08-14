@@ -1,237 +1,240 @@
-# -*- coding: utf-8 -*-
-"""
-Clumppling: main function
-
-@author: Xiran Liu
-"""
-
-import os
-import sys
-import json
-import time
-import shutil
-import logging
-import builtins   
 import argparse
-import datetime
-from pkg_resources import resource_stream
-import numpy as np
+import os
+import shutil
+import matplotlib.pyplot as plt
 
-from clumppling.funcs import *
-import warnings
+from .log_config import setup_logger
+from .core import align_within_k_all_K, detect_modes_all_K, extract_modes_all_K, align_across_k, write_alignment_across_k, reorderQ_within_k, reorderQ_across_k
+from .utils import disp_params,str2bool,parse_strings,load_default_cmap, parse_custom_cmap, get_modes_all_K, write_reordered_across_k, get_mode_sizes, unnest_list
+from .plot import plot_colorbar, plot_memberships_list, plot_graph, plot_alignment
 
+from .parseInput import process_files, extract_meta_input
+# from .alignWithinK import load_withinK_qfiles
+# from .detectMode import write_modes_to_file
 
-def main(args):
+import logging
+logger = logging.getLogger(__name__)
 
-    input_path = args.input_path
-    output_path = args.output_path
-    input_format = args.input_format
+def main(args: argparse.Namespace):
+    # load and process input files
+    processed_input_dir = os.path.join(args.output, "input")
+    labels = process_files(input_dir=args.input, output_dir=processed_input_dir, 
+                           fmt=args.format,extension=args.extension, 
+                           skip_missing=args.remove_missing,
+                           delimiter=" ", skip_rows=0, label_cols=[0, 1, 3], mat_start_col=5)
+    if labels is not None:
+        logger.warning("Input labels loaded.")
     
-    if os.path.exists(input_path+".zip"):
-        shutil.unpack_archive(input_path+".zip",input_path)
-    if not os.path.exists(input_path):
-        sys.exit("ERROR: Input file {} doesn't exist.".format(input_path))
-    if input_path==output_path:
-        sys.exit("ERROR: The input and output file paths are the same: {}. Please use different paths.".format(input_path))
-    if not input_format in ["structure","fastStructure","admixture","generalQ"]:
-        sys.exit("ERROR: Input data format is not supported. \nPlease specify input_format as one of the following: structure, admixture, fastStructure, and generalQ.")  
+    Q_names, K_range, K2IDs = extract_meta_input(processed_input_dir)
+    K_max = max(K_range)
+    logging.info(f"Unique K values found (max: {K_max}): {K_range}")
 
-    overwrite = False
-    if os.path.exists(output_path):
-        overwrite = True
-        shutil.rmtree(output_path)
-
-    if os.path.exists(output_path+".zip"):
-        os.remove(output_path+".zip")
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-
-    if args.vis is not None:
-        visualization = bool(args.vis)
+    # align within K
+    logger.info(f"Aligning replicates within K".center(50, '-'))
+    alignment_withinK_list, cost_withinK_list = align_within_k_all_K(Q_names, K_range, K2IDs,
+                                                                     qfile_dir = processed_input_dir, output_dir = args.output)
+    # detect modes within K
+    logger.info(f"Detecting modes within K".center(50, '-'))
+    modes_dir = os.path.join(args.output, "modes")
+    modes_all_K_list, cost_matrices_list = detect_modes_all_K(K_range, cost_withinK_list, Q_names, K2IDs, 
+                                                    test_comm = args.test_comm, method = args.cd_method, res = args.cd_res, 
+                                                    comm_min = args.comm_min, comm_max = args.comm_max)
+    # extract modes and statistics
+    logger.info(f"Extracting modes and summarizing statistics".center(50, '-'))
+    cd_res, avg_stat = extract_modes_all_K(K_range, K2IDs, Q_names, cost_matrices_list, modes_all_K_list, alignment_withinK_list,
+                                           processed_input_dir, output_dir=modes_dir)
+    mode_sizes = get_mode_sizes(cd_res) 
+    # get modes for alignment across K
+    mode_names_list, Q_rep_modes_list, Q_avg_modes_list = get_modes_all_K(K_range, cd_res)
+    
+    # align across K
+    logger.info(f"Aligning modes across K".center(50, '-'))
+    if len(K_range) < 2:
+        logger.error("At least two K values are required for alignment across K: K={}".format(K_range))
+    acrossK_dir = os.path.join(args.output,"alignment_acrossK")
+    if os.path.exists(acrossK_dir) and os.listdir(acrossK_dir):
+        shutil.rmtree(acrossK_dir)
+        logger.info(f"Alignment across-K output directory '{acrossK_dir}' already exists and is not empty. Removed existing directory.")
+    os.makedirs(acrossK_dir, exist_ok=True)
+    suffix = "rep" if args.use_rep else "avg"
+    if args.use_rep:
+        logger.info(f"(using representative replicate)")
+        alignment_acrossK, cost_acrossK, best_acrossK_out, major_acrossK_out = align_across_k(K_range, Q_rep_modes_list, mode_names_list, merge=args.merge)
+        write_alignment_across_k(alignment_acrossK, cost_acrossK, os.path.join(acrossK_dir,"alignment_acrossK_rep.txt"))
+        best_acrossK_out.to_csv(os.path.join(acrossK_dir,"best_pairs_acrossK_rep.txt"), index=False)
+        major_acrossK_out.to_csv(os.path.join(acrossK_dir,"major_pairs_acrossK_rep.txt"), index=False)
     else:
-        visualization = True
-
-    # load default parameters and process
-    parameters = vars(args)
-    parameters = process_parameters(parameters)
-    plot_params = ['plot_modes','plot_modes_withinK','plot_major_modes','plot_all_modes']
-    if visualization==False:
-        for param in plot_params:
-            parameters[param] = False
-    disp = display_parameters(input_path,input_format,output_path,parameters)
+        logger.info(f"(using average across replicates)")
+        alignment_acrossK, cost_acrossK, best_acrossK_out, major_acrossK_out  = align_across_k(K_range, Q_avg_modes_list, mode_names_list, merge=args.merge)
+        write_alignment_across_k(alignment_acrossK, cost_acrossK, os.path.join(acrossK_dir,"alignment_acrossK_rep.txt"))
+        best_acrossK_out.to_csv(os.path.join(acrossK_dir,"best_pairs_acrossK_avg.txt"), index=False)
+        major_acrossK_out.to_csv(os.path.join(acrossK_dir,"major_pairs_acrossK_avg.txt"), index=False)    
     
-    #%% Set-up 
-    # log outputs
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
-    logging.basicConfig(filename=os.path.join(output_path,'output.log'), level=logging.INFO, format='')
-    logging.getLogger().addHandler(logging.StreamHandler())
-    logging.getLogger('matplotlib.pyplot').disabled = True
-    logging.getLogger('matplotlib.pyplot').disabled = True
-
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    logging.info("{} Program starts.".format(current_time))
-
-    if overwrite:
-        logging.info('\033[93m'+"Overwriting existing output directory {}.".format(output_path)+'\033[0m') 
+    # Reorder Q matrices across K
+    logger.info(f"Reordering membership matrices according to alignment".center(50, '-'))
+    modeQ_dir = os.path.join(args.output,"modes_aligned")
+    Q_modes_list = Q_rep_modes_list if args.use_rep else Q_avg_modes_list
+    anchor_pairs = best_acrossK_out["Best Pair"].tolist() if args.use_best_pair else major_acrossK_out["Major Pair"].tolist()
+    aligned_Qs_allK, all_modes_alignment = reorderQ_across_k(K_range, Q_modes_list, mode_names_list, 
+                                                            alignment_acrossK, anchor_pairs)
+    write_reordered_across_k(aligned_Qs_allK, all_modes_alignment, output_dir=modeQ_dir, suffix=suffix)
+    if len(K_range)==1:
+        logger.warning(f"Only one K value found: K={K_range[0]}." )
     
-    logging.info("==================================")
-    logging.info(disp)
-    logging.info("======= Running Clumppling =======")
+    # plot colormap if visualization is enabled
+    if args.vis:
+        # load colormap (convert to a list of RGB tuples)
+        if args.custom_cmap:
+            try:
+                colors = parse_strings(args.custom_cmap, remove_dup=False)
+                cmap = parse_custom_cmap(colors, K=K_max)
+            except ValueError as e:
+                logger.error(e)
+                logger.info("Falling back to default colormap.")
+                cmap = load_default_cmap(K=K_max)
+        else:
+            cmap = load_default_cmap(K=K_max)  # Example usage of load_default_cmap
+            
+        # plot alignment pattern
+        logger.info(f"Generating visualizations".center(50, '-'))
+        fig_dir = os.path.join(args.output,"visualization")
+        os.makedirs(fig_dir, exist_ok=True)
+        logger.info(f"Plot colorbar")
+        plot_colorbar(cmap,K_max,fig_dir)
 
-    tot_tic = time.time()   
-    tic = time.time()
-    logging.info(">>> Processing input data files and checking arguments")
-    
-    
-    #%% Loading membership data    
-    # load input data
-    Q_list, K_list, Q_files, R, N, K_range, K_max, K2IDs = load_inputs(data_path=input_path, 
-                                                                   output_path=output_path, 
-                                                                   input_format=input_format)
-    
-    distruct_cmap = np.loadtxt(resource_stream('clumppling', 'files/default_colors.txt'),dtype=str,comments=None)
-
-    # set colormap
-    if parameters['custom_cmap']!='':
-        custom_cmap = [s.strip() for s in parameters['custom_cmap'].split(",")]
-        if len(custom_cmap) < K_max:
-            logging.info("The provided colormap does not have enough colors for all clusters. Colors are recycled.")
-        cmap = cm.colors.ListedColormap(custom_cmap, N=K_max)
-    else:
-        cmap = cm.colors.ListedColormap(distruct_cmap[:K_max])
-
-    if visualization:
-        # visualize results
-        fig_path = os.path.join(output_path,"visualization")
-        if not os.path.exists(fig_path):
-            os.makedirs(fig_path)
-        plot_colorbar(cmap,K_max,fig_path)
-
-
-    toc = time.time()
-    logging.info("Time: %.3fs",toc-tic)
-    
-    
-    #%% Alignment within-K and mode detection
-    
-    tic = time.time()
-    logging.info(">>> Aligning replicates within K and detecting modes")
-
-    # align within-K
-    alignment_withinK, cost_withinK = align_withinK(output_path,Q_list,Q_files,K_range,K2IDs)
-
-    # detect mode
-    modes_allK, cost_matrices, msg = detect_modes(cost_withinK,Q_files,K_range,K2IDs,default_cd=parameters['cd_default'],cd_param=parameters['cd_param'])
-
-    # extract representative/consensus replicates
-    mode_labels, rep_modes, repQ_modes, avgQ_modes, alignment_to_modes, stats, costs = extract_modes(Q_list,Q_files,modes_allK,alignment_withinK,cost_matrices,K_range,K2IDs, output_path)
-    
-    toc = time.time()
-    logging.info("Time: %.3fs", toc-tic)
-    
-    #%% Alignment across-K
-        
-    # use representative membership as the consensus
-    logging.info(">>>  Aligning modes across K")
-    tic = time.time()
-    # align across-K
-    acrossK_path = os.path.join(output_path,"alignment_acrossK")
-    if parameters['use_rep']:
-        alignment_acrossK_rep, cost_acrossK_rep, best_acrossK_rep = align_ILP_modes_acrossK(repQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="rep",merge=parameters['merge_cls'])
-    else:
-        alignment_acrossK_avg, cost_acrossK_avg, best_acrossK_avg = align_ILP_modes_acrossK(avgQ_modes,mode_labels,K_range,acrossK_path,cons_suffix="avg",merge=parameters['merge_cls'])
-    toc = time.time()
-    logging.info("Time: %.3fs", toc-tic)
-    
-    #%% Visualization of alignment within-K
-    tic = time.time()
-    logging.info(">>> Plotting alignment results")
-    if parameters['use_rep']:
-        if len(best_acrossK_rep)==0:
-            logging.info("WARNING: Only one K is detected. Only plotting the alignment within-K.")
-            parameters['plot_modes_withinK'] = True
-            parameters['plot_modes'] = False
-            parameters['plot_major_modes'] = False
-            parameters['plot_all_modes'] = False
-    else:
-        if len(best_acrossK_avg)==0:
-            logging.info("WARNING: Only one K is detected. Only plotting the alignment within-K.")
-            parameters['plot_modes_withinK'] = True
-            parameters['plot_modes'] = False
-            parameters['plot_major_modes'] = False
-            parameters['plot_all_modes'] = False
-
-    if visualization and parameters['plot_modes_withinK']:
-        for K in K_range:
-            if parameters['use_rep']:
-                plot_withinK_modes(K,K_max,repQ_modes,alignment_acrossK_rep,stats,fig_path,cmap,fig_suffix="rep")
+        if args.include_label:
+            if args.ind_labels!="":
+                ind_labels = parse_strings(args.ind_labels, remove_dup=False)
+            elif labels is not None:
+                ind_labels = list(labels[:,-1])
             else:
-                plot_withinK_modes(K,K_max,avgQ_modes,alignment_acrossK_avg,stats,fig_path,cmap,fig_suffix="avg")
-    
-
-    #%% Visualization of alignment across-K
-    # # plot all replicates    
-    if visualization and parameters['plot_modes']:
-        if parameters['use_rep']:
-            plot_structure_on_multipartite(K_range,mode_labels,stats,repQ_modes,alignment_acrossK_rep,cost_acrossK_rep,best_acrossK_rep,"rep",output_path,True,cmap)
+                ind_labels = []
         else:
-            plot_structure_on_multipartite(K_range,mode_labels,stats,avgQ_modes,alignment_acrossK_avg,cost_acrossK_avg,best_acrossK_avg,"avg",output_path,True,cmap)
-    else:
-        if parameters['use_rep']:
-            if len(best_acrossK_rep)>0:
-                plot_structure_on_multipartite(K_range,mode_labels,stats,repQ_modes,alignment_acrossK_rep,cost_acrossK_rep,best_acrossK_rep,"rep",output_path,False,cmap)
-        else:
-            if len(best_acrossK_avg)>0:
-                plot_structure_on_multipartite(K_range,mode_labels,stats,avgQ_modes,alignment_acrossK_avg,cost_acrossK_avg,best_acrossK_avg,"avg",output_path,False,cmap)
+            ind_labels = []
 
-    if visualization and parameters['plot_major_modes']:
-        if parameters['use_rep']:
-            plot_major_modes(K_range,output_path,"rep",cmap)
-        else:
-            plot_major_modes(K_range,output_path,"avg",cmap)
-    if visualization and parameters['plot_all_modes']:
-        if parameters['use_rep']:
-            plot_all_modes(K_range,mode_labels,output_path,"rep",cmap)
-        else:
-            plot_all_modes(K_range,mode_labels,output_path,"avg",cmap)
+        # plot alignment pattern
+        logger.info(f"Plot alignment patterns ({suffix})")
+        mode_K = [Q.shape[1] for Q in unnest_list(Q_rep_modes_list)]
+        mode_names = unnest_list(mode_names_list)
+        fig = plot_alignment(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=150)
+        fig.savefig(os.path.join(fig_dir,"alignment_pattern_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+        plt.close(fig)
 
-    toc = time.time()
-    logging.info("Time: %.3fs", toc-tic)
-    
-    
-    # zip all files
-    logging.info(">>>  Zipping files")
-    shutil.make_archive(output_path, "zip", output_path)
+        if len(K_range)>1:
 
-    tot_toc = time.time()
-    logging.info("======== Total Time: %.3fs ========", tot_toc-tot_tic)
-    
-    
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+            if args.plot_type in ["graph", "all"]:
+                logger.info(f"Plot all modes in a graph ({suffix})")
+                mode_labels_list = [[f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names] for mode_names in mode_names_list]
+                Q_modes_reordered_list = [[aligned_Qs_allK[mode_name] for mode_name in mode_names] for mode_names in mode_names_list]
+                if args.include_cost:
+                    logger.info(f"Including cost values in the graph")
+                    fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
+                                    names_list=mode_names_list, labels_list=mode_labels_list,  
+                                    cost_acrossK=cost_acrossK, ind_labels=ind_labels, 
+                                    fontsize=14, line_cmap=plt.get_cmap("Greys"))
+                else:
+                    logger.info(f"Not including cost values in the graph")
+                    fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
+                                    names_list=mode_names_list, labels_list=mode_labels_list,  
+                                    cost_acrossK=None, ind_labels=ind_labels, 
+                                    fontsize=14, line_cmap=plt.get_cmap("Greys"))
+                fig.savefig(os.path.join(fig_dir,"all_modes_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                plt.close(fig)
+            
+            if args.plot_type in ["withinK", "all"]:
+                logger.info(f"Plot modes within-K ({suffix})")
+                for i_K, K in enumerate(K_range):
+                    Q_modes_list = Q_rep_modes_list[i_K] if args.use_rep else Q_avg_modes_list[i_K]
+                    mode_names = mode_names_list[i_K]
+                    Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
+                    # # if only align within each mode, but not across K, then use the following line:
+                    # Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)
+                    mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+                    fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels)
+                    fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.png".format(K,suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                    plt.close(fig)
+            
+            if args.plot_type in ["list", "all"]:
+                logger.info(f"Plot all modes in a list ({suffix})")
+                Q_modes_list = unnest_list(Q_rep_modes_list) if args.use_rep else unnest_list(Q_avg_modes_list)
+                mode_names = unnest_list(mode_names_list)
+                Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
+                mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+                fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels)
+                fig.savefig(os.path.join(fig_dir,"all_modes_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                plt.close(fig)
+
+            if args.plot_type in ["major", "all"]:
+                logger.info(f"Plot major modes in a list ({suffix})")
+                major_mode_names = [mode_names[0] for mode_names in mode_names_list]
+                Q_major_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in major_mode_names]
+                major_mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in major_mode_names]
+                fig = plot_memberships_list(Q_major_modes_reordered, cmap, names=major_mode_labels, ind_labels=ind_labels)
+                fig.savefig(os.path.join(fig_dir,"major_modes_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                plt.close(fig)      
+        else:
+            logger.info(f"Plot modes within-K (single K={K_range[0]})")
+            i_K = 0
+            K = K_range[i_K]
+            Q_modes_list = Q_rep_modes_list[i_K] if args.use_rep else Q_avg_modes_list[i_K]
+            mode_names = mode_names_list[i_K]
+            Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)        
+            # Q_modes = cd_res[0]['repQ_modes'] if args.use_rep else cd_res[0]['avgQ_modes']
+            suffix = "rep" if args.use_rep else "avg"
+            mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+            fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels)
+            fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.png".format(K,suffix)), bbox_inches='tight', dpi=150, transparent=False)
+            plt.close(fig)
+
+    logger.info(f"Completed".center(50, '-'))
+    logger.info(f"".center(50, '='))   
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Clumppling: a tool for cluster matching and permutation program with integer linear programming")
     parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
     optional = parser.add_argument_group('optional arguments')
 
-    required.add_argument('-i', '--input_path', type=str, required=True, help='path to load input files')
-    required.add_argument('-o', '--output_path', type=str, required=True, help='path to save output files')
-    required.add_argument('-f', '--input_format', type=str, required=True, help='input data format')
+    # required
+    required.add_argument("-i", "--input", type=str, required=True, help="Input file path")
+    required.add_argument("-o", "--output", type=str, required=True, help="Output file directory")
+    required.add_argument("-f", "--format", type=str, required=True, choices=["generalQ", "admixture", "structure", "fastStructure"],
+                        help="File format")
+    # optional
+    optional.add_argument('-v', '--vis', type=str2bool, default=True, required=False, help='Whether to generate figure(s): True (default)/False')
+    optional.add_argument('--custom_cmap', type=str, default='', required=False, help='Customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap, otherwise use the user-specified colormap')
+    optional.add_argument("--plot_type", type=str, default="graph", required=False, choices=["graph", "list", "withinK", "major", "all"],
+                          help="Type of plot to generate: 'graph' (default), 'list', 'withinK', 'major', 'all'")
+    optional.add_argument("--include_cost", type=str2bool, default=True, required=False, help="Whether to include cost values in the graph plot: True (default)/False")
+    optional.add_argument("--include_label", type=str2bool, default=True, required=False, help="Whether to include individual labels in the plot: True (default)/False")
+    optional.add_argument("--ind_labels", type=str, default="",
+                        help="A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3] separated by delimiter)")
     
-    optional.add_argument('-v', '--vis', default=1, type=int, required=False, help='whether to generate visualization: 0 for no, 1 for yes (default)')
-    optional_arguments = [['cd_param',1.0,'float','the parameter for community detection method (default 1.0)'], \
-        ['use_rep',0,'int','whether to use representative replicate as mode consensus: 0 for no (default), 1 for yes'], \
-        ['merge_cls',0,'int','whether to merge all pairs of clusters to align K+1 and K: 0 for no (default), 1 for yes'], \
-        ['cd_default',1,'int','whether to use default community detection method (Louvain): 0 for no, 1 for yes (default)'], \
-        ['plot_modes',1,'int','whether to display aligned modes in structure plots over a multipartite graph: 0 for no, 1 for yes (default)'],\
-        ['plot_modes_withinK',0,'int','whether to display modes for each K in structure plots: 0 for no (default), 1 for yes'], \
-        ['plot_major_modes',0,'int','whether to display all major modes in a series of structure plots: 0 for no (default), 1 for yes'], \
-        ['plot_all_modes',0,'int','whether to display all aligned modes in a series of structure plots: 0 for no (default), 1 for yes'], \
-        ['custom_cmap','','str','customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap, otherwise use the user-specified colormap']]
+    optional.add_argument("--extension", type=str, default="", required=False, help="Extension of input files")
+    optional.add_argument("--skip_rows", type=int, default=0, required=False, help="Skip top rows in input files")
+    optional.add_argument("--remove_missing", type=str2bool, default=True, required=False, help="Remove individuals with missing data: True (default)/False")
+
+    optional.add_argument("--cd_method", type=str, default="louvain", required=False,
+                          choices=["louvain", "leiden", "infomap", "markov_clustering", "label_propagation", "walktrap", "custom"],
+                          help="Community detection method to use (default: louvain)")
+    optional.add_argument("--cd_res", type=float, default=1.0, required=False,
+                          help="Resolution parameter for the default Louvain community detection (default: 1.0)")
+    optional.add_argument("--test_comm", type=str2bool, default=True, required=False,
+                          help="Whether to test community structure (default: True)")
+    optional.add_argument("--comm_min", type=float, default=1e-4, required=False,
+                          help="Minimum threshold for cost matrix (default: 1e-4)")
+    optional.add_argument("--comm_max", type=float, default=1e-2, required=False,
+                          help="Maximum threshold for cost matrix (default: 1e-2)")
+    optional.add_argument("--merge", type=str2bool, default=True, required=False,
+                          help="Whther to merge two clusters when aligning K+1 to K (default: True)")
+    optional.add_argument("--use_rep", type=str2bool, default=True, required=False, help="Use representative modes (alternative: average): True (default)/False")
+    optional.add_argument("--use_best_pair", type=str2bool, default=True, required=False, help="Use best pair as anchor for across-K alignment (alternative: major): True (default)/False")
     
-    for opt_arg in optional_arguments: 
-        optional.add_argument('--{}'.format(opt_arg[0]), default=opt_arg[1], type=getattr(builtins, opt_arg[2]), required=False, help=opt_arg[3])
+    
+    return parser.parse_args()
 
-    args = parser.parse_args()
-
+if __name__ == "__main__":
+    setup_logger()
+    args = parse_args()
+    disp_params(args, title="CLUMPPLING")
     main(args)

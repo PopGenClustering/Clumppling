@@ -2,14 +2,10 @@ clumppling.egg-info/*
 dist/*
 build/*
 output/*
-input/capeverde/*
-input/capeverde_admixtureQ/*
-input/chicken/*
-input/chicken_gapK/*
-input/diffInd/*
-input/diffModel/*
-input/edge_case_capeverde/*
-clumppling/__pycache__
+input/*
+tests/*
+logs/*
+__pycache__
 
 # for MacOS users
 **/.DS_Store
