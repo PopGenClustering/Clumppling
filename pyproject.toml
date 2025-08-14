@@ -18,8 +18,8 @@ python = ">=3.9,<3.13"
 matplotlib = "^3.7"
 numpy = "^1.24"
 scipy = "^1.10"
-cvxpy = { version = "1.5", extras = ["GLPK"] }
 cvxopt = "1.3"
+cvxpy = { version = "1.5", extras = ["GLPK"] }
 cdlib = "^0.3"
 networkx = "^3.0"
 TracyWidom = "0.3.0"
