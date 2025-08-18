@@ -281,6 +281,13 @@ python examples/plot_submodules.py
 All commands are also provided in [examples/run_submodules.sh](examples/run_submodules.sh). 
 
 
+### compModels
+
+Compare clustering results from different models, with potentially different K values for the results of each model.
+
+Example: see [examples/run_comp_models.sh](examples/run_comp_models.sh). 
+
+
 ## License
 
 MIT License

@@ -692,7 +692,6 @@ def reorderQ_across_k(K_range: list[int], Q_modes_list: list[list[np.ndarray]], 
     mode_names = mode_names_list[i_K]
     if len(anchor_pairs)>0:
         m1 = anchor_pairs_rev[0].split("-")[0]
-        assert(m1.split("M")[0].strip("K")==str(K))
         m_m1 = mode_names.index(m1)
         base_Q = Q_modes_list[i_K][m_m1]
         base_patterns[m1] = [i for i in range(K)]
