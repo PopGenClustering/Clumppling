@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning mixed-membership clustering results of population structure analysis.
 
-Current version **v 1.0.1** (Last update: Aug 14, 2025)
+Current version **v 1.0.1** (Last update: Aug 17, 2025)
 
 ## Features
 
