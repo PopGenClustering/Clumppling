@@ -1,4 +1,4 @@
-This folder contains the example data files and scripts for running **Clumppling**.
+This folder contains the example data files and scripts for running ***Clumppling***.
 
 The scripts are in:
 * **align_capeverde.sh**
