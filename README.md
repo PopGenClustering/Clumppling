@@ -281,9 +281,17 @@ python examples/plot_submodules.py
 All commands are also provided in [examples/run_submodules.sh](examples/run_submodules.sh). 
 
 
-### compModels
+### `compModels`
 
 Compare clustering results from different models, with potentially different K values for the results of each model.
+
+````bash
+python -m clumppling.compModels \
+--models ${model1} ${model2} \
+--qfilelists examples/comp_models/${model1}.qfilelist examples/comp_models/${model2}.qfilelist \
+--qnamelists examples/comp_models/${model1}.qnamelist examples/comp_models/${model2}.qnamelist \
+--output examples/comp_models/capeverde_comp_${model1}_vs_${model2} 
+````
 
 Example: see [examples/run_comp_models.sh](examples/run_comp_models.sh). 
 
