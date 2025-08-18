@@ -4,5 +4,5 @@ python -m clumppling \
 -f structure \
 --extension _f \
 --plot_type all \
---use_best_pair 0 \
+--use_best_pair T \
 --custom_cmap examples/custom_colors.txt 

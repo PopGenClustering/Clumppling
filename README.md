@@ -2,22 +2,96 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning mixed-membership clustering results of population structure analysis.
 
-Current version **v 1.0.1** (Last update: Aug 17, 2025)
+Current version **v 1.0.2** (Last update: Aug 18, 2025)
 
-## Features
+## Feature Highlights
 
-- **Flexible input parsing**
-- **Cluster alignment within and across K values**
-- **Mode detection in clustering results**
-- **Visualization of alignment patterns and aligned modes**
-- **Modular design for easy integration**
+- Flexible input parsing compatible with popular ancestry inference softwares like *STRUCTURE* and *ADMIXTURE*.
+- Clustering alignment within and across various K values (i.e., the number of ancestries).
+- Mode detection in clustering results for identifying and summarizing distinct solutions.
+- Visualization of alignment patterns and aligned modes in a connected graph layout.
+- Modular design for easy integration.
 
-## Installation
+## Usage
 
-```bash
-pip install clumppling
-```
+**There are two ways to run *Clumppling*.**
+1. You can run it **remotely** on the server, which **does not require downloading or installing** the program locally. The remote version provides the core functionalities of the program. Check out the [Remote Notebook](#Remote-Notebook) section.
+2. You can download and install the Python package onto your local machine and run the program **locally**. The local version provides an extended list of functionalities (see [the pdf Manual](Clumppling_Manual.pdf) for details). Check out the [Local Installation](#Local-Installation) section.
 
+---
+## Remote Notebook
+The remote version is available through an **online Colaboratory notebook**, which is a Jupyter notebook that runs in the cloud served by Google. If you are interested, more details about Colab notebooks can be found at https://colab.google/.
+
+There is **no need to download and install the program locally**.
+
+To **run *Clumppling* remotely**, click on [**THIS LINK**](https://gist.github.com/xr-cc/a56458add4f7356a09f89970db40ca35) which will bring you to the notebook. Next, open the notebook in Colab and follow the instructions in the notebook. 
+
+One by one, Click the run (little round-shaped buttons with a triangle in the middle) buttons next to each block on the left. 
+
+Upload input files (e.g., the example files provided [here](examples)) as a zip folder, specify the input data format, and change input parameters (if needed) following the instructions. 
+
+You will be able to download a zipped file containing the alignment results at the end of the notebook.
+
+---
+## Local Installation
+The local version requires downloading and installing the program to your local machine. 
+
+### 1. Use a **command line interpreter** (i.e., a shell)
+   * Linux and macOS users can use the **built-in Terminal**. 
+   * For Windows users, you will need to obtain a terminal. For example: 
+     - After you follow Step 3 to install Conda, you can use the built-in *Anaconda Prompt* available from the Anaconda Navigator. Note that the installation of Python and Conda on Windows only requires running the installers and there is no need for running commands in the command window.
+     - You may also use the built-in (for Windows 10) [*Windows PowerShell*](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell). 
+     - Or, you can use *Git Bash* after you install Git by downloading and running the executable Git installer from https://git-scm.com/download/win.
+
+### 2. Install **Python** (Version 3.8 and above recommended)
+   You can download the Python installer from https://www.python.org/downloads/.
+   * For **Windows** users, go to https://www.python.org/downloads/windows/ to download the installer corresponding to your operating system, e.g., Windows installer (64-bit). Run the executable installer and check the box 'Add Python to environment variables' during the installation.
+   * For **macOS** users, go to https://www.python.org/downloads/macos/ to download the macOS 64-bit universal2 installer and double-click on the *python-<version>-macosx.pkg* file to start the Python installer.
+   * For **Linux** users, if Python is not pre-installed, you can install it via command lines (``sudo yum install -y python3`` for CentOS and Red Hat Linux and ``sudo apt-get install python3`` for all other Linux systems). 
+   
+   You can verify the installation by running 
+   ````
+   python --version
+   ```` 
+   in the command line interpreter, which should give you the version of the installed Python.
+
+### 3. Install conda and create a virtual environment 
+   Go to https://www.anaconda.com/download to download the conda installer and run the installer. Conda is a popular package management system and environment management system.
+   
+   > A virtual environment is a Python environment such that the Python interpreter, libraries and scripts installed into it are isolated from those installed in other virtual environments, and (by default) any libraries installed in a “system” Python, i.e., one which is installed as part of your operating system"
+   
+   Using a virtual environment helps to keep the dependencies required by different projects separate and to avoid conflicts between projects. 
+   
+   Create a virtual environment named ``clumppling-env`` (feel free to specify your own name) by typing the following command in the command-line interpreter
+   ````
+   conda create -n clumppling-env python
+   ````
+   Activate the virtual environment by
+   ````
+   conda activate clumppling-env 
+   ````
+### 4. Install the *Clumppling* package 
+   **(1) Install the package**  
+
+   Usually, pip is automatically installed when you installed Python. If it is not yet available in the system, follow the instructions from [https://pip.pypa.io/en/stable/installation/](https://pip.pypa.io/en/stable/installation/) to install it.
+   
+   Then run the following command to install the package:
+   ````
+   pip install clumppling
+   ````
+   
+   > **Alternatively**, you may choose to install the package in one of the two other ways: 
+   >
+   > If you have [Git](https://git-scm.com/) installed, run ```pip install git+https://github.com/PopGenClustering/Clumppling```.
+   > 
+   > If you don't have Git, run ```pip install https://github.com/PopGenClustering/Clumppling/archive/master.zip```.
+
+   **(2) Download the example files from [the examples directory](examples) in the GitHub repository** \
+   For each zipped example dataset, unzip the files into a folder with the same name as the zip file, and put it inside a folder called "input" under a path of your choice. 
+   
+   More will be discussed in the section *How to run (with example data)*.
+
+### 5. Check whether the installation is successful
 Run the following command:
    ````bash
    python -m clumppling -h
@@ -83,16 +157,17 @@ optional arguments:
 Examples:
 ````bash
 python -m clumppling.clumppling \
-        -i tests/test1/input \
-        -o tests/test1/output \
-        -f generalQ 
+        -i INPUT_PATH \
+        -o OUTPUT_PATH \
+        -f generalQ \
+        --extension .Q # if not specified, all files under INPUT_PATH will be treated as input files
 ````
 
 ## Main Function
 
 **Detailed explanation will be available in the [Manual](Clumppling_Manual.pdf).**
 
-### Input Arguments
+### Input arguments
 The main module takes in three required arguments and several optional ones. The required arguments are
 * ``-i`` (``--input``) path to load input files
 * ``-o`` (``--output``) path to save output files
@@ -104,13 +179,41 @@ The optional arguments are
 * for alignment across-K: ``merge``, ``use_rep``,``use_best_pair``
 * for figure generation: ``vis``, ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``, ``reorder_ind``, ``reorder_by_max_k``, ``order_cls_by_label``.
 
-### How to Run (with an example)
-As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.2017.07.002) and the [chicken data](https://doi.org/10.1093/genetics/159.2.699) as examples. The data files are available in the zip files [examples/capeverde.zip](examples/capeverde.zip) and [examples/chicken.zip](examples/chicken.zip). 
+### Example data
+As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.2017.07.002) and the [chicken data](https://doi.org/10.1093/genetics/159.2.699) as examples. The data files are available in the zip files [examples/capeverde.zip](examples/capeverde.zip) and [examples/chicken.zip](examples/chicken.zip) under "examples/".
 
-The *.indivq* files for Cape Verde data contains the column indicating their population indices. The corresponding population labels are provided separately in the file [examples/capeverde_ind_labels.txt](examples/capeverde_ind_labels.txt).
+#### Cape Verde data
+The *.indivq* files for Cape Verde data contains the column indicating their population indices. Rows in a *.indivq* file with *K=5* clusters (ancestries) look like:
+````
+5 HGDP00908 (0) 1 : 0.000010 0.000010 0.999960 0.000010 0.000010
+6 HGDP00909 (0) 1 : 0.000010 0.000010 0.999960 0.000010 0.000010
+7 HGDP00910 (0) 1 : 0.311649 0.000010 0.688321 0.000010 0.000010
+````
+where the columns represent the individual index (`5`), the individual label (`HGDP00908`), the missing rate (`(0)`), the population index (`1`), and the clustering memberships (after colon). 
+
+The Cape Verde data is also available in **general Q format** (*.Q* files) in [examples/capeverde_admixtureQ.zip](examples/capeverde_admixtureQ.zip). For the same rows as above, in a *.Q* file they look like:
+````
+0.000010 0.000010 0.999960 0.000010 0.000010
+0.000010 0.000010 0.999960 0.000010 0.000010
+0.311649 0.000010 0.688321 0.000010 0.000010
+````
+
+The corresponding population labels of the Cape Verde individuals are provided separately in the file [examples/capeverde_ind_labels.txt](examples/capeverde_ind_labels.txt).
+
+#### Chicken data
+The chicken data is available as the output file format of (*STRUCTURE*)[https://web.stanford.edu/group/pritchardlab/structure.html] software (*_f* files). The clustering memberships are reported in the section starting with
+````
+Inferred ancestry of individuals:
+        Label (%Miss) Pop:  Inferred clusters
+  1   0004_1    (0)    4 :  0.001 0.002 0.002 0.001 0.001 0.002 0.001 0.001 0.002 0.001 0.001 0.002 0.003 0.005 0.001 0.972 0.001 
+  2   0004_3    (0)    4 :  0.001 0.001 0.002 0.001 0.001 0.002 0.001 0.001 0.002 0.002 0.001 0.002 0.003 0.005 0.002 0.971 0.001 
+  3   0004_6    (3)    4 :  0.002 0.001 0.002 0.001 0.001 0.001 0.001 0.001 0.001 0.002 0.002 0.003 0.002 0.003 0.004 0.969 0.004 
+````
+where the content format pretty much resembles that of the *.indivq* file. Other sections in the structure file is not required neither utilized by *Clumppling*.
 
 A file with custom colors is also provided at [examples/custom_colors.txt](examples/custom_colors.txt) for use in examples.
 
+### How to run (with example data)
 1. **Ensure that the data files have been successfully downloaded and put under the right directory.** 
 Download the example files from [the directory "examples"](examples) in the GitHub repository. For each example dataset, unzip the files into the folder with the same name as the zip file. 
    
@@ -138,7 +241,7 @@ Download the example files from [the directory "examples"](examples) in the GitH
     -f structure \
     --extension _f \
     --plot_type all \
-    --use_best_pair 0 \
+    --use_best_pair F \
     --custom_cmap examples/custom_colors.txt 
     ````
 
@@ -314,11 +417,11 @@ We thank Egor Lappo for helping with the packaging of the program.
 We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteban Rodriguez Rodriguez for helping with the testing of the program.
 
 ## Version Update History
-Version 0.3.2: 
+**Version 0.3.2**: 
 - Fix the bug in plotting when all replicates have the same K.
 - Add a check (merged from branch) to exclude loading K=1 replicates.
 
-Version 1.0.0 (major updates): 
+**Version 1.0.0** (major updates): 
 - Modularize each step.
 - Add visualization of alignment patterns.
 - Add input parsing features:
