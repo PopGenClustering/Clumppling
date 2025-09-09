@@ -43,7 +43,7 @@ The local version requires downloading and installing the program to your local 
      - You may also use the built-in (for Windows 10) [*Windows PowerShell*](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell). 
      - Or, you can use *Git Bash* after you install Git by downloading and running the executable Git installer from https://git-scm.com/download/win.
 
-### 2. Install **Python** (Version 3.8 and above recommended)
+### 2. Install **Python** (Version >=3.9,<3.13)
    You can download the Python installer from https://www.python.org/downloads/.
    * For **Windows** users, go to https://www.python.org/downloads/windows/ to download the installer corresponding to your operating system, e.g., Windows installer (64-bit). Run the executable installer and check the box 'Add Python to environment variables' during the installation.
    * For **macOS** users, go to https://www.python.org/downloads/macos/ to download the macOS 64-bit universal2 installer and double-click on the *python-<version>-macosx.pkg* file to start the Python installer.
@@ -53,7 +53,7 @@ The local version requires downloading and installing the program to your local 
    ````
    python --version
    ```` 
-   in the command line interpreter, which should give you the version of the installed Python.
+   in the command line interpreter, which should give you the version of the installed Python (>=3.9,<3.13 required).
 
 ### 3. Install conda and create a virtual environment 
    Go to https://www.anaconda.com/download to download the conda installer and run the installer. Conda is a popular package management system and environment management system.
