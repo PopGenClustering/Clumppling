@@ -64,7 +64,7 @@ The local version requires downloading and installing the program to your local 
    
    Create a virtual environment named ``clumppling-env`` (feel free to specify your own name) by typing the following command in the command-line interpreter
    ````
-   conda create -n clumppling-env python
+   conda create -n clumppling-env python=3.10
    ````
    Activate the virtual environment by
    ````
