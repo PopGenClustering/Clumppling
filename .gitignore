@@ -5,7 +5,13 @@ output/*
 input/*
 tests/*
 logs/*
+latex/*
+examples/*/
+examples/*_output.zip
 __pycache__
+!examples/capeverde_output/visualizationo/
+!examples/submodules/K3K5_acrossK_output/
+!examples/submodules/figures/
 
 # for MacOS users
 **/.DS_Store

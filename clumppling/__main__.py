@@ -276,7 +276,7 @@ def parse_args():
     optional.add_argument("--comm_max", type=float, default=1e-2, required=False,
                           help="Maximum threshold for cost matrix (default: 1e-2)")
     optional.add_argument("--merge", type=str2bool, default=True, required=False,
-                          help="Whther to merge two clusters when aligning K+1 to K (default: True)")
+                          help="Whether to merge two clusters when aligning K+1 to K (default: True)")
     optional.add_argument("--use_rep", type=str2bool, default=True, required=False, help="Use representative modes (alternative: average): True (default)/False")
     optional.add_argument("--use_best_pair", type=str2bool, default=True, required=False, help="Use best pair as anchor for across-K alignment (alternative: major): True (default)/False")
     
