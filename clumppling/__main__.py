@@ -257,7 +257,7 @@ def parse_args():
                         help="Whether to reorder individuals within each label group in the plot: True (default)/False")
     optional.add_argument("--reorder_by_max_k", type=str2bool, default=True, required=False, 
                         help="Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)")
-    optional.add_argument("--order_cls_by_label", type=str2bool, default=False, required=False, 
+    optional.add_argument("--order_cls_by_label", type=str2bool, default=True, required=False, 
                         help="Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)")
 
     optional.add_argument("--extension", type=str, default="", required=False, help="Extension of input files")
