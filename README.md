@@ -156,7 +156,7 @@ optional arguments:
 ## Usage
 Examples:
 ````bash
-python -m clumppling.clumppling \
+python -m clumppling \
         -i INPUT_PATH \
         -o OUTPUT_PATH \
         -f generalQ \
@@ -164,8 +164,6 @@ python -m clumppling.clumppling \
 ````
 
 ## Main Function
-
-**Detailed explanation will be available in the [Manual](Clumppling_Manual.pdf).**
 
 ### Input arguments
 The main module takes in three required arguments and several optional ones. The required arguments are
@@ -177,7 +175,9 @@ The optional arguments are
 * for input parsing: ``extension``, ``skip_rows``, ``remove_missing``
 * for community detection: ``cd_method``,  ``cd_res``, ``test_comm``, ``comm_min``, ``comm_max``
 * for alignment across-K: ``merge``, ``use_rep``,``use_best_pair``
-* for figure generation: ``vis``, ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``, ``reorder_ind``, ``reorder_by_max_k``, ``order_cls_by_label``.
+* for figure generation: ``-v`` (``--vis``), ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``, ``reorder_ind``, ``reorder_by_max_k``, ``order_cls_by_label``.
+
+See the above helper message from ``clumppling -h'' for usage of each argument. 
 
 ### Example data
 As a quick start, let's use the [Cape Verde data](https://doi.org/10.1016/j.cub.2017.07.002) and the [chicken data](https://doi.org/10.1093/genetics/159.2.699) as examples. The data files are available in the zip files [examples/capeverde.zip](examples/capeverde.zip) and [examples/chicken.zip](examples/chicken.zip) under "examples/".
@@ -301,9 +301,35 @@ Each submodule is callable independently.
 
 ### `parseInput`
 
-Handles reading and parsing input files containing clustering results. Supports various formats and prepares data for downstream analysis.
+``clumppling.parseInput``: Handles reading and parsing input files containing clustering results. Supports various formats and prepares data for downstream analysis.
 
-Example:
+**Usage:**
+````bash
+usage: __main__.py [-h] -i INPUT -o OUTPUT -f
+                   {generalQ,admixture,structure,fastStructure}
+                   [--extension EXTENSION] [--skip_rows SKIP_ROWS]
+                   [--remove_missing REMOVE_MISSING]
+
+clumppling.parseInput
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        Input file path
+  -o OUTPUT, --output OUTPUT
+                        Output file directory
+  -f {generalQ,admixture,structure,fastStructure}, --format {generalQ,admixture,structure,fastStructure}
+                        File format
+  --extension EXTENSION
+                        Extension of input files
+  --skip_rows SKIP_ROWS
+                        Skip top rows in input files
+  --remove_missing REMOVE_MISSING
+                        Remove individuals with missing data: True/False
+````
+
+
+**Example:**
 ````bash
 python -m clumppling.parseInput \
 -i examples/submodules/input \
@@ -313,9 +339,25 @@ python -m clumppling.parseInput \
 
 ### `aligneWithinK`
 
-Aligns clusters within a single value of K to ensure consistent labeling and facilitate comparison across replicates.
+``clumppling.alignWithinK``: Aligns clusters within a single value of K to ensure consistent labeling and facilitate comparison across replicates.
 
-Example:
+**Usage:**
+````bash
+usage: __main__.py [-h] [--qfiles [QFILES ...]] [--qfilelist QFILELIST] -o OUTPUT
+
+clumppling.alignWithinK
+
+options:
+  -h, --help            show this help message and exit
+  --qfiles [QFILES ...]
+                        List of Q files to align, passed as command-line arguments
+  --qfilelist QFILELIST
+                        A plain text file containing Q file names (one per line).
+  -o OUTPUT, --output OUTPUT
+                        Output file name
+````
+
+**Example:**
 ````bash
 python -m clumppling.alignWithinK \
 --qfilelist examples/submodules/K3.qfilelist \
@@ -328,9 +370,36 @@ python -m clumppling.alignWithinK \
 
 ### `detectMode`
 
-Detects modes (distinct clustering solutions) among multiple runs for a given K, helping to identify stable and alternative solutions.
+``clumppling.detectMode``: Detects modes (distinct clustering solutions) among multiple runs for a given K, helping to identify stable and alternative solutions.
 
-Example:
+**Usage:**
+````bash
+usage: __main__.py [-h] --align_res ALIGN_RES --qfilelist QFILELIST -o OUTPUT [--qnamelist QNAMELIST]
+                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES]
+                   [--test_comm TEST_COMM] [--comm_min COMM_MIN] [--comm_max COMM_MAX]
+
+clumppling.alignWithinK
+
+options:
+  -h, --help            show this help message and exit
+  --align_res ALIGN_RES
+                        Path to the alignment results file
+  --qfilelist QFILELIST
+                        A plain text file containing Q file names (one per line).
+  -o OUTPUT, --output OUTPUT
+                        Output file directory
+  --qnamelist QNAMELIST
+                        A plain text file containing replicate names (one per line) (default: file base from qfilelist)
+  --cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}
+                        Community detection method to use (default: louvain)
+  --cd_res CD_RES       Resolution parameter for the default Louvain community detection (default: 1.0)
+  --test_comm TEST_COMM
+                        Whether to test community structure (default: True)
+  --comm_min COMM_MIN   Minimum threshold for cost matrix (default: 1e-4)
+  --comm_max COMM_MAX   Maximum threshold for cost matrix (default: 1e-2)
+````
+
+**Example:**
 ````bash
 python -m clumppling.detectMode \
 --align_res examples/submodules/K3_aligned.txt \
@@ -349,9 +418,27 @@ python -m clumppling.detectMode \
 
 ### `alignAcrossK`
 
-Aligns clusters across different values of K, enabling tracking of cluster membership changes as K varies.
+``clumppling.alignAcrossK``: Aligns clusters across different values of K, enabling tracking of cluster membership changes as K varies.
 
-Example:
+**Usage:**
+````bash
+usage: __main__.py [-h] [--qfilelist QFILELIST] -o OUTPUT [--qnamelist QNAMELIST] [--use_best_pair USE_BEST_PAIR]
+
+clumppling.alignAcrossK
+
+options:
+  -h, --help            show this help message and exit
+  --qfilelist QFILELIST
+                        A plain text file containing Q file names (one per line).
+  -o OUTPUT, --output OUTPUT
+                        Directory to save output files
+  --qnamelist QNAMELIST
+                        A plain text file containing replicate names (one per line) (default: file base from qfilelist)
+  --use_best_pair USE_BEST_PAIR
+                        Use best pair as anchor for across-K alignment (alternative: major): True (default)/False
+````
+
+**Example:**
 ````bash
 # prepare mode files
 for K in 3 5; do
@@ -376,7 +463,9 @@ python -m clumppling.alignAcrossK \
 ````
 
 ### Visualizations
-For generating figures, see [examples/plot_submodules.py](examples/plot_submodules.py) as an example. Run
+For generating figures, see [examples/plot_submodules.py](examples/plot_submodules.py) as an example of visualizing the results from [examples/submodules/K3K5_acrossK_output](examples/submodules/K3K5_acrossK_output) in different ways. 
+
+Run
 ````bash
 python examples/plot_submodules.py 
 ````
@@ -386,8 +475,32 @@ All commands are also provided in [examples/run_submodules.sh](examples/run_subm
 
 ### `compModels`
 
-Compare clustering results from different models, with potentially different K values for the results of each model.
+``clumppling.compModels``: Compares clustering results from different models, with potentially different K values for the results of each model.
 
+**Usage:**
+````bash
+usage: __main__.py [-h] --models MODELS [MODELS ...] --qfilelists QFILELISTS [QFILELISTS ...] [--qnamelists QNAMELISTS [QNAMELISTS ...]] -o OUTPUT
+                   [-v VIS] [--custom_cmap CUSTOM_CMAP]
+
+clumppling.alignWithinK
+
+options:
+  -h, --help            show this help message and exit
+  --models MODELS [MODELS ...]
+                        List of model names.
+  --qfilelists QFILELISTS [QFILELISTS ...]
+                        List of files containing Q file names from each model.
+  --qnamelists QNAMELISTS [QNAMELISTS ...]
+                        List of files containing replicate names from each model.
+  -o OUTPUT, --output OUTPUT
+                        Output file directory
+  -v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
+  --custom_cmap CUSTOM_CMAP
+                        Customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap,
+                        otherwise use the user-specified colormap
+````
+
+**Example:**
 ````bash
 python -m clumppling.compModels \
 --models ${model1} ${model2} \
@@ -417,27 +530,34 @@ We thank Egor Lappo for helping with the packaging of the program.
 We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteban Rodriguez Rodriguez for helping with the testing of the program.
 
 ## Version Update History
-**Version 0.3.2**: 
+**Version 0.3**: 
 - Fix the bug in plotting when all replicates have the same K.
 - Add a check (merged from branch) to exclude loading K=1 replicates.
 
-**Version 1.0.0** (major updates): 
+**Version 1.0** (major updates): 
 - Modularize each step.
-- Add visualization of alignment patterns.
 - Add input parsing features:
     * use `extension` to specify the file extension of the input files.
     * use `skip_rows` to specify number of rows to skip from the input files.
     * use `remove_missing` to choose whether to remove individuals with missing data (clusters).
-- Add more flexibility in algorithmic settings: 
+- Add flexibility in algorithmic settings: 
     * `test_comm`: whether to test for community structure during mode detection, as well as extreme values for determining if nodes fall into communities (`comm_min` and `comm_max`). 
     * `use_best_pair`: whether to align across-K using the best pair of modes or the pair of major modes as the anchor.
     * keep the features `merge` and `use_rep`.
 - Use the package `cdlib` for community detection. Change `cd_method` to multiple choices (default: 'louvain') and move `cd_custom` as the choice 'custom'. 
-- Add more flexibility in plotting settings:
+- Add flexibility in plotting settings:
     * `plot_type`: which plot(s) to generate: 'all', 'graph' (default), 'list', 'major', or 'withinK'.
     * `include_cost`: include edges indicating alignment costs in the graph of structure plots.
     * `include_label`: whether to include group labels of individuals (if available) on the x-axis and draw corresponding vertical lines in the structure plots separating groups.
     * `ind_labels`: accept user-specified individual labels from a file.
+ 
+ **Version 2.0** (coming)  
+ - Add the model comparison module to keep modes from different clustering models separate while aligning them.
+ - Add visualization of alignment patterns.
+ - Add flexibility in plotting:
+    * ``reorder_ind``: whether to reorder individuals within each label group, in decreasing order their memberships in the cluster with largest total membership in this label group.
+    * ``reorder_by_max_k``: when reordering individuals (``reorder_ind=True``), whether to reorder based on the major mode with largest K, or the major mode with smallest K.
+    * ``order_cls_by_label``: whether to reorder clusters based on total memberships within each label group.
 
 > Questions and feedback are welcome.
 > Contact the author at ``xiranliu at stanford dot edu``.
