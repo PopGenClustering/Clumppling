@@ -555,9 +555,9 @@ We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteba
  - Add the model comparison module to keep modes from different clustering models separate while aligning them.
  - Add visualization of alignment patterns.
  - Add flexibility in plotting:
-    * ``reorder_ind``: whether to reorder individuals within each label group, in decreasing order their memberships in the cluster with largest total membership in this label group.
+    * ``reorder_ind``: whether to reorder individuals within each label group, in decreasing order their memberships in the cluster with largest total membership (in each label group, or over all label groups).
     * ``reorder_by_max_k``: when reordering individuals (``reorder_ind=True``), whether to reorder based on the major mode with largest K, or the major mode with smallest K.
-    * ``order_cls_by_label``: whether to reorder clusters based on total memberships within each label group.
+    * ``order_cls_by_label``: when reordering individuals (``reorder_ind=True``), whether to reorder clusters based on total memberships within each label group or total memberships over all label groups.
 
 > Questions and feedback are welcome.
 > Contact the author at ``xiranliu at stanford dot edu``.
