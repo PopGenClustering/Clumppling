@@ -154,7 +154,8 @@ def plot_membership_reordered(Q:np.ndarray, lbs: list,
 
 def plot_memberships_list(Q_list: list[np.ndarray], cmap: list[tuple[float, float, float]], 
                           names: list[str], ind_labels: list=[], 
-                          order_refQ: Optional[np.ndarray]=None, order_cls_by_label: bool=True):
+                          order_refQ: Optional[np.ndarray]=None, order_cls_by_label: bool=True,
+                          width_scale: float=1.0):
     # get separation points in the labels
     if ind_labels:
         uniq_lbs, uniq_lbs_indices, uniq_lbs_sep_idx = get_uniq_lb_sep(ind_labels)
@@ -162,7 +163,7 @@ def plot_memberships_list(Q_list: list[np.ndarray], cmap: list[tuple[float, floa
             ref_ind_sorted_indices, ref_mbsp_sort_indices = reorder_ind_within_group(order_refQ, ind_labels)
             # print(f"Reordering individuals within each label group based on the reference Q matrix with shape {order_refQ.shape}.")
 
-    fig, axes = plt.subplots(len(Q_list),1,figsize=(15,1.5*len(Q_list)),facecolor='white')
+    fig, axes = plt.subplots(len(Q_list),1,figsize=(15*width_scale,1.5*len(Q_list)),facecolor='white')
 
     for i in range(len(Q_list)):
         Q = Q_list[i]
@@ -202,7 +203,8 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
                names_list: list[list[str]], labels_list: Optional[list[list[str]]]=None,
                cost_acrossK: Optional[dict]=None,
                ind_labels: list=[], fontsize: float=14, line_cmap=None,
-               order_refQ: Optional[np.ndarray]=None, order_cls_by_label: bool=True):
+               order_refQ: Optional[np.ndarray]=None, order_cls_by_label: bool=True, 
+               width_scale: float=1.0):
     mode_numbers = [len(names_list[i_K]) for i_K, K in enumerate(K_range)]
     n_row = len(K_range)
     n_col = max(mode_numbers)
@@ -217,7 +219,7 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
     if labels_list is None:
         labels_list = names_list
 
-    fig = plt.figure(figsize=(7*n_col,2*n_row), dpi=150)
+    fig = plt.figure(figsize=(7*n_col*width_scale,2*n_row), dpi=150)
     gs = fig.add_gridspec(n_row,n_col, wspace=0.2, hspace=1)
 
     axes_handles = dict()

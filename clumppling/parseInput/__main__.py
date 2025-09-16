@@ -1,4 +1,5 @@
 import os
+import shutil
 import argparse
 from clumppling.log_config import setup_logger
 from clumppling.utils import disp_msg, str2bool, disp_params
@@ -26,7 +27,13 @@ if __name__ == "__main__":
     setup_logger(os.path.join(args.output, "parseInput.log"))
     disp_params(args, title="Input Parsing")
     disp_msg(f"Processing input files")
-    process_files(input_dir=args.input, output_dir=os.path.join(args.output,"input"), 
+    output_dir = os.path.join(args.output,"input")
+    if os.path.exists(output_dir) and os.listdir(output_dir):
+        shutil.rmtree(output_dir)
+        logger.info(f"Output directory '{output_dir}' already exists and is not empty. Removed existing directory.")
+    os.makedirs(output_dir, exist_ok=True)
+    logger.info(f"Created output directory '{output_dir}'.")
+    process_files(input_dir=args.input, output_dir=output_dir, 
                   fmt=args.format,extension=args.extension, 
                   skip_missing=args.remove_missing,
                   delimiter=" ", skip_rows=0)

@@ -1,9 +1,30 @@
 import os
-import shutil
 import numpy as np
+from collections import OrderedDict
 from typing import List, Optional, Tuple
 import logging
 logger = logging.getLogger(__name__)
+
+def group_labels(labels: list) -> Tuple[list, list]:
+    """ Group identical labels together while preserving the order they first appear.
+        Args:
+            labels: List of labels.
+        Returns:
+            grouped_labels: List of labels with identical labels grouped together.
+            reorder_indices: List of indices to reorder the original labels.
+    """
+    # Group labels while preserving first-seen order
+    groups = OrderedDict()
+    for idx, label in enumerate(labels):
+        groups.setdefault(label, []).append(idx)  # store indices instead of label
+
+    # Flatten indices to get the reordering
+    reorder_indices = [i for idx_list in groups.values() for i in idx_list]
+    # Apply to labels to get grouped labels
+    grouped_labels = [labels[i] for i in reorder_indices]
+    logger.info(f"(altogether {len(labels)} labels, with {len(groups)} unique labels)")
+
+    return grouped_labels, reorder_indices
 
 
 def process_files(
@@ -12,14 +33,10 @@ def process_files(
     skip_missing: bool = True, 
     delimiter: str = " ", skip_rows: int = 0,
     tolerance: float = 1e-6, meta_file: str = "input_meta.txt",
-    label_cols: list[int]=[0, 1, 3], mat_start_col: int=5
+    label_cols: list[int]=[0, 1, 3], mat_start_col: int=5,
+    reorder_indices: Optional[List[int]] = None
 ) -> Optional[np.ndarray]:
-    if os.path.exists(output_dir) and os.listdir(output_dir):
-        shutil.rmtree(output_dir)
-        logger.info(f"Output directory '{output_dir}' already exists and is not empty. Removed existing directory.")
-    os.makedirs(output_dir, exist_ok=True)
-    logger.info(f"Created output directory '{output_dir}'.")
-
+    
     file_paths = [os.path.join(input_dir,f) for f in os.listdir(input_dir) if f.endswith(extension)]
     if not file_paths:
         logger.error(f"No files found with the specified extension '{extension}'.")
@@ -80,6 +97,20 @@ def process_files(
         except ValueError as e:
             logger.error(f"ERROR processing {file_path}: {e}")
     
+    # Save labels if applicable
+    if labels is not None:        
+        if reorder_indices is None:
+            # reorder    
+            labels, reorder_indices = group_labels(list(labels))
+            labels = np.array(labels)
+            if not reorder_indices == list(range(len(labels))):
+                logger.warning(f"Individual labels reordered by grouping identical labels together.")
+
+        labels_out_path = os.path.join(output_dir, "input_labels.txt")
+        np.savetxt(labels_out_path, labels, fmt="%s", delimiter=',')
+        logger.info(f"Labels saved to {labels_out_path}")
+    
+
     global_id = 1  # ID
     for k in sorted(grouped_files.keys()):  # Loop in increasing K
         group = grouped_files[k]
@@ -88,6 +119,8 @@ def process_files(
         for i, (file_path, matrix) in enumerate(group):
             filename = f"{global_id}_K{k}R{i+1}.Q"
             out_path = os.path.join(output_dir, filename)
+            if reorder_indices is not None:
+                matrix = matrix[reorder_indices, :]
             np.savetxt(out_path, matrix, delimiter=' ') #fmt="%.6f",
             metadata.append(f"{file_path},{out_path},{k}")
             global_id += 1
@@ -97,12 +130,6 @@ def process_files(
     with open(meta_out_path, "w") as f:
         f.write("\n".join(metadata))
     logger.info(f"Metadata written to {meta_out_path}")
-
-    # Save labels if applicable
-    if labels is not None:
-        labels_out_path = os.path.join(output_dir, "input_labels.txt")
-        np.savetxt(labels_out_path, labels, fmt="%s", delimiter=',')
-        logger.info(f"Labels saved to {labels_out_path}")
 
     return labels
 

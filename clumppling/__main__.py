@@ -9,22 +9,62 @@ from .core import align_within_k_all_K, detect_modes_all_K, extract_modes_all_K,
 from .utils import disp_params,str2bool,parse_strings,get_modes_all_K, write_reordered_across_k, get_mode_sizes, unnest_list
 from .plot import load_default_cmap, parse_custom_cmap, plot_colorbar, plot_memberships_list, plot_graph, plot_alignment
 
-from .parseInput import process_files, extract_meta_input
+from .parseInput import process_files, extract_meta_input, group_labels
 
 import logging
 logger = logging.getLogger(__name__)
 
 def main(args: argparse.Namespace):
     tot_tic = time.time()
+
     # load and process input files
     processed_input_dir = os.path.join(args.output, "input")
+    if os.path.exists(processed_input_dir) and os.listdir(processed_input_dir):
+        shutil.rmtree(processed_input_dir)
+        logger.info(f"Directory '{processed_input_dir}' already exists and is not empty. Removed existing directory.")
+    os.makedirs(processed_input_dir, exist_ok=True)
+    logger.info(f"Created input directory '{processed_input_dir}'.")
+
+    # load and reorder individuals labels if applicable
+    reorder_indices = None
+    if args.include_label:
+        if args.ind_labels!="":
+            ind_labels = parse_strings(args.ind_labels, remove_dup=False)
+            if len(ind_labels)>0:
+                logger.info(f"{len(ind_labels)} individual labels loaded.")
+                ind_labels, reorder_indices = group_labels(ind_labels)
+                if not reorder_indices == list(range(len(ind_labels))):
+                    logger.warning(f"Individual labels reordered by grouping identical labels together.")
+                    # Save grouped labels
+                    with open(os.path.join(processed_input_dir,"ind_labels_grouped.txt"), "w") as f:
+                        for label in ind_labels:
+                            f.write(label + "\n")
+                    # Save reorder indices (0-based)
+                    with open(os.path.join(processed_input_dir,"ind_labels_indices.txt"), "w") as f:
+                        for i in reorder_indices:
+                            f.write(str(i) + "\n")
+
+    # process files
     labels = process_files(input_dir=args.input, output_dir=processed_input_dir, 
                            fmt=args.format,extension=args.extension, 
                            skip_missing=args.remove_missing,
-                           delimiter=" ", skip_rows=0, label_cols=[0, 1, 3], mat_start_col=5)
-    if labels is not None:
-        logger.warning("Input labels loaded.")
+                           delimiter=" ", skip_rows=0, label_cols=[0, 1, 3], 
+                           mat_start_col=5, reorder_indices=reorder_indices)
+
+    if args.include_label:
+        if args.ind_labels!="":
+            logger.info(f"Input labels loaded from {args.ind_labels}.")
+        elif labels is not None:
+            ind_labels = list(labels[:,-1])
+            logger.info("Input labels loaded from processed files.")
+        else:
+            ind_labels = []
+            logger.warning("No input labels found.")
+    else:
+        ind_labels = []
+        logger.warning("No input labels found.")
     
+
     Q_names, K_range, K2IDs = extract_meta_input(processed_input_dir)
     K_max = max(K_range)
     logging.info(f"Unique K values found (max: {K_max}): {K_range}")
@@ -102,16 +142,6 @@ def main(args: argparse.Namespace):
         logger.info(f"Plot colorbar")
         plot_colorbar(cmap,K_max,fig_dir)
 
-        if args.include_label:
-            if args.ind_labels!="":
-                ind_labels = parse_strings(args.ind_labels, remove_dup=False)
-            elif labels is not None:
-                ind_labels = list(labels[:,-1])
-            else:
-                ind_labels = []
-        else:
-            ind_labels = []
-
         # plot alignment pattern
         logger.info(f"Plot alignment patterns ({suffix})")
         mode_K = [Q.shape[1] for Q in unnest_list(Q_rep_modes_list)]
@@ -119,6 +149,11 @@ def main(args: argparse.Namespace):
         fig = plot_alignment(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=200)
         fig.savefig(os.path.join(fig_dir,"alignment_pattern_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
+
+        # determine width scaling for structure plots based on number of unique individual labels
+        width_scale = 1.0
+        if len(ind_labels)>1:
+            width_scale = max(1,len(set(ind_labels))/10)
 
         if len(K_range)>1:
 
@@ -133,20 +168,23 @@ def main(args: argparse.Namespace):
                         Q_ref = Q_modes_reordered_list[0][0]
                 else:
                     Q_ref = None
+                
                 if args.include_cost:
                     logger.info(f"Including cost values in the graph")
                     fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
                                     names_list=mode_names_list, labels_list=mode_labels_list,  
                                     cost_acrossK=cost_acrossK, ind_labels=ind_labels, 
                                     fontsize=14, line_cmap=plt.get_cmap("Greys"),
-                                    order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
+                                    order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label,
+                                    width_scale=width_scale)
                 else:
                     logger.info(f"Not including cost values in the graph")
                     fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
                                     names_list=mode_names_list, labels_list=mode_labels_list,  
                                     cost_acrossK=None, ind_labels=ind_labels, 
                                     fontsize=14, line_cmap=plt.get_cmap("Greys"),
-                                    order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
+                                    order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label,
+                                    width_scale=width_scale)
                 fig.savefig(os.path.join(fig_dir,"all_modes_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
             
@@ -166,7 +204,8 @@ def main(args: argparse.Namespace):
                             Q_ref = Q_modes_reordered[0]
                     else:
                         Q_ref = None
-                    fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
+                    fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
+                                                order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
                     fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.png".format(K,suffix)), bbox_inches='tight', dpi=150, transparent=False)
                     plt.close(fig)
             
@@ -183,7 +222,8 @@ def main(args: argparse.Namespace):
                         Q_ref = Q_modes_list[0]
                 else:
                     Q_ref = None
-                fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
+                fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
+                                            order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
                 fig.savefig(os.path.join(fig_dir,"all_modes_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
 
@@ -199,7 +239,8 @@ def main(args: argparse.Namespace):
                         Q_ref = Q_major_modes_reordered[0]
                 else:
                     Q_ref = None
-                fig = plot_memberships_list(Q_major_modes_reordered, cmap, names=major_mode_labels, ind_labels=ind_labels, order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
+                fig = plot_memberships_list(Q_major_modes_reordered, cmap, names=major_mode_labels, ind_labels=ind_labels, 
+                                            order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
                 fig.savefig(os.path.join(fig_dir,"major_modes_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)      
         else:
@@ -219,7 +260,8 @@ def main(args: argparse.Namespace):
                     Q_ref = Q_modes_reordered[0]
             else:
                 Q_ref = None
-            fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label)
+            fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
+                                        order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
             fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.png".format(K,suffix)), bbox_inches='tight', dpi=150, transparent=False)
             plt.close(fig)
 

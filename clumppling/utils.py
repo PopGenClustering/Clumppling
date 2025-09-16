@@ -261,6 +261,7 @@ def labels_are_grouped(labels: list, uniq_labels: list):
             return False
     return True
 
+
 def get_uniq_lb_sep(labels: list) -> Tuple[list, list, list]:
     """ Get unique labels and their separation indices.
         Args:
