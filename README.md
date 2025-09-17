@@ -4,6 +4,8 @@ This is the GitHub repository for the program ***Clumppling*** (CLUster Matching
 
 Current version **v 1.0.2** (Last update: Aug 18, 2025)
 
+This README provides a quick-start guide for installation and use. See the [software manual](Clumppling_Manual.pdf) for full details.
+
 ## Feature Highlights
 
 - Flexible input parsing compatible with popular ancestry inference softwares like *STRUCTURE* and *ADMIXTURE*.
