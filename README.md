@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning mixed-membership clustering results of population structure analysis.
 
-Current version **v 1.0.2** (Last update: Aug 18, 2025)
+Current version **v 1.1.1** (Last update: Sep 17, 2025)
 
 This README provides a quick-start guide for installation and use. See the [software manual](Clumppling_Manual.pdf) for full details.
 
@@ -552,14 +552,17 @@ We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteba
     * `include_cost`: include edges indicating alignment costs in the graph of structure plots.
     * `include_label`: whether to include group labels of individuals (if available) on the x-axis and draw corresponding vertical lines in the structure plots separating groups.
     * `ind_labels`: accept user-specified individual labels from a file.
- 
- **Version 2.0** (coming)  
- - Add the model comparison module to keep modes from different clustering models separate while aligning them.
- - Add visualization of alignment patterns.
- - Add flexibility in plotting:
-    * ``reorder_ind``: whether to reorder individuals within each label group, in decreasing order their memberships in the cluster with largest total membership (in each label group, or over all label groups).
-    * ``reorder_by_max_k``: when reordering individuals (``reorder_ind=True``), whether to reorder based on the major mode with largest K, or the major mode with smallest K.
-    * ``order_cls_by_label``: when reordering individuals (``reorder_ind=True``), whether to reorder clusters based on total memberships within each label group or total memberships over all label groups.
+- Add visualization of alignment patterns.
+
+**Version 2.0** (coming)  
+- Add the model comparison module to keep modes from different clustering models separate while aligning them.
+
+- Add flexibility in plotting:
+  * ``reorder_ind``: whether to reorder individuals within each label group, in decreasing order their memberships in the cluster with largest total membership (in each label group, or over all label groups).
+  * ``reorder_by_max_k``: when reordering individuals (``reorder_ind=True``), whether to reorder based on the major mode with largest K, or the major mode with smallest K.
+  * ``order_cls_by_label``: when reordering individuals (``reorder_ind=True``), whether to reorder clusters based on total memberships within each label group or total memberships over all label groups.
+
+- Enable regrouping of individuals. If `regroup_ind` is set to True (default) and population labels are available (either extracted from the input files or provided separately), then individuals with the same population labels will be reordered to stay together. If individuals are not grouped by populations, ``include_label'' must be be set to False to ensure the generation of plots without errors. 
 
 > Questions and feedback are welcome.
 > Contact the author at ``xiranliu at stanford dot edu``.
