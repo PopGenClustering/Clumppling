@@ -163,7 +163,7 @@ def main(args: argparse.Namespace):
                 logger.info(f"Plot all modes in a graph ({suffix})")
                 mode_labels_list = [[f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names] for mode_names in mode_names_list]
                 Q_modes_reordered_list = [[aligned_Qs_allK[mode_name] for mode_name in mode_names] for mode_names in mode_names_list]
-                if args.reorder_ind:
+                if args.reorder_ind_with_group:
                     if args.reorder_by_max_k:
                         Q_ref = Q_modes_reordered_list[-1][0]
                     else:
@@ -199,7 +199,7 @@ def main(args: argparse.Namespace):
                     # # if only align within each mode, but not across K, then use the following line:
                     # Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)
                     mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-                    if args.reorder_ind:
+                    if args.reorder_ind_with_group:
                         if args.reorder_by_max_k:
                             Q_ref = Q_modes_reordered[-1]
                         else:
@@ -217,7 +217,7 @@ def main(args: argparse.Namespace):
                 mode_names = unnest_list(mode_names_list)
                 Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
                 mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-                if args.reorder_ind:
+                if args.reorder_ind_with_group:
                     if args.reorder_by_max_k:
                         Q_ref = Q_rep_modes_list[-1][0] if args.use_rep else Q_avg_modes_list[-1][0]
                     else:
@@ -234,7 +234,7 @@ def main(args: argparse.Namespace):
                 major_mode_names = [mode_names[0] for mode_names in mode_names_list]
                 Q_major_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in major_mode_names]
                 major_mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in major_mode_names]
-                if args.reorder_ind:
+                if args.reorder_ind_with_group:
                     if args.reorder_by_max_k:
                         Q_ref = Q_major_modes_reordered[-1]
                     else:
@@ -255,7 +255,7 @@ def main(args: argparse.Namespace):
             # Q_modes = cd_res[0]['repQ_modes'] if args.use_rep else cd_res[0]['avgQ_modes']
             suffix = "rep" if args.use_rep else "avg"
             mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-            if args.reorder_ind:
+            if args.reorder_ind_with_group:
                 if args.reorder_by_max_k:
                     Q_ref = Q_modes_reordered[-1]
                 else:
@@ -299,7 +299,7 @@ def parse_args():
                         help="A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3] separated by delimiter)")
     optional.add_argument("--regroup_ind", type=str2bool, default=True, required=False, 
                         help="Whether to regroup individuals so that those with the same labels stay together (if labels are available): True (default)/False")
-    optional.add_argument("--reorder_ind", type=str2bool, default=True, required=False, 
+    optional.add_argument("--reorder_ind_with_group", type=str2bool, default=True, required=False, 
                         help="Whether to reorder individuals within each label group in the plot (if labels are available): True (default)/False")
     optional.add_argument("--reorder_by_max_k", type=str2bool, default=True, required=False, 
                         help="Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)")
