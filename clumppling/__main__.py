@@ -30,7 +30,7 @@ def main(args: argparse.Namespace):
     if args.include_label:
         if args.ind_labels!="":
             ind_labels = parse_strings(args.ind_labels, remove_dup=False)
-            if len(ind_labels)>0:
+            if args.regroup_ind and len(ind_labels)>0:
                 logger.info(f"{len(ind_labels)} individual labels loaded.")
                 ind_labels, reorder_indices = group_labels(ind_labels)
                 if not reorder_indices == list(range(len(ind_labels))):
@@ -43,6 +43,8 @@ def main(args: argparse.Namespace):
                     with open(os.path.join(processed_input_dir,"ind_labels_indices.txt"), "w") as f:
                         for i in reorder_indices:
                             f.write(str(i) + "\n")
+            else:
+                logger.info(f"{len(ind_labels)} individual labels loaded (not regrouped).")
 
     # process files
     labels = process_files(input_dir=args.input, output_dir=processed_input_dir, 
@@ -295,8 +297,10 @@ def parse_args():
     optional.add_argument("--include_label", type=str2bool, default=True, required=False, help="Whether to include individual labels in the plot: True (default)/False")
     optional.add_argument("--ind_labels", type=str, default="", required=False, 
                         help="A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3] separated by delimiter)")
+    optional.add_argument("--regroup_ind", type=str2bool, default=True, required=False, 
+                        help="Whether to regroup individuals so that those with the same labels stay together (if labels are available): True (default)/False")
     optional.add_argument("--reorder_ind", type=str2bool, default=True, required=False, 
-                        help="Whether to reorder individuals within each label group in the plot: True (default)/False")
+                        help="Whether to reorder individuals within each label group in the plot (if labels are available): True (default)/False")
     optional.add_argument("--reorder_by_max_k", type=str2bool, default=True, required=False, 
                         help="Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)")
     optional.add_argument("--order_cls_by_label", type=str2bool, default=True, required=False, 

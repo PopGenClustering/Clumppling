@@ -157,7 +157,7 @@ def plot_memberships_list(Q_list: list[np.ndarray], cmap: list[tuple[float, floa
                           order_refQ: Optional[np.ndarray]=None, order_cls_by_label: bool=True,
                           width_scale: float=1.0):
     # get separation points in the labels
-    if ind_labels:
+    if len(ind_labels)>0:
         uniq_lbs, uniq_lbs_indices, uniq_lbs_sep_idx = get_uniq_lb_sep(ind_labels)
         if order_refQ is not None:
             ref_ind_sorted_indices, ref_mbsp_sort_indices = reorder_ind_within_group(order_refQ, ind_labels)
@@ -170,7 +170,7 @@ def plot_memberships_list(Q_list: list[np.ndarray], cmap: list[tuple[float, floa
         lb = names[i]
         ax = axes[i] if len(Q_list)>1 else axes
 
-        if order_refQ is None:
+        if order_refQ is None or len(ind_labels)==0:
             plot_membership(Q, cmap, ax=ax, ylab=lb)
         else:
             if order_cls_by_label:
@@ -184,7 +184,7 @@ def plot_memberships_list(Q_list: list[np.ndarray], cmap: list[tuple[float, floa
                 Q_reordered = Q_reordered[:,mbsp_sortidx]
                 plot_membership(Q_reordered, [cmap[i] for i in mbsp_sortidx], ax=ax, ylab=lb)        
 
-        if ind_labels:
+        if len(ind_labels)>0:
             if len(ind_labels)!=Q.shape[0]:
                 logger.warning(f"Number of individual labels ({len(ind_labels)}) does not match number of rows in Q matrix ({Q.shape[0]}). ")
             for v in uniq_lbs_sep_idx:
@@ -211,7 +211,7 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
     N = Q_list_list[0][0].shape[0]
 
     # get separation points in the labels
-    if ind_labels:
+    if len(ind_labels)>0:
         uniq_lbs, uniq_lbs_indices, uniq_lbs_sep_idx = get_uniq_lb_sep(ind_labels)
         if order_refQ is not None:
             ref_ind_sorted_indices, ref_mbsp_sort_indices = reorder_ind_within_group(order_refQ, ind_labels)
@@ -229,7 +229,7 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
             axes_handles[(K, i_mode)] = ax
             Q_label = labels_list[i_K][i_mode] 
             Q = Q_list_list[i_K][i_mode]
-            if order_refQ is None:
+            if order_refQ is None or len(ind_labels)==0:
                 plot_membership(Q, cmap, ax=ax, title=Q_label, fontsize=fontsize)
             else:
                 if order_cls_by_label:
@@ -243,9 +243,8 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
                     Q_reordered = Q_reordered[:,mbsp_sortidx]
                     plot_membership(Q_reordered, [cmap[i] for i in mbsp_sortidx], ax=ax, title=Q_label, fontsize=fontsize)        
 
-
             ax.set_zorder(9)
-            if ind_labels:
+            if len(ind_labels)>0:
                 if len(ind_labels)!=N:
                     logger.warning(f"Number of individual labels ({len(ind_labels)}) does not match number of rows in Q matrix ({N}). ")
                 for v in uniq_lbs_sep_idx:
