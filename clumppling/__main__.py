@@ -62,7 +62,7 @@ def main(args: argparse.Namespace):
             logger.warning("No input labels found.")
     else:
         ind_labels = []
-        logger.warning("No input labels found.")
+        logger.warning("No input labels.")
     
 
     Q_names, K_range, K2IDs = extract_meta_input(processed_input_dir)
@@ -153,7 +153,7 @@ def main(args: argparse.Namespace):
         # determine width scaling for structure plots based on number of unique individual labels
         width_scale = 1.0
         if len(ind_labels)>1:
-            width_scale = max(1,len(set(ind_labels))/10)
+            width_scale = max(1,len(set(ind_labels))/8)
 
         if len(K_range)>1:
 

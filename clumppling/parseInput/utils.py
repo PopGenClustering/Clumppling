@@ -22,7 +22,7 @@ def group_labels(labels: list) -> Tuple[list, list]:
     reorder_indices = [i for idx_list in groups.values() for i in idx_list]
     # Apply to labels to get grouped labels
     grouped_labels = [labels[i] for i in reorder_indices]
-    logger.info(f"(altogether {len(labels)} labels, with {len(groups)} unique labels)")
+    logger.info(f"Out of {len(labels)} labels, {len(groups)} are unique.")
 
     return grouped_labels, reorder_indices
 
