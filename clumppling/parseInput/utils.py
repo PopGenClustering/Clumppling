@@ -16,6 +16,7 @@ def group_labels(labels: list) -> Tuple[list, list]:
     # Group labels while preserving first-seen order
     groups = OrderedDict()
     for idx, label in enumerate(labels):
+        # print(label)
         groups.setdefault(label, []).append(idx)  # store indices instead of label
 
     # Flatten indices to get the reordering
@@ -54,6 +55,8 @@ def process_files(
                     file_path, skip_missing, delimiter, skip_rows,
                     label_cols=[0, 1, 3], mat_start_col=5
                 )
+                if labels is not None:
+                    labels = [label[-1] for label in labels]
                 if labels is None or matrix is None:
                     logger.error(f"Failed to extract labels or matrix from {file_path}.")
                     continue
@@ -66,6 +69,8 @@ def process_files(
                     lines, skip_missing, delimiter, skip_rows,
                     label_cols=label_cols, mat_start_col=mat_start_col
                 )
+                if labels is not None:
+                    labels = [label[-1] for label in labels]  # Use the last column as label
                 if labels is None or matrix is None:
                     logger.error(f"Failed to extract labels or matrix from {file_path}.")
                     continue

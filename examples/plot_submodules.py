@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from clumppling.plot import parse_custom_cmap, plot_colorbar, plot_alignment, plot_memberships_list, plot_graph
+from clumppling.plot import parse_custom_cmap, plot_colorbar, plot_alignment_list, plot_alignment_graph, plot_memberships_list, plot_graph
 from clumppling.utils import str_to_pattern
 
 K_max = 5
@@ -71,10 +71,18 @@ with open(os.path.join(acrossK_dir, "alignment_acrossK.txt"), "r") as f:
         cost = float(parts[1])
         cost_acrossK[mode_pair] = cost
         
-# Plot alignment pattern
-fig = plot_alignment(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=200)
-fig.savefig(os.path.join(fig_dir,"alignment_pattern_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+# Plot alignment pattern (as a list)
+fig = plot_alignment_list(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=200)
+fig.savefig(os.path.join(fig_dir,"alignment_pattern_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
 plt.close(fig)
+
+
+fig = plot_alignment_graph(K_range, names_list=mode_names_list, cmap=cmap, 
+                           alignment_acrossK=alignment_acrossK, all_modes_alignment=all_modes_alignment,
+                           ls_alt=['-', '--'], color_alt=['dimgrey', 'darkslateblue','darkgreen'])
+fig.savefig(os.path.join(fig_dir,"alignment_pattern_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+plt.close(fig)        
+
 
 # Plot aligned memberships (as a list, with individuals ordered by major cluster's memberships, based on major mode of smallest K)
 Q_ref = Q_list_list[0][0] # use the major mode of smallest K as reference

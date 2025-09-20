@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from .log_config import setup_logger
 from .core import align_within_k_all_K, detect_modes_all_K, extract_modes_all_K, align_across_k, write_alignment_across_k, reorderQ_within_k, reorderQ_across_k
 from .utils import disp_params,str2bool,parse_strings,get_modes_all_K, write_reordered_across_k, get_mode_sizes, unnest_list
-from .plot import load_default_cmap, parse_custom_cmap, plot_colorbar, plot_memberships_list, plot_graph, plot_alignment
+from .plot import load_default_cmap, parse_custom_cmap, plot_colorbar, plot_memberships_list, plot_graph, plot_alignment_list, plot_alignment_graph
 
 from .parseInput import process_files, extract_meta_input, group_labels
 
@@ -45,6 +45,9 @@ def main(args: argparse.Namespace):
                             f.write(str(i) + "\n")
             else:
                 logger.info(f"{len(ind_labels)} individual labels loaded (not regrouped).")
+    else:
+        ind_labels = []
+        logger.warning("No input labels used.")
 
     # process files
     labels = process_files(input_dir=args.input, output_dir=processed_input_dir, 
@@ -57,14 +60,14 @@ def main(args: argparse.Namespace):
         if args.ind_labels!="":
             logger.info(f"Input labels loaded from {args.ind_labels}.")
         elif labels is not None:
-            ind_labels = list(labels[:,-1])
+            ind_labels = labels #list(labels[:,-1])
             logger.info("Input labels loaded from processed files.")
         else:
             ind_labels = []
             logger.warning("No input labels found.")
     else:
         ind_labels = []
-        logger.warning("No input labels.")
+        logger.warning("No input labels used.")
     
 
     Q_names, K_range, K2IDs = extract_meta_input(processed_input_dir)
@@ -148,22 +151,31 @@ def main(args: argparse.Namespace):
         logger.info(f"Plot alignment patterns ({suffix})")
         mode_K = [Q.shape[1] for Q in unnest_list(Q_rep_modes_list)]
         mode_names = unnest_list(mode_names_list)
-        fig = plot_alignment(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=200)
-        fig.savefig(os.path.join(fig_dir,"alignment_pattern_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+        fig = plot_alignment_list(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=200)
+        fig.savefig(os.path.join(fig_dir,"alignment_pattern_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+        plt.close(fig)
+        fig = plot_alignment_graph(K_range, names_list=mode_names_list, cmap=cmap, 
+                                   alignment_acrossK=alignment_acrossK, all_modes_alignment=all_modes_alignment,
+                                   alt_color=args.alt_color, ls_alt=['-', '--'],  
+                                   y_aspect=3 if K_max <5 else 5,
+                                   wspace_padding=1.3 if K_max<8 else 1.1) #color_alt=['#6A8A9F','#B49F63', '#789B8C','#AD839A','#8D8D8D'], 
+        fig.savefig(os.path.join(fig_dir,"alignment_pattern_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
 
-        # determine width scaling for structure plots based on number of unique individual labels
+        # determine width scaling for structure plots based on size of data
         width_scale = 1.0
-        if len(ind_labels)>1:
-            width_scale = max(1,len(set(ind_labels))/8)
+        height_scale = 1.0
+        if K_max>10:
+            width_scale = 2/K_max+0.8
+        if len(K_range)<5:
+            height_scale = 5/len(K_range)
 
         if len(K_range)>1:
-
             if args.plot_type in ["graph", "all"]:
                 logger.info(f"Plot all modes in a graph ({suffix})")
                 mode_labels_list = [[f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names] for mode_names in mode_names_list]
                 Q_modes_reordered_list = [[aligned_Qs_allK[mode_name] for mode_name in mode_names] for mode_names in mode_names_list]
-                if args.reorder_ind_with_group:
+                if args.reorder_within_group:
                     if args.reorder_by_max_k:
                         Q_ref = Q_modes_reordered_list[-1][0]
                     else:
@@ -176,17 +188,17 @@ def main(args: argparse.Namespace):
                     fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
                                     names_list=mode_names_list, labels_list=mode_labels_list,  
                                     cost_acrossK=cost_acrossK, ind_labels=ind_labels, 
-                                    fontsize=14, line_cmap=plt.get_cmap("Greys"),
+                                    fontsize=14, alt_color=args.alt_color, line_cmap=None,
                                     order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label,
-                                    width_scale=width_scale)
+                                    width_scale=width_scale, height_scale=height_scale)
                 else:
                     logger.info(f"Not including cost values in the graph")
                     fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
                                     names_list=mode_names_list, labels_list=mode_labels_list,  
                                     cost_acrossK=None, ind_labels=ind_labels, 
-                                    fontsize=14, line_cmap=plt.get_cmap("Greys"),
+                                    fontsize=14, alt_color=args.alt_color, line_cmap=None,
                                     order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label,
-                                    width_scale=width_scale)
+                                    width_scale=width_scale, height_scale=height_scale)
                 fig.savefig(os.path.join(fig_dir,"all_modes_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
             
@@ -199,7 +211,7 @@ def main(args: argparse.Namespace):
                     # # if only align within each mode, but not across K, then use the following line:
                     # Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)
                     mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-                    if args.reorder_ind_with_group:
+                    if args.reorder_within_group:
                         if args.reorder_by_max_k:
                             Q_ref = Q_modes_reordered[-1]
                         else:
@@ -217,7 +229,7 @@ def main(args: argparse.Namespace):
                 mode_names = unnest_list(mode_names_list)
                 Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
                 mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-                if args.reorder_ind_with_group:
+                if args.reorder_within_group:
                     if args.reorder_by_max_k:
                         Q_ref = Q_rep_modes_list[-1][0] if args.use_rep else Q_avg_modes_list[-1][0]
                     else:
@@ -234,7 +246,7 @@ def main(args: argparse.Namespace):
                 major_mode_names = [mode_names[0] for mode_names in mode_names_list]
                 Q_major_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in major_mode_names]
                 major_mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in major_mode_names]
-                if args.reorder_ind_with_group:
+                if args.reorder_within_group:
                     if args.reorder_by_max_k:
                         Q_ref = Q_major_modes_reordered[-1]
                     else:
@@ -255,7 +267,7 @@ def main(args: argparse.Namespace):
             # Q_modes = cd_res[0]['repQ_modes'] if args.use_rep else cd_res[0]['avgQ_modes']
             suffix = "rep" if args.use_rep else "avg"
             mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-            if args.reorder_ind_with_group:
+            if args.reorder_within_group:
                 if args.reorder_by_max_k:
                     Q_ref = Q_modes_reordered[-1]
                 else:
@@ -290,16 +302,17 @@ def parse_args():
                         help="File format")
     # optional
     optional.add_argument('-v', '--vis', type=str2bool, default=True, required=False, help='Whether to generate figure(s): True (default)/False')
-    optional.add_argument('--custom_cmap', type=str, default='', required=False, help='Customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap, otherwise use the user-specified colormap')
+    optional.add_argument('--custom_cmap', type=str, default='', required=False, help='A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use the user-specified colormap')
     optional.add_argument("--plot_type", type=str, default="graph", required=False, choices=["graph", "list", "withinK", "major", "all"],
                           help="Type of plot to generate: 'graph' (default), 'list', 'withinK', 'major', 'all'")
     optional.add_argument("--include_cost", type=str2bool, default=True, required=False, help="Whether to include cost values in the graph plot: True (default)/False")
     optional.add_argument("--include_label", type=str2bool, default=True, required=False, help="Whether to include individual labels in the plot: True (default)/False")
+    optional.add_argument("--alt_color", type=str2bool, default=False, required=False, help="Whether to use alternative colors for connection lines: True (default)/False")
     optional.add_argument("--ind_labels", type=str, default="", required=False, 
                         help="A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3] separated by delimiter)")
     optional.add_argument("--regroup_ind", type=str2bool, default=True, required=False, 
                         help="Whether to regroup individuals so that those with the same labels stay together (if labels are available): True (default)/False")
-    optional.add_argument("--reorder_ind_with_group", type=str2bool, default=True, required=False, 
+    optional.add_argument("--reorder_within_group", type=str2bool, default=True, required=False, 
                         help="Whether to reorder individuals within each label group in the plot (if labels are available): True (default)/False")
     optional.add_argument("--reorder_by_max_k", type=str2bool, default=True, required=False, 
                         help="Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)")

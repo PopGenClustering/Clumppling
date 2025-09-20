@@ -3,8 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.axes as maxes
 import matplotlib.colors as mcolors
+import colorsys
 import importlib.resources
-from matplotlib.patches import ConnectionPatch
+from matplotlib import cm
+from matplotlib.patches import ConnectionPatch, Rectangle
 from typing import Optional, cast
 from clumppling.utils import get_uniq_lb_sep, reorder_ind_within_group
 
@@ -198,13 +200,40 @@ def plot_memberships_list(Q_list: list[np.ndarray], cmap: list[tuple[float, floa
     
     return fig
 
+def adjust_lightness(color, factor=1.0):
+    """
+    Adjust color lightness by multiplying the lightness channel in HLS.
+    factor > 1 → lighter, factor < 1 → darker
+    """
+    r, g, b = mcolors.to_rgb(color)
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    l = max(0, min(1, l * factor))
+    r, g, b = colorsys.hls_to_rgb(h, l, s)
+    return (r, g, b)
+
+
+def create_single_cmap(color: str, name: str='custom_cmap', light: float=1.5, dark: float=0.6) -> mcolors.LinearSegmentedColormap:
+    """Create a colormap that transitions from white to the specified color and then to black.
+    Args:
+        color (str): The base color for the colormap.
+        name (str): The name of the colormap.
+    """
+    rgb = mcolors.to_rgb(color)
+    # Define gradient: white → base color → black
+    return mcolors.LinearSegmentedColormap.from_list(
+        name, 
+        [adjust_lightness(color, light), mcolors.to_rgb(color), adjust_lightness(color, dark)]
+    )
+
 
 def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: list[tuple[float, float, float]], 
                names_list: list[list[str]], labels_list: Optional[list[list[str]]]=None,
                cost_acrossK: Optional[dict]=None,
-               ind_labels: list=[], fontsize: float=14, line_cmap=None,
+               ind_labels: list=[], fontsize: float=14, 
+               alt_color: bool=True, line_cmap=None,
+               color_alt: list[str]=['rosybrown', 'steelblue','goldenrod', 'darkseagreen'], 
                order_refQ: Optional[np.ndarray]=None, order_cls_by_label: bool=True, 
-               width_scale: float=1.0):
+               width_scale: float=1.0, height_scale: float=1.0):
     mode_numbers = [len(names_list[i_K]) for i_K, K in enumerate(K_range)]
     n_row = len(K_range)
     n_col = max(mode_numbers)
@@ -219,7 +248,7 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
     if labels_list is None:
         labels_list = names_list
 
-    fig = plt.figure(figsize=(7*n_col*width_scale,2*n_row), dpi=150)
+    fig = plt.figure(figsize=(7*n_col*width_scale,2*n_row*height_scale), dpi=150)
     gs = fig.add_gridspec(n_row,n_col, wspace=0.2, hspace=1)
 
     axes_handles = dict()
@@ -253,6 +282,8 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
                     ax.set_xticks(uniq_lbs_indices)
                     ax.tick_params(axis='x', which='both', length=0)
                     rot = 45 if np.any([len(lb)>5 for lb in uniq_lbs]) else 0
+                    if len(uniq_lbs)>10:
+                        rot = 90 
                     fs = 14 if len(uniq_lbs)<10 else 10
                     ax.set_xticklabels(uniq_lbs, rotation=rot, ha='center', fontsize=fs)
 
@@ -269,9 +300,14 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
         logger.info(f"Including graph edges for cost across K")
         textbox_props = dict(boxstyle='round', facecolor='white', alpha=0.6, edgecolor='none', pad=0.1)
         
-        if line_cmap is None:
-            logger.info(f"Using default Greys colormap for cost lines")
-            line_cmap = plt.get_cmap("Greys")
+        # get colormap for connection lines
+        if not alt_color:
+            if line_cmap is None:
+                logger.info(f"Using default Greys colormap for cost lines")
+                line_cmap = cm.get_cmap("Greys")
+        else:
+            cmaps_alt = [create_single_cmap(c, c) for c in color_alt]
+        
         cost_max = max(cost_acrossK.values())
         cost_min = min(cost_acrossK.values())
         
@@ -280,11 +316,17 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
                 for i_mode2 in range(mode_numbers[i_K+1]):
                     m1, m2 = names_list[i_K][i_mode], names_list[i_K+1][i_mode2]
                     pair_label = "{}-{}".format(m1, m2)
+                    if alt_color:
+                        line_cmap = cmaps_alt[(i_mode+i_mode2+i_K+i_K+1) % len(cmaps_alt)]
+                    elif line_cmap is None:
+                        line_cmap = cm.get_cmap("Greys")
+
                     if pair_label in cost_acrossK:
                         ax = axes_handles[(K, i_mode)]
                         ax2 = axes_handles[(K_range[i_K+1], i_mode2)]
                         cost = float(cost_acrossK[pair_label])
                         edge_w = 0.85-(cost-cost_min)/(cost_max-cost_min)*0.8
+                        
                         con = ConnectionPatch(xyA=(0.5,-0.05), coordsA='axes fraction', axesA=ax,
                                               xyB=(0.5,1.05), coordsB='axes fraction', axesB=ax2,
                                               color=line_cmap(edge_w), lw=4, alpha=1, zorder=0)
@@ -293,7 +335,7 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
                         # add text annotation  at midpoint
                         xyA_fig = fig.transFigure.inverted().transform(ax.transData.transform((N//2,-0.05)))
                         xyB_fig = fig.transFigure.inverted().transform(ax2.transData.transform((N//2,1.05)))
-                        frac = 0.3 if (i_mode)%2==1 else 0.7 # to avoid overlapping texts
+                        frac = 0.3 if (i_mode+i_mode2)%2==1 else 0.7 # to avoid overlapping texts
                         if mode_numbers[i_K]==1 or mode_numbers[i_K+1]==1:
                             frac = 0.5
                         mid_fig = get_frac_coord(xyA_fig,xyB_fig,frac=frac)
@@ -306,9 +348,18 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
     return fig
             
 
-def plot_alignment(mode_K: list[int], mode_names: list[str], cmap: list[tuple[float, float, float]], 
+def plot_alignment_list(mode_K: list[int], mode_names: list[str], cmap: list[tuple[float, float, float]], 
                    alignment_acrossK: dict, all_modes_alignment: dict, 
                    marker_size: float=200):
+    """Plot alignment pattern (as a list) with all modes arranged in a column.
+    Args:
+        mode_K: List of K values for each mode.
+        mode_names: List of mode names.
+        cmap: Color map for clusters.
+        alignment_acrossK: Alignment mappings across K.
+        all_modes_alignment: Alignments within each mode.
+        marker_size: Size of the markers in the plot. Defaults to 200.
+    """
     K_max = np.max(mode_K)
 
     fig, ax = plt.subplots(1,1,figsize=(K_max*0.75,len(mode_names)*0.75), dpi=150)
@@ -341,4 +392,104 @@ def plot_alignment(mode_K: list[int], mode_names: list[str], cmap: list[tuple[fl
     ax.set_ylabel("Modes", fontsize=12)
     ax.invert_yaxis()    
 
+    return fig
+
+def plot_alignment_graph(K_range: list[int], names_list: list[list[str]], cmap: list[tuple[float, float, float]], 
+                   alignment_acrossK: dict, all_modes_alignment: dict, 
+                   wspace_padding: float=1.3, y_aspect: float=3, 
+                   alt_color: bool=True,
+                   color_alt: list[str]=['rosybrown', 'steelblue','goldenrod', 'darkseagreen'], 
+                   ls_alt: list[str]=['-', '--'], 
+                   marker_size: float=200):
+    """Plot alignment pattern (as a graph), with modes in each K arranged in a row, and space between modes.
+
+    Args:
+        K_range: List of K values.
+        names_list: List of lists of mode names for each K.
+        cmap: Color map for clusters.
+        alignment_acrossK: Alignment mappings across K.
+        all_modes_alignment: Alignments within each mode.
+        wspace_padding: Horizontal space padding between modes. Defaults to 1.3.
+        y_aspect: Aspect ratio for y-axis. Defaults to 3.
+        color_alt: List of colors to alternate between for lines. Defaults to ['rosybrown', 'steelblue', 'goldenrod', 'darkseagreen'].
+        ls_alt: List of line styles to alternate between for lines. Defaults to ['-', '--', ':'].
+        marker_size: float=200
+    """
+
+    mode_numbers = [len(names_list[i_K]) for i_K, K in enumerate(K_range)]
+    n_row = len(K_range)
+    n_col = max(mode_numbers)
+    K_max = np.max(K_range)
+    # get the starting (x-)positions of each mode in each row
+    start_positions = np.zeros((n_row, n_col), dtype=int)
+    for i_K, K in enumerate(K_range):
+        for i_mode in range(n_col):
+            start_positions[i_K, i_mode] = i_mode * int(K_max*wspace_padding)  # add some space between modes
+
+    fig, ax = plt.subplots(1,1,figsize=(n_col*K_max*0.3,n_row*1.5), dpi=150)
+    for i_K, K in enumerate(K_range[:-1]):
+        i_K2, K2 = i_K+1, K_range[i_K+1]
+        for i_mode in range(mode_numbers[i_K]):
+            mode_name = names_list[i_K][i_mode]
+            ax.scatter(all_modes_alignment[mode_name]+start_positions[i_K, i_mode], np.ones(K)*i_K, 
+                       s=marker_size, linewidths=0.5, edgecolors='k',
+                    c=[cmap[all_modes_alignment[mode_name][i]] for i in range(K)], zorder=6)
+            for i_mode2 in range(mode_numbers[i_K2]):
+                mode_name2 = names_list[i_K2][i_mode2]
+                mode_pair = '{}-{}'.format(mode_name,mode_name2)
+                if mode_pair in alignment_acrossK:
+                    mapping = alignment_acrossK[mode_pair]
+                    reordering_cur = all_modes_alignment[mode_name]
+                    reordering_next = all_modes_alignment[mode_name2]
+                    for kp1 in range(len(mapping)):
+                        # switch between colors for better visibility
+                        if alt_color:
+                            color = color_alt[(i_mode+i_mode2+i_K+i_K2) % len(color_alt)]
+                        else:
+                            color = 'k'
+                        # cycle between line styles for better visibility
+                        ls = ls_alt[(i_mode+i_mode2) % len(ls_alt)]
+                        if reordering_cur[mapping[kp1]]!=reordering_next[kp1]:
+                            ax.plot([reordering_cur[mapping[kp1]]+start_positions[i_K, i_mode],reordering_next[kp1]+start_positions[i_K2, i_mode2]], [i_K,i_K2],
+                                    c=color, ls=ls, lw=0.8, zorder=2)
+                        else:
+                            ax.plot([reordering_cur[mapping[kp1]]+start_positions[i_K, i_mode],reordering_next[kp1]+start_positions[i_K2, i_mode2]], [i_K,i_K2],
+                                    c='lightgrey', ls=':', lw=0.3, zorder=2)
+                    # add a rectangle to highlight the mode
+                    rect = Rectangle((start_positions[i_K2, i_mode2]-0.5, i_K2-0.15), K2, 0.3, 
+                                    linewidth=0.5, edgecolor='lightgrey', facecolor='lightgrey', alpha=0.1, 
+                                    joinstyle='round', capstyle='round',zorder=1)
+                    ax.add_patch(rect)
+                else:
+                    print(f"Warning: alignment for mode pair {mode_pair} not found.")
+
+    i_K = len(K_range)-1
+    K = K_range[i_K]
+    for i_mode in range(mode_numbers[i_K]):
+        mode_name = names_list[i_K][i_mode]
+        ax.scatter(all_modes_alignment[mode_name]+start_positions[i_K, i_mode], np.ones(K)*i_K, 
+                   s=marker_size, linewidths=0.5, edgecolors='k',
+                    c=[cmap[all_modes_alignment[mode_name][i]] for i in range(K)], zorder=6)
+    i_K = 0
+    K = K_range[i_K]
+    for i_mode in range(mode_numbers[i_K]):
+        mode_name = names_list[i_K][i_mode]       
+        # add a rectangle to highlight the mode
+        rect = Rectangle((start_positions[i_K, i_mode]-0.5, i_K-0.15), K, 0.3, 
+                        linewidth=0.5, edgecolor='lightgrey', facecolor='lightgrey', alpha=0.1, 
+                        joinstyle='round', capstyle='round',zorder=1)
+        ax.add_patch(rect)
+
+    tick_positions = [start_positions[0, i_mode] + (K_max - 1) / 2.0 for i_mode in range(n_col)]
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels([f"M{i_m+1}" for i_m in range(n_col)], fontsize=14)
+    ax.set_xlabel("Clusters in Modes", fontsize=14)
+    ax.set_xlim(-1, (n_col-1) * int(K_max*wspace_padding) + K_max )  
+
+    ax.set_yticks(np.arange(n_row))
+    ax.set_yticklabels([f"K={K}" for K in K_range], rotation=0, fontsize=14, va='center', ha='right')
+    ax.set_ylim(-0.5,n_row-0.5)
+
+    ax.invert_yaxis() 
+    ax.set_aspect(y_aspect, adjustable='box')
     return fig
