@@ -372,7 +372,9 @@ def plot_alignment_list(mode_K: list[int], mode_names: list[str], cmap: list[tup
         mapping = alignment_acrossK[mode_pair]
         reordering_next = all_modes_alignment[mode_names[i_m+1]]
         for kp1 in range(len(mapping)):
-            ax.plot([reordering_cur[mapping[kp1]],reordering_next[kp1]], [i_m,i_m+1],
+            # ax.plot([reordering_cur[mapping[kp1]],reordering_next[kp1]], [i_m,i_m+1],
+            #         c='k', ls='-', lw=0.8, zorder=5)
+            ax.plot([reordering_cur.index(mapping[kp1]),reordering_next.index(kp1)], [i_m,i_m+1],
                     c='k', ls='-', lw=0.8, zorder=5)
     i_m += 1
     mode_name = mode_names[i_m]
@@ -394,6 +396,8 @@ def plot_alignment_list(mode_K: list[int], mode_names: list[str], cmap: list[tup
 
     return fig
 
+
+
 def plot_alignment_graph(K_range: list[int], names_list: list[list[str]], cmap: list[tuple[float, float, float]], 
                    alignment_acrossK: dict, all_modes_alignment: dict, 
                    wspace_padding: float=1.3, y_aspect: float=3, 
@@ -408,7 +412,7 @@ def plot_alignment_graph(K_range: list[int], names_list: list[list[str]], cmap: 
         names_list: List of lists of mode names for each K.
         cmap: Color map for clusters.
         alignment_acrossK: Alignment mappings across K.
-        all_modes_alignment: Alignments within each mode.
+        all_modes_alignment: Global alignment (final output).
         wspace_padding: Horizontal space padding between modes. Defaults to 1.3.
         y_aspect: Aspect ratio for y-axis. Defaults to 3.
         color_alt: List of colors to alternate between for lines. Defaults to ['rosybrown', 'steelblue', 'goldenrod', 'darkseagreen'].
@@ -449,11 +453,15 @@ def plot_alignment_graph(K_range: list[int], names_list: list[list[str]], cmap: 
                             color = 'k'
                         # cycle between line styles for better visibility
                         ls = ls_alt[(i_mode+i_mode2) % len(ls_alt)]
-                        if reordering_cur[mapping[kp1]]!=reordering_next[kp1]:
-                            ax.plot([reordering_cur[mapping[kp1]]+start_positions[i_K, i_mode],reordering_next[kp1]+start_positions[i_K2, i_mode2]], [i_K,i_K2],
+                        if reordering_cur.index(mapping[kp1])!=reordering_next.index(kp1):
+                            ax.plot([reordering_cur.index(mapping[kp1])+start_positions[i_K, i_mode],
+                                     reordering_next.index(kp1)+start_positions[i_K2, i_mode2]], 
+                                     [i_K+0.1,i_K2-0.1],
                                     c=color, ls=ls, lw=0.8, zorder=2)
                         else:
-                            ax.plot([reordering_cur[mapping[kp1]]+start_positions[i_K, i_mode],reordering_next[kp1]+start_positions[i_K2, i_mode2]], [i_K,i_K2],
+                            ax.plot([reordering_cur.index(mapping[kp1])+start_positions[i_K, i_mode],
+                                     reordering_next.index(kp1)+start_positions[i_K2, i_mode2]], 
+                                     [i_K+0.1,i_K2-0.1],
                                     c='lightgrey', ls=':', lw=0.3, zorder=2)
                     # add a rectangle to highlight the mode
                     rect = Rectangle((start_positions[i_K2, i_mode2]-0.5, i_K2-0.15), K2, 0.3, 

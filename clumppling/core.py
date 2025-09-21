@@ -420,12 +420,9 @@ def extract_modes_and_stats(modes: List[List[int]], cost_mat: np.ndarray,
     
     repQ_modes = []
     avgQ_modes = []
-    # mode_alignment = {}
     mode_labels = []
     mode_stats = []
     align_info = []
-    major_mode = None
-    major_mode_rep = ""
     for mode_idx in range(len(modes)):
 
         mode_label = "{}{}".format(label_prefix,mode_idx+1)
@@ -755,4 +752,9 @@ def reorderQ_across_k(K_range: list[int], Q_modes_list: list[list[np.ndarray]], 
                     all_modes_alignment[m3] = pat
                     aligned_Qs_allK[m3] = aligned_Q
     
+    for m in all_modes_alignment.keys():
+        orig =  all_modes_alignment[m]
+        new = [orig.index(ii) for ii in range(len(orig))]
+        all_modes_alignment[m] = new
+
     return aligned_Qs_allK, all_modes_alignment

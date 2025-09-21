@@ -154,11 +154,12 @@ def main(args: argparse.Namespace):
         fig = plot_alignment_list(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=200)
         fig.savefig(os.path.join(fig_dir,"alignment_pattern_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
+        y_aspect = 3 if K_max<5 else 3+K_max/5
+        wspace_padding = 1.3 if K_max<8 else 1.15
         fig = plot_alignment_graph(K_range, names_list=mode_names_list, cmap=cmap, 
                                    alignment_acrossK=alignment_acrossK, all_modes_alignment=all_modes_alignment,
                                    alt_color=args.alt_color, ls_alt=['-', '--'],  
-                                   y_aspect=3 if K_max <5 else 5,
-                                   wspace_padding=1.3 if K_max<8 else 1.1) #color_alt=['#6A8A9F','#B49F63', '#789B8C','#AD839A','#8D8D8D'], 
+                                   y_aspect=y_aspect, wspace_padding=wspace_padding) #color_alt=['#6A8A9F','#B49F63', '#789B8C','#AD839A','#8D8D8D'], 
         fig.savefig(os.path.join(fig_dir,"alignment_pattern_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
 
@@ -166,7 +167,7 @@ def main(args: argparse.Namespace):
         width_scale = 1.0
         height_scale = 1.0
         if K_max>10:
-            width_scale = 2/K_max+0.8
+            width_scale = 3/K_max+0.7
         if len(K_range)<5:
             height_scale = 5/len(K_range)
 
@@ -240,6 +241,13 @@ def main(args: argparse.Namespace):
                                             order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
                 fig.savefig(os.path.join(fig_dir,"all_modes_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
+            
+                if args.plot_unaligned:
+                    logger.info(f"Plot all modes in a list (unaligned; {suffix})")
+                    fig = plot_memberships_list(Q_modes_list, cmap, names=mode_labels, ind_labels=ind_labels, 
+                                                order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
+                    fig.savefig(os.path.join(fig_dir,"all_modes_list_unaligned_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                    plt.close(fig)
 
             if args.plot_type in ["major", "all"]:
                 logger.info(f"Plot major modes in a list ({suffix})")
@@ -318,6 +326,7 @@ def parse_args():
                         help="Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)")
     optional.add_argument("--order_cls_by_label", type=str2bool, default=True, required=False, 
                         help="Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)")
+    optional.add_argument("--plot_unaligned", type=str2bool, default=False, required=False, help="Whether to plot unaligned modes (in a list): True/False (default)")
 
     optional.add_argument("--extension", type=str, default="", required=False, help="Extension of input files")
     optional.add_argument("--skip_rows", type=int, default=0, required=False, help="Skip top rows in input files")

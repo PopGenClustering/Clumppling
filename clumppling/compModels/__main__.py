@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 from clumppling.log_config import setup_logger
 from clumppling.utils import disp_params, disp_msg, str2bool, parse_strings, unnest_list, write_reordered_across_k
 from clumppling.core import align_across_k, write_alignment_across_k, reorderQ_across_k
-from clumppling.plot import plot_colorbar, load_default_cmap, parse_custom_cmap, plot_alignment
+from clumppling.plot import plot_colorbar, load_default_cmap, parse_custom_cmap, plot_alignment_list
 from clumppling.alignAcrossK import load_any_qfiles, extract_K_range_from_Qs, separate_Qs_by_K
-from . import plot_multi_model_graph
+from . import plot_multi_model_graph, load_mode_stats
 
 import logging
 logger = logging.getLogger(__name__)
@@ -24,6 +24,8 @@ def parse_args():
                         help="List of files containing Q file names from each model.")
     parser.add_argument("--qnamelists", nargs="+", type=str, default="",
                         help="List of files containing replicate names from each model.")
+    parser.add_argument("--mode_stats_files", nargs="+", type=str, default="",
+                        help="List of files containing mode statistics from each model.")
     parser.add_argument("-o", "--output", type=str, required=True, 
                         help="Output file directory")
     parser.add_argument('-v', '--vis', type=str2bool, default=True, required=False, help='Whether to generate figure(s): True (default)/False')
@@ -104,15 +106,35 @@ if __name__ == "__main__":
         Q_names_reordered = unnest_list(mode_names_list)
         Q_aligned_list = load_any_qfiles([os.path.join(modeQ_dir,f"{Q_name}.Q") for Q_name in Q_names_reordered])
         mode_K = [Q.shape[1] for Q in Q_aligned_list]
-        fig = plot_alignment(mode_K, Q_names_reordered, cmap, alignment_acrossK, all_modes_alignment, marker_size=250)
+        fig = plot_alignment_list(mode_K, Q_names_reordered, cmap, alignment_acrossK, all_modes_alignment, marker_size=250)
         fig.axes[0].set_ylabel("Replicates")
         fig.savefig(os.path.join(fig_dir,"alignment_pattern.png"), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
 
+        # load mode statistics if provided
+        if args.mode_stats_files and len(args.mode_stats_files)==len(args.models):
+            disp_msg(f"Loading mode statistics from each model")
+            mode_stats_list = [load_mode_stats(f) for f in args.mode_stats_files]
+            mode_sizes = dict()
+            for i_model, model in enumerate(args.models):
+                mode_stats = mode_stats_list[i_model]
+                if 'Mode' not in mode_stats.columns or 'Size' not in mode_stats.columns:
+                    logger.warning(f"Mode statistics file '{args.mode_stats_files[i_model]}' does not contain required columns 'Mode' and 'Size'. Skipping mode size labeling for model '{model}'.")
+                    continue
+                for _, row in mode_stats.iterrows():
+                    mode_name = f"{model}_{row['Mode']}"
+                    if 'SizeFrac' in mode_stats.columns:
+                        mode_sizes[mode_name] = row['SizeFrac']
+                    else:
+                        mode_sizes[mode_name] = row['Size']
+
+        mode_labels_list = [[f"{mode_name.title().replace('_', ' ')} ({mode_sizes[mode_name]})" for mode_name in mode_names] for mode_names in mode_names_list]        
         # generate graph of structure plots
         fig = plot_multi_model_graph(K_range, args.models, 
                                      mode_names_list, Q_names_reordered, 
-                                     Q_aligned_list, cmap, label_K=True, label_model=True)
+                                     Q_aligned_list, cmap, 
+                                     Q_names_label_list=mode_labels_list,
+                                     label_K=True, label_model=True)
         fig.savefig(os.path.join(fig_dir,"comparison_aligned_models.png"), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)  
 
