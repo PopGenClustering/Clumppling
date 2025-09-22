@@ -14,7 +14,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="clumppling.alignWithinK")
+    parser = argparse.ArgumentParser(description="clumppling.detectMode")
 
     parser.add_argument("--align_res", type=str, required=True,
                         help="Path to the alignment results file")

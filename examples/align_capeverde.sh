@@ -1,3 +1,6 @@
+# !/bin/bash
+
+# default run with louvain mode detection, representative Q matrices for modes, and alignment across-K using the best mode pair
 python -m clumppling \
 -i examples/capeverde \
 -o examples/capeverde_output \
@@ -5,6 +8,7 @@ python -m clumppling \
 --extension .indivq \
 --ind_labels examples/capeverde_ind_labels.txt
 
+# run with average Q matrices, average Q matrices for modes, and alignment across-K using the major mode pair
 python -m clumppling \
 -i examples/capeverde \
 -o examples/capeverde_avg_output \
@@ -14,6 +18,7 @@ python -m clumppling \
 --extension .indivq \
 --ind_labels examples/capeverde_ind_labels.txt
 
+# run with customized mode detection, average Q matrices for modes, and alignment across-K using the major mode pair
 python -m clumppling \
 -i examples/capeverde \
 -o examples/capeverde_custom_output \

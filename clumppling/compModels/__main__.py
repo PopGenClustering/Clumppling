@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="clumppling.alignWithinK")
+    parser = argparse.ArgumentParser(description="clumppling.compModels")
 
     parser.add_argument("--models", nargs="+", type=str, required=True,
                         help="List of model names.")
@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument("-o", "--output", type=str, required=True, 
                         help="Output file directory")
     parser.add_argument('-v', '--vis', type=str2bool, default=True, required=False, help='Whether to generate figure(s): True (default)/False')
-    parser.add_argument('--custom_cmap', type=str, default='', required=False, help='Customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap, otherwise use the user-specified colormap')
+    parser.add_argument('--custom_cmap', type=str, default='', required=False, help='A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use the user-specified colormap')
     return parser.parse_args()
 
 
