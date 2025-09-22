@@ -152,7 +152,7 @@ def main(args: argparse.Namespace):
         mode_K = [Q.shape[1] for Q in unnest_list(Q_rep_modes_list)]
         mode_names = unnest_list(mode_names_list)
         fig = plot_alignment_list(mode_K, mode_names, cmap, alignment_acrossK, all_modes_alignment, marker_size=200)
-        fig.savefig(os.path.join(fig_dir,"alignment_pattern_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+        fig.savefig(os.path.join(fig_dir,"alignment_pattern_list_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
         y_aspect = 3 if K_max<5 else 3+K_max/5
         wspace_padding = 1.3 if K_max<8 else 1.15
@@ -160,7 +160,7 @@ def main(args: argparse.Namespace):
                                    alignment_acrossK=alignment_acrossK, all_modes_alignment=all_modes_alignment,
                                    alt_color=args.alt_color, ls_alt=['-', '--'],  
                                    y_aspect=y_aspect, wspace_padding=wspace_padding) #color_alt=['#6A8A9F','#B49F63', '#789B8C','#AD839A','#8D8D8D'], 
-        fig.savefig(os.path.join(fig_dir,"alignment_pattern_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+        fig.savefig(os.path.join(fig_dir,"alignment_pattern_graph_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
 
         # determine width scaling for structure plots based on size of data
@@ -200,7 +200,7 @@ def main(args: argparse.Namespace):
                                     fontsize=14, alt_color=args.alt_color, line_cmap=None,
                                     order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label,
                                     width_scale=width_scale, height_scale=height_scale)
-                fig.savefig(os.path.join(fig_dir,"all_modes_graph_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                fig.savefig(os.path.join(fig_dir,"all_modes_graph_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
             
             if args.plot_type in ["withinK", "all"]:
@@ -221,7 +221,7 @@ def main(args: argparse.Namespace):
                         Q_ref = None
                     fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
                                                 order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
-                    fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.png".format(K,suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                    fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.{}".format(K,suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
                     plt.close(fig)
             
             if args.plot_type in ["list", "all"]:
@@ -239,14 +239,14 @@ def main(args: argparse.Namespace):
                     Q_ref = None
                 fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
                                             order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
-                fig.savefig(os.path.join(fig_dir,"all_modes_list_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                fig.savefig(os.path.join(fig_dir,"all_modes_list_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
             
                 if args.plot_unaligned:
                     logger.info(f"Plot all modes in a list (unaligned; {suffix})")
                     fig = plot_memberships_list(Q_modes_list, cmap, names=mode_labels, ind_labels=ind_labels, 
                                                 order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
-                    fig.savefig(os.path.join(fig_dir,"all_modes_list_unaligned_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                    fig.savefig(os.path.join(fig_dir,"all_modes_list_unaligned_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
                     plt.close(fig)
 
             if args.plot_type in ["major", "all"]:
@@ -263,7 +263,7 @@ def main(args: argparse.Namespace):
                     Q_ref = None
                 fig = plot_memberships_list(Q_major_modes_reordered, cmap, names=major_mode_labels, ind_labels=ind_labels, 
                                             order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
-                fig.savefig(os.path.join(fig_dir,"major_modes_{}.png".format(suffix)), bbox_inches='tight', dpi=150, transparent=False)
+                fig.savefig(os.path.join(fig_dir,"major_modes_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)      
         else:
             logger.info(f"Plot modes within-K (single K={K_range[0]})")
@@ -284,7 +284,7 @@ def main(args: argparse.Namespace):
                 Q_ref = None
             fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
                                         order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
-            fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.png".format(K,suffix)), bbox_inches='tight', dpi=150, transparent=False)
+            fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.{}".format(K,suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
             plt.close(fig)
 
     logger.info(f"Completed".center(50, '-'))
@@ -327,6 +327,7 @@ def parse_args():
     optional.add_argument("--order_cls_by_label", type=str2bool, default=True, required=False, 
                         help="Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)")
     optional.add_argument("--plot_unaligned", type=str2bool, default=False, required=False, help="Whether to plot unaligned modes (in a list): True/False (default)")
+    optional.add_argument("--fig_format", type=str, default="png", required=False, choices=["png", "jpeg", "svg", "pdf"], help="Figure format for output files (default: png)")
 
     optional.add_argument("--extension", type=str, default="", required=False, help="Extension of input files")
     optional.add_argument("--skip_rows", type=int, default=0, required=False, help="Skip top rows in input files")
