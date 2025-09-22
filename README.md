@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning mixed-membership clustering results of population structure analysis.
 
-Current version **v 1.1.1** (Last update: Sep 17, 2025)
+Current version **v 1.1.8** (Last update: Sep 17, 2025)
 
 This README provides a quick-start guide for installation and use. See the [software manual](Clumppling_Manual.pdf) for full details.
 
@@ -100,58 +100,69 @@ Run the following command:
    ````
 If the installation was successful, you should see the usage of the program in the command window. The usage tells you the required and optional arguments to the program. It should look like:
 ````bash
-usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [-v VIS] [--custom_cmap CUSTOM_CMAP] [--plot_type {graph,list,withinK,major,all}]
-                [--include_cost INCLUDE_COST] [--include_label INCLUDE_LABEL] [--ind_labels IND_LABELS] [--reorder_ind REORDER_IND] [--reorder_by_max_k REORDER_BY_MAX_K]
-                [--order_cls_by_label ORDER_CLS_BY_LABEL] [--extension EXTENSION] [--skip_rows SKIP_ROWS] [--remove_missing REMOVE_MISSING]
-                [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES] [--test_comm TEST_COMM] [--comm_min COMM_MIN]
-                [--comm_max COMM_MAX] [--merge MERGE] [--use_rep USE_REP] [--use_best_pair USE_BEST_PAIR]
+usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [-v VIS] [--custom_cmap CUSTOM_CMAP]
+                   [--plot_type {graph,list,withinK,major,all}] [--include_cost INCLUDE_COST] [--include_label INCLUDE_LABEL] [--alt_color ALT_COLOR]
+                   [--ind_labels IND_LABELS] [--regroup_ind REGROUP_IND] [--reorder_within_group REORDER_WITHIN_GROUP] [--reorder_by_max_k REORDER_BY_MAX_K]
+                   [--order_cls_by_label ORDER_CLS_BY_LABEL] [--plot_unaligned PLOT_UNALIGNED] [--fig_format {png,jpeg,svg,pdf}] [--extension EXTENSION]
+                   [--skip_rows SKIP_ROWS] [--remove_missing REMOVE_MISSING]
+                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES] [--test_comm TEST_COMM]
+                   [--comm_min COMM_MIN] [--comm_max COMM_MAX] [--merge MERGE] [--use_rep USE_REP] [--use_best_pair USE_BEST_PAIR]
 
 Clumppling: a tool for cluster matching and permutation program with integer linear programming
 
 required arguments:
--i INPUT, --input INPUT
+  -i INPUT, --input INPUT
                         Input file path
--o OUTPUT, --output OUTPUT
+  -o OUTPUT, --output OUTPUT
                         Output file directory
--f {generalQ,admixture,structure,fastStructure}, --format {generalQ,admixture,structure,fastStructure}
+  -f {generalQ,admixture,structure,fastStructure}, --format {generalQ,admixture,structure,fastStructure}
                         File format
 
 optional arguments:
--v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
---custom_cmap CUSTOM_CMAP
-                        Customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap, otherwise use the user-specified
-                        colormap
---plot_type {graph,list,withinK,major,all}
+  -v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
+  --custom_cmap CUSTOM_CMAP
+                        A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise
+                        use the user-specified colormap
+  --plot_type {graph,list,withinK,major,all}
                         Type of plot to generate: 'graph' (default), 'list', 'withinK', 'major', 'all'
---include_cost INCLUDE_COST
+  --include_cost INCLUDE_COST
                         Whether to include cost values in the graph plot: True (default)/False
---include_label INCLUDE_LABEL
+  --include_label INCLUDE_LABEL
                         Whether to include individual labels in the plot: True (default)/False
---ind_labels IND_LABELS
-                        A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3]
-                        separated by delimiter)
---reorder_ind REORDER_IND
-                        Whether to reorder individuals within each label group in the plot: True (default)/False
---reorder_by_max_k REORDER_BY_MAX_K
+  --alt_color ALT_COLOR
+                        Whether to use alternative colors for connection lines: True (default)/False
+  --ind_labels IND_LABELS
+                        A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of
+                        columns [0, 1, 3] separated by delimiter)
+  --regroup_ind REGROUP_IND
+                        Whether to regroup individuals so that those with the same labels stay together (if labels are available): True (default)/False
+  --reorder_within_group REORDER_WITHIN_GROUP
+                        Whether to reorder individuals within each label group in the plot (if labels are available): True (default)/False
+  --reorder_by_max_k REORDER_BY_MAX_K
                         Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)
---order_cls_by_label ORDER_CLS_BY_LABEL
-                        Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)
---extension EXTENSION
+  --order_cls_by_label ORDER_CLS_BY_LABEL
+                        Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total
+                        memberships)
+  --plot_unaligned PLOT_UNALIGNED
+                        Whether to plot unaligned modes (in a list): True/False (default)
+  --fig_format {png,jpeg,svg,pdf}
+                        Figure format for output files (default: png)
+  --extension EXTENSION
                         Extension of input files
---skip_rows SKIP_ROWS
+  --skip_rows SKIP_ROWS
                         Skip top rows in input files
---remove_missing REMOVE_MISSING
+  --remove_missing REMOVE_MISSING
                         Remove individuals with missing data: True (default)/False
---cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}
+  --cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}
                         Community detection method to use (default: louvain)
---cd_res CD_RES       Resolution parameter for the default Louvain community detection (default: 1.0)
---test_comm TEST_COMM
+  --cd_res CD_RES       Resolution parameter for the default Louvain community detection (default: 1.0)
+  --test_comm TEST_COMM
                         Whether to test community structure (default: True)
---comm_min COMM_MIN   Minimum threshold for cost matrix (default: 1e-4)
---comm_max COMM_MAX   Maximum threshold for cost matrix (default: 1e-2)
---merge MERGE         Whther to merge two clusters when aligning K+1 to K (default: True)
---use_rep USE_REP     Use representative modes (alternative: average): True (default)/False
---use_best_pair USE_BEST_PAIR
+  --comm_min COMM_MIN   Minimum threshold for cost matrix (default: 1e-4)
+  --comm_max COMM_MAX   Maximum threshold for cost matrix (default: 1e-2)
+  --merge MERGE         Whether to merge two clusters when aligning K+1 to K (default: True)
+  --use_rep USE_REP     Use representative modes (alternative: average): True (default)/False
+  --use_best_pair USE_BEST_PAIR
                         Use best pair as anchor for across-K alignment (alternative: major): True (default)/False
 ````
 
@@ -165,6 +176,12 @@ python -m clumppling \
         --extension .Q # if not specified, all files under INPUT_PATH will be treated as input files
 ````
 
+## Example Outputs
+<p align="center">
+<img src="./example_figures/capeverde_all_modes_graph.png" alt="Cape Verde aligned modes" width="600">
+<img src="./example_figures/capeverde_alignment_pattern_graph.png" alt="Cape Verde alignment pattern" width="300">
+</p>
+
 ## Main Function
 
 ### Input arguments
@@ -177,7 +194,7 @@ The optional arguments are
 * for input parsing: ``extension``, ``skip_rows``, ``remove_missing``
 * for community detection: ``cd_method``,  ``cd_res``, ``test_comm``, ``comm_min``, ``comm_max``
 * for alignment across-K: ``merge``, ``use_rep``,``use_best_pair``
-* for figure generation: ``-v`` (``--vis``), ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``, ``reorder_ind``, ``reorder_by_max_k``, ``order_cls_by_label``.
+* for figure generation: ``-v`` (``--vis``), ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``, ``reorder_ind``, ``regroup_ind``, ``reorder_by_max_k``, ``order_cls_by_label``, ``plot_unaligned``, ``fig_format``.
 
 See the above helper message from ``clumppling -h'' for usage of each argument. 
 
@@ -283,7 +300,7 @@ output/
 │   └── major_pairs_acrossK_rep.txt
 ├── visualization/
 │   ├── colorbar.png
-│   ├── alignment_pattern_rep.png
+│   ├── alignment_pattern_graph_rep.png
 │   ├── all_modes_graph_rep.png
 │   └── ...
 └── clumppling.log
@@ -307,9 +324,7 @@ Each submodule is callable independently.
 
 **Usage:**
 ````bash
-usage: __main__.py [-h] -i INPUT -o OUTPUT -f
-                   {generalQ,admixture,structure,fastStructure}
-                   [--extension EXTENSION] [--skip_rows SKIP_ROWS]
+usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [--extension EXTENSION] [--skip_rows SKIP_ROWS]
                    [--remove_missing REMOVE_MISSING]
 
 clumppling.parseInput
@@ -339,7 +354,7 @@ python -m clumppling.parseInput \
 -f generalQ 
 ````
 
-### `aligneWithinK`
+### `alignWithinK`
 
 ``clumppling.alignWithinK``: Aligns clusters within a single value of K to ensure consistent labeling and facilitate comparison across replicates.
 
@@ -377,8 +392,8 @@ python -m clumppling.alignWithinK \
 **Usage:**
 ````bash
 usage: __main__.py [-h] --align_res ALIGN_RES --qfilelist QFILELIST -o OUTPUT [--qnamelist QNAMELIST]
-                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES]
-                   [--test_comm TEST_COMM] [--comm_min COMM_MIN] [--comm_max COMM_MAX]
+                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES] [--test_comm TEST_COMM]
+                   [--comm_min COMM_MIN] [--comm_max COMM_MAX]
 
 clumppling.alignWithinK
 
@@ -481,10 +496,10 @@ All commands are also provided in [examples/run_submodules.sh](examples/run_subm
 
 **Usage:**
 ````bash
-usage: __main__.py [-h] --models MODELS [MODELS ...] --qfilelists QFILELISTS [QFILELISTS ...] [--qnamelists QNAMELISTS [QNAMELISTS ...]] -o OUTPUT
-                   [-v VIS] [--custom_cmap CUSTOM_CMAP]
+usage: __main__.py [-h] --models MODELS [MODELS ...] --qfilelists QFILELISTS [QFILELISTS ...] [--qnamelists QNAMELISTS [QNAMELISTS ...]]
+                   [--mode_stats_files MODE_STATS_FILES [MODE_STATS_FILES ...]] -o OUTPUT [-v VIS] [--custom_cmap CUSTOM_CMAP]
 
-clumppling.alignWithinK
+clumppling.compModels
 
 options:
   -h, --help            show this help message and exit
@@ -494,12 +509,14 @@ options:
                         List of files containing Q file names from each model.
   --qnamelists QNAMELISTS [QNAMELISTS ...]
                         List of files containing replicate names from each model.
+  --mode_stats_files MODE_STATS_FILES [MODE_STATS_FILES ...]
+                        List of files containing mode statistics from each model.
   -o OUTPUT, --output OUTPUT
                         Output file directory
   -v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
   --custom_cmap CUSTOM_CMAP
-                        Customized colormap as a comma-separated string of hex codes for colors: if empty (default), using the default colormap,
-                        otherwise use the user-specified colormap
+                        A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use
+                        the user-specified colormap
 ````
 
 **Example:**
@@ -532,11 +549,8 @@ We thank Egor Lappo for helping with the packaging of the program.
 We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteban Rodriguez Rodriguez for helping with the testing of the program.
 
 ## Version Update History
-**Version 0.3**: 
-- Fix the bug in plotting when all replicates have the same K.
-- Add a check (merged from branch) to exclude loading K=1 replicates.
 
-**Version 1.0** (major updates): 
+**Version 1.0** 
 - Modularize each step.
 - Add input parsing features:
     * use `extension` to specify the file extension of the input files.
