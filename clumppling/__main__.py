@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from .log_config import setup_logger
 from .core import align_within_k_all_K, detect_modes_all_K, extract_modes_all_K, align_across_k, write_alignment_across_k, reorderQ_within_k, reorderQ_across_k
-from .utils import disp_params,str2bool,parse_strings,get_modes_all_K, write_reordered_across_k, get_mode_sizes, unnest_list
+from .utils import disp_params,str2bool,parse_strings,get_modes_all_K, write_reordered_across_k, get_mode_prop, unnest_list
 from .plot import load_default_cmap, parse_custom_cmap, plot_colorbar, plot_memberships_list, plot_graph, plot_alignment_list, plot_alignment_graph
 
 from .parseInput import process_files, extract_meta_input, group_labels
@@ -68,6 +68,7 @@ def main(args: argparse.Namespace):
     else:
         ind_labels = []
         logger.warning("No input labels used.")
+    ind_labels = list(ind_labels)
     
 
     Q_names, K_range, K2IDs = extract_meta_input(processed_input_dir)
@@ -88,7 +89,10 @@ def main(args: argparse.Namespace):
     logger.info(f"Extracting modes and summarizing statistics".center(50, '-'))
     cd_res, avg_stat = extract_modes_all_K(K_range, K2IDs, Q_names, cost_matrices_list, modes_all_K_list, alignment_withinK_list,
                                            processed_input_dir, output_dir=modes_dir)
-    mode_sizes = get_mode_sizes(cd_res) 
+    mode_sizes = get_mode_prop(cd_res, 'Size')
+    mode_sims = get_mode_prop(cd_res, 'Performance')
+    n_runs_per_K = [len(K2IDs[K]) for K in K_range]
+    logger.info(f"Number of runs per K: {n_runs_per_K}")
     # get modes for alignment across K
     mode_names_list, Q_rep_modes_list, Q_avg_modes_list = get_modes_all_K(K_range, cd_res)
     
@@ -145,7 +149,7 @@ def main(args: argparse.Namespace):
         fig_dir = os.path.join(args.output,"visualization")
         os.makedirs(fig_dir, exist_ok=True)
         logger.info(f"Plot colorbar")
-        plot_colorbar(cmap,K_max,fig_dir)
+        plot_colorbar(cmap,K_max, fig_dir, fig_format=args.fig_format)
 
         # plot alignment pattern
         logger.info(f"Plot alignment patterns ({suffix})")
@@ -158,6 +162,7 @@ def main(args: argparse.Namespace):
         wspace_padding = 1.3 if K_max<8 else 1.15
         fig = plot_alignment_graph(K_range, names_list=mode_names_list, cmap=cmap, 
                                    alignment_acrossK=alignment_acrossK, all_modes_alignment=all_modes_alignment,
+                                   anchor_pairs=anchor_pairs,
                                    alt_color=args.alt_color, ls_alt=['-', '--'],  
                                    y_aspect=y_aspect, wspace_padding=wspace_padding) #color_alt=['#6A8A9F','#B49F63', '#789B8C','#AD839A','#8D8D8D'], 
         fig.savefig(os.path.join(fig_dir,"alignment_pattern_graph_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
@@ -174,7 +179,11 @@ def main(args: argparse.Namespace):
         if len(K_range)>1:
             if args.plot_type in ["graph", "all"]:
                 logger.info(f"Plot all modes in a graph ({suffix})")
-                mode_labels_list = [[f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names] for mode_names in mode_names_list]
+                # mode_labels_list = [[f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names] for mode_names in mode_names_list]
+                mode_labels_list = [["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
+                                                                    mode_sizes[mode_name], 
+                                                                    n_runs_per_K[i_K]) for mode_name in mode_names] for i_K, mode_names in enumerate(mode_names_list)]
+                right_labels_list = [["sim {:.3f}".format(mode_sims[mode_name]) for mode_name in mode_names] for i_K, mode_names in enumerate(mode_names_list)]
                 Q_modes_reordered_list = [[aligned_Qs_allK[mode_name] for mode_name in mode_names] for mode_names in mode_names_list]
                 if args.reorder_within_group:
                     if args.reorder_by_max_k:
@@ -187,7 +196,8 @@ def main(args: argparse.Namespace):
                 if args.include_cost:
                     logger.info(f"Including cost values in the graph")
                     fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
-                                    names_list=mode_names_list, labels_list=mode_labels_list,  
+                                    names_list=mode_names_list, labels_list=mode_labels_list, 
+                                    right_labels_list=right_labels_list, 
                                     cost_acrossK=cost_acrossK, ind_labels=ind_labels, 
                                     fontsize=14, alt_color=args.alt_color, line_cmap=None,
                                     order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label,
@@ -197,6 +207,7 @@ def main(args: argparse.Namespace):
                     fig = plot_graph(K_range, Q_modes_reordered_list, cmap, 
                                     names_list=mode_names_list, labels_list=mode_labels_list,  
                                     cost_acrossK=None, ind_labels=ind_labels, 
+                                    right_labels_list=right_labels_list, 
                                     fontsize=14, alt_color=args.alt_color, line_cmap=None,
                                     order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label,
                                     width_scale=width_scale, height_scale=height_scale)
@@ -211,7 +222,12 @@ def main(args: argparse.Namespace):
                     Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
                     # # if only align within each mode, but not across K, then use the following line:
                     # Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)
-                    mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+                    # mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+                    # mode_labels = ["{}({}): sim {:.3f}".format(mode_name.title().replace('_', ' '), mode_sizes[mode_name], mode_sims[mode_name]) for mode_name in mode_names]
+                    mode_labels = ["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
+                                                        mode_sizes[mode_name], 
+                                                        n_runs_per_K[i_K]) for mode_name in mode_names]
+                    right_labels = ["sim {:.3f}".format(mode_sims[mode_name]) for mode_name in mode_names]
                     if args.reorder_within_group:
                         if args.reorder_by_max_k:
                             Q_ref = Q_modes_reordered[-1]
@@ -219,7 +235,7 @@ def main(args: argparse.Namespace):
                             Q_ref = Q_modes_reordered[0]
                     else:
                         Q_ref = None
-                    fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
+                    fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, right_labels=right_labels,
                                                 order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
                     fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.{}".format(K,suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
                     plt.close(fig)
@@ -229,7 +245,12 @@ def main(args: argparse.Namespace):
                 Q_modes_list = unnest_list(Q_rep_modes_list) if args.use_rep else unnest_list(Q_avg_modes_list)
                 mode_names = unnest_list(mode_names_list)
                 Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
-                mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+                # mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+                # mode_labels = ["{}({}): sim {:.3f}".format(mode_name.title().replace('_', ' '), mode_sizes[mode_name], mode_sims[mode_name]) for mode_name in mode_names]
+                mode_labels = ["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
+                                                    mode_sizes[mode_name], 
+                                                    n_runs_per_K[i_K]) for mode_name in mode_names]
+                right_labels = ["sim {:.3f}".format(mode_sims[mode_name]) for mode_name in mode_names]
                 if args.reorder_within_group:
                     if args.reorder_by_max_k:
                         Q_ref = Q_rep_modes_list[-1][0] if args.use_rep else Q_avg_modes_list[-1][0]
@@ -237,7 +258,8 @@ def main(args: argparse.Namespace):
                         Q_ref = Q_modes_list[0]
                 else:
                     Q_ref = None
-                fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
+                fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, 
+                                            ind_labels=ind_labels, right_labels=right_labels, 
                                             order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
                 fig.savefig(os.path.join(fig_dir,"all_modes_list_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)
@@ -253,7 +275,10 @@ def main(args: argparse.Namespace):
                 logger.info(f"Plot major modes in a list ({suffix})")
                 major_mode_names = [mode_names[0] for mode_names in mode_names_list]
                 Q_major_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in major_mode_names]
-                major_mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in major_mode_names]
+                major_mode_labels = ["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
+                                                            mode_sizes[mode_name], 
+                                                            n_runs_per_K[i_K]) for i_K,mode_name in enumerate(major_mode_names)]
+                major_right_labels = ["sim {:.3f}".format(mode_sims[mode_name]) for mode_name in major_mode_names]
                 if args.reorder_within_group:
                     if args.reorder_by_max_k:
                         Q_ref = Q_major_modes_reordered[-1]
@@ -261,7 +286,7 @@ def main(args: argparse.Namespace):
                         Q_ref = Q_major_modes_reordered[0]
                 else:
                     Q_ref = None
-                fig = plot_memberships_list(Q_major_modes_reordered, cmap, names=major_mode_labels, ind_labels=ind_labels, 
+                fig = plot_memberships_list(Q_major_modes_reordered, cmap, names=major_mode_labels, ind_labels=ind_labels, right_labels=major_right_labels,
                                             order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
                 fig.savefig(os.path.join(fig_dir,"major_modes_{}.{}".format(suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
                 plt.close(fig)      
@@ -274,7 +299,12 @@ def main(args: argparse.Namespace):
             Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)        
             # Q_modes = cd_res[0]['repQ_modes'] if args.use_rep else cd_res[0]['avgQ_modes']
             suffix = "rep" if args.use_rep else "avg"
-            mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+            # mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
+            # mode_labels = ["{}({}): sim {:.3f}".format(mode_name.title().replace('_', ' '), mode_sizes[mode_name], mode_sims[mode_name]) for mode_name in mode_names]
+            mode_labels = ["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
+                                                            mode_sizes[mode_name], 
+                                                            n_runs_per_K[i_K]) for i_K,mode_name in enumerate(mode_names)]
+            right_labels = ["sim {:.3f}".format(mode_sims[mode_name]) for mode_name in mode_names]
             if args.reorder_within_group:
                 if args.reorder_by_max_k:
                     Q_ref = Q_modes_reordered[-1]
@@ -282,7 +312,7 @@ def main(args: argparse.Namespace):
                     Q_ref = Q_modes_reordered[0]
             else:
                 Q_ref = None
-            fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, 
+            fig = plot_memberships_list(Q_modes_reordered, cmap, names=mode_labels, ind_labels=ind_labels, right_labels=right_labels,
                                         order_refQ=Q_ref, order_cls_by_label=args.order_cls_by_label, width_scale=width_scale)
             fig.savefig(os.path.join(fig_dir,"K{}_modes_{}.{}".format(K,suffix, args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
             plt.close(fig)
@@ -327,7 +357,7 @@ def parse_args():
     optional.add_argument("--order_cls_by_label", type=str2bool, default=True, required=False, 
                         help="Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)")
     optional.add_argument("--plot_unaligned", type=str2bool, default=False, required=False, help="Whether to plot unaligned modes (in a list): True/False (default)")
-    optional.add_argument("--fig_format", type=str, default="png", required=False, choices=["png", "jpeg", "svg", "pdf"], help="Figure format for output files (default: png)")
+    optional.add_argument("--fig_format", type=str, default="tiff", required=False, choices=["png", "jpg", "jpeg", "tif", "tiff", "svg", "pdf", "eps", "ps", "bmp", "gif"], help="Figure format for output files (default: tiff)")
 
     optional.add_argument("--extension", type=str, default="", required=False, help="Extension of input files")
     optional.add_argument("--skip_rows", type=int, default=0, required=False, help="Skip top rows in input files")
@@ -340,8 +370,8 @@ def parse_args():
                           help="Resolution parameter for the default Louvain community detection (default: 1.0)")
     optional.add_argument("--test_comm", type=str2bool, default=True, required=False,
                           help="Whether to test community structure (default: True)")
-    optional.add_argument("--comm_min", type=float, default=1e-4, required=False,
-                          help="Minimum threshold for cost matrix (default: 1e-4)")
+    optional.add_argument("--comm_min", type=float, default=1e-6, required=False,
+                          help="Minimum threshold for cost matrix (default: 1e-6)")
     optional.add_argument("--comm_max", type=float, default=1e-2, required=False,
                           help="Maximum threshold for cost matrix (default: 1e-2)")
     optional.add_argument("--merge", type=str2bool, default=True, required=False,

@@ -100,13 +100,12 @@ Run the following command:
    ````
 If the installation was successful, you should see the usage of the program in the command window. The usage tells you the required and optional arguments to the program. It should look like:
 ````bash
-usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [-v VIS] [--custom_cmap CUSTOM_CMAP]
-                   [--plot_type {graph,list,withinK,major,all}] [--include_cost INCLUDE_COST] [--include_label INCLUDE_LABEL] [--alt_color ALT_COLOR]
-                   [--ind_labels IND_LABELS] [--regroup_ind REGROUP_IND] [--reorder_within_group REORDER_WITHIN_GROUP] [--reorder_by_max_k REORDER_BY_MAX_K]
-                   [--order_cls_by_label ORDER_CLS_BY_LABEL] [--plot_unaligned PLOT_UNALIGNED] [--fig_format {png,jpeg,svg,pdf}] [--extension EXTENSION]
-                   [--skip_rows SKIP_ROWS] [--remove_missing REMOVE_MISSING]
-                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES] [--test_comm TEST_COMM]
-                   [--comm_min COMM_MIN] [--comm_max COMM_MAX] [--merge MERGE] [--use_rep USE_REP] [--use_best_pair USE_BEST_PAIR]
+usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [-v VIS] [--custom_cmap CUSTOM_CMAP] [--plot_type {graph,list,withinK,major,all}]
+                   [--include_cost INCLUDE_COST] [--include_label INCLUDE_LABEL] [--alt_color ALT_COLOR] [--ind_labels IND_LABELS] [--regroup_ind REGROUP_IND]
+                   [--reorder_within_group REORDER_WITHIN_GROUP] [--reorder_by_max_k REORDER_BY_MAX_K] [--order_cls_by_label ORDER_CLS_BY_LABEL] [--plot_unaligned PLOT_UNALIGNED]
+                   [--fig_format {png,jpg,jpeg,tif,tiff,svg,pdf,eps,ps,bmp,gif}] [--extension EXTENSION] [--skip_rows SKIP_ROWS] [--remove_missing REMOVE_MISSING]
+                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES] [--test_comm TEST_COMM] [--comm_min COMM_MIN]
+                   [--comm_max COMM_MAX] [--merge MERGE] [--use_rep USE_REP] [--use_best_pair USE_BEST_PAIR]
 
 Clumppling: a tool for cluster matching and permutation program with integer linear programming
 
@@ -121,8 +120,8 @@ required arguments:
 optional arguments:
   -v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
   --custom_cmap CUSTOM_CMAP
-                        A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise
-                        use the user-specified colormap
+                        A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use the user-
+                        specified colormap
   --plot_type {graph,list,withinK,major,all}
                         Type of plot to generate: 'graph' (default), 'list', 'withinK', 'major', 'all'
   --include_cost INCLUDE_COST
@@ -132,8 +131,8 @@ optional arguments:
   --alt_color ALT_COLOR
                         Whether to use alternative colors for connection lines: True (default)/False
   --ind_labels IND_LABELS
-                        A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of
-                        columns [0, 1, 3] separated by delimiter)
+                        A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3]
+                        separated by delimiter)
   --regroup_ind REGROUP_IND
                         Whether to regroup individuals so that those with the same labels stay together (if labels are available): True (default)/False
   --reorder_within_group REORDER_WITHIN_GROUP
@@ -141,12 +140,11 @@ optional arguments:
   --reorder_by_max_k REORDER_BY_MAX_K
                         Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)
   --order_cls_by_label ORDER_CLS_BY_LABEL
-                        Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total
-                        memberships)
+                        Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)
   --plot_unaligned PLOT_UNALIGNED
                         Whether to plot unaligned modes (in a list): True/False (default)
-  --fig_format {png,jpeg,svg,pdf}
-                        Figure format for output files (default: png)
+  --fig_format {png,jpg,jpeg,tif,tiff,svg,pdf,eps,ps,bmp,gif}
+                        Figure format for output files (default: tiff)
   --extension EXTENSION
                         Extension of input files
   --skip_rows SKIP_ROWS
@@ -158,7 +156,7 @@ optional arguments:
   --cd_res CD_RES       Resolution parameter for the default Louvain community detection (default: 1.0)
   --test_comm TEST_COMM
                         Whether to test community structure (default: True)
-  --comm_min COMM_MIN   Minimum threshold for cost matrix (default: 1e-4)
+  --comm_min COMM_MIN   Minimum threshold for cost matrix (default: 1e-6)
   --comm_max COMM_MAX   Maximum threshold for cost matrix (default: 1e-2)
   --merge MERGE         Whether to merge two clusters when aligning K+1 to K (default: True)
   --use_rep USE_REP     Use representative modes (alternative: average): True (default)/False
@@ -299,9 +297,9 @@ output/
 │   ├── best_pairs_acrossK_rep.txt
 │   └── major_pairs_acrossK_rep.txt
 ├── visualization/
-│   ├── colorbar.png
-│   ├── alignment_pattern_graph_rep.png
-│   ├── all_modes_graph_rep.png
+│   ├── colorbar.tiff
+│   ├── alignment_pattern_graph_rep.tiff
+│   ├── all_modes_graph_rep.tiff
 │   └── ...
 └── clumppling.log
 ```

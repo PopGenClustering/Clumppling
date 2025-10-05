@@ -227,21 +227,22 @@ def write_reordered_across_k(aligned_Qs_allK: dict, all_modes_alignment: dict, o
                 alignment_pattern = all_modes_alignment[mode_label]
                 f.write(f"{mode_label}:{pattern_to_str(alignment_pattern)}\n")
 
-def get_mode_sizes(cd_res: list) -> dict:
-    """ Get sizes of modes for each K value.
+
+def get_mode_prop(cd_res: list, key: str) -> dict:
+    """ Get a specific property of modes for each K value.
         Args:
             cd_res: List of dictionaries containing mode detection results for each K value.
-            K_range: List of unique K values.
+            key: The key of the property to retrieve (e.g., 'Size', 'Performance').
         Returns:
-            Dictionary containing mode sizes for each mode.
+            Dictionary containing the specified property for each mode.
     """
-    mode_sizes = dict()
+    mode_props = dict()
     for i_K, cd_res_K in enumerate(cd_res):
         mode_stats = cd_res_K['mode_stats']
         for _, row in mode_stats.iterrows():
-            mode_sizes[row['Mode']] = row['Size']
-    
-    return mode_sizes
+            mode_props[row['Mode']] = row[key]
+
+    return mode_props
 
 
 def unnest_list(list_of_lists: List[List[Any]]) -> List[Any]:
@@ -311,24 +312,3 @@ def reorder_ind_within_group(Q: np.ndarray, lbs: list) -> Tuple[np.ndarray, dict
         ind_sorted_indices[lb_indices] = lb_indices[sorted_ind]  # add the offset of the group start index
         mbsp_sort_indices[lb] = mbsp_sortidx
     return ind_sorted_indices, mbsp_sort_indices
-
-# def order_mbsp(Q: np.ndarray, lbs: list) -> dict:
-#     """ Order the membership matrix Q based on the labels.
-#         Args:
-#             Q: Membership matrix of shape (N_ind, K).
-#             lbs: List of labels for each individual.
-#         Returns:
-#             Ordered indices for each group.
-#     """
-#     uniq_lbs = list(np.unique(lbs))
-#     assert labels_are_grouped(lbs, uniq_lbs), "Labels are not grouped together."
-#     mbsp_sortindices = dict()
-#     for lb in uniq_lbs:
-#         lb_indices = [i for i, val in enumerate(lbs) if val == lb]
-#         lb_indices = np.array(lb_indices)
-#         lb_Q = Q[lb_indices,:]
-#         # get total membership for each cluster
-#         mbsp_sum = lb_Q.sum(axis=0)
-#         mbsp_sortidx = np.argsort(-mbsp_sum) # from largest to smallest
-#         mbsp_sortindices[lb] = mbsp_sortidx
-#     return mbsp_sortindices

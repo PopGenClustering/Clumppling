@@ -1,7 +1,7 @@
 mkdir -p examples/comp_models
-model1=louvain # should not contain dash in the model name
+model1=louvain # should not contain underscore or dash in the model name
 model1_suffix=avg
-model2=markov # should not contain dash in the model name
+model2=markov # should not contain underscore or dash in the model name
 model2_suffix=avg
 ls examples/capeverde_avg_output/modes_aligned/*_${model1_suffix}.Q > examples/comp_models/${model1}.qfilelist
 for f in examples/capeverde_avg_output/modes_aligned/*_${model1_suffix}.Q; do [ -f "$f" ] && basename "$f" | sed "s/\_${model1_suffix}.Q$//" >> examples/comp_models/${model1}.qnamelist; done

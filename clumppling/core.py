@@ -14,7 +14,7 @@ from typing import List, Tuple, Any, TypedDict
 from clumppling.utils import cost_membership, cost_membership_sep, pattern_to_str, disp_msg, C2Gprime, avg_tril
 from .parseInput import validate_membership_matrix
 from .alignWithinK import load_withinK_qfiles, write_aligned_within_k, aligned_res_to_dicts
-from .detectMode import construct_cost_mat, community_labels_to_modes, cost_to_adj, test_comm_struc, ModesDict, cd_custom, compute_mode_avg_stats #, detect_communities, community_labels_to_modes
+from .detectMode import construct_cost_mat, community_labels_to_modes, cost_to_adj, test_comm_struc, ModesDict, cd_custom, compute_mode_avg_stats 
 
 import logging
 logger = logging.getLogger(__name__)
@@ -317,12 +317,6 @@ def cd_default(adj_mat: np.ndarray, res: float = 1.0, method: str = "louvain") -
 def detect_communities(cost_mat: np.ndarray, test_comm: bool = True, method: str = "louvain", res: float = 1.0, 
                        min_threshold: float = 1e-4, max_threshold: float = 1e-2) -> List[int]:
     """ Detect communities from a cost matrix.
-        Args:
-            cost_mat: A square cost matrix (2D NumPy array).
-            threshold: A float value to threshold the cost matrix.
-            norm: Boolean indicating whether to normalize the cost matrix.
-        Returns:
-            A binary adjacency matrix (2D NumPy array) where entries are 1 if the cost is below the threshold, else 0.
     """
     n_nodes = cost_mat.shape[0]
     if n_nodes == 0:
@@ -360,7 +354,10 @@ def detect_communities(cost_mat: np.ndarray, test_comm: bool = True, method: str
         # test for community structure
         has_comm_struc = test_comm_struc(adj_mat, alpha = 0.01)
     if has_comm_struc:
-        logger.info("Detected community structure in the cost matrix. Running community detection.")
+        if test_comm:
+            logger.info("Detected community structure in the cost matrix. Running community detection.")
+        else:
+            logger.info("Skipping test for community structure. Running community detection.")
         communities = cd_default(adj_mat, method=method, res=res)
         if not communities:
             logger.warning("No communities detected. Returning singleton modes.")
