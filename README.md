@@ -26,7 +26,7 @@ The remote version is available through an **online Colaboratory notebook**, whi
 
 There is **no need to download and install the program locally**.
 
-To **run *Clumppling* remotely**, click on [**THIS LINK**](https://gist.github.com/xr-cc/a56458add4f7356a09f89970db40ca35) which will bring you to the notebook. Next, open the notebook in Colab and follow the instructions in the notebook. 
+To **run *Clumppling* remotely**, click on [**THIS LINK**](online_notebook_for_clumppling.ipynb)) which will bring you to the notebook. Next, open the notebook in Colab and follow the instructions in the notebook. 
 
 One by one, Click the run (little round-shaped buttons with a triangle in the middle) buttons next to each block on the left. 
 
