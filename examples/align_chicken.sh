@@ -7,4 +7,5 @@ python -m clumppling \
 -f structure \
 --extension _f \
 --plot_type all \
+--fig_format png \
 --custom_cmap examples/custom_colors.txt 

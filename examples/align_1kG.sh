@@ -7,5 +7,5 @@ mkdir -p $output_dir
 # reproduce Pong's results
 python -m clumppling -i $input_dir -o $output_dir \
 -f admixture --extension .Q --ind_labels $pop_label_file \
---comm_min 1e-6 --test_comm F --cd_res 1.05 \
+--test_comm F --cd_res 1.05 --fig_format png \
 --plot_type all --regroup_ind T --alt_color T

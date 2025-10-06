@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('-v', '--vis', type=str2bool, default=True, required=False, help='Whether to generate figure(s): True (default)/False')
     parser.add_argument('--custom_cmap', type=str, default='', required=False, help='A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use the user-specified colormap')
     parser.add_argument('--include_sim_in_label', type=str2bool, default=True, required=False, help='Whether to include (original) alignment similarity in mode labels (if provided): True (default)/False')
-    parser.add_argument("--fig_format", type=str, default="png", required=False, choices=["png", "jpeg", "svg", "pdf"], help="Figure format for output files (default: png)")
+    parser.add_argument("--fig_format", type=str, default="tiff", required=False, choices=["png", "jpg", "jpeg", "tif", "tiff", "svg", "pdf", "eps", "ps", "bmp", "gif"], help="Figure format for output files (default: tiff)")
 
     return parser.parse_args()
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         mode_K = [Q.shape[1] for Q in Q_aligned_list]
         fig = plot_alignment_list(mode_K, Q_names_reordered, cmap, alignment_acrossK, all_modes_alignment, marker_size=250)
         fig.axes[0].set_ylabel("Replicates")
-        fig.savefig(os.path.join(fig_dir,"alignment_pattern_list.png"), bbox_inches='tight', dpi=150, transparent=False)
+        fig.savefig(os.path.join(fig_dir,"alignment_pattern_list.{}".format(args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig)
 
         # plot alignment pattern graph 
@@ -166,7 +166,7 @@ if __name__ == "__main__":
                                      Q_aligned_list, cmap, ind_labels=ind_labels,
                                      Q_names_label_list=mode_labels_list,
                                      label_K=True, label_model=True)
-        fig.savefig(os.path.join(fig_dir,"comparison_aligned_models_graph_il.png"), bbox_inches='tight', dpi=150, transparent=False)
+        fig.savefig(os.path.join(fig_dir,"comparison_aligned_models_graph_il.{}".format(args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig) 
 
         # plot graph of structure plots side by side
@@ -175,7 +175,7 @@ if __name__ == "__main__":
                                      Q_aligned_list, cmap, 
                                      Q_names_label_list=mode_labels_list,
                                      label_K=True, label_model=True)
-        fig.savefig(os.path.join(fig_dir,"comparison_aligned_models_graph.png"), bbox_inches='tight', dpi=150, transparent=False)
+        fig.savefig(os.path.join(fig_dir,"comparison_aligned_models_graph_sbs.{}".format(args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig) 
         
         # plot list of structure plots side by side
