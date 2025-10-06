@@ -6,6 +6,8 @@ Current version **v 1.3.0** (Last update: Oct 5, 2025)
 
 This README provides a quick-start guide for installation and use. See the [software manual](Clumppling_Manual.pdf) for full details.
 
+**Refer to [this tutorial](https://github.com/PopGenClustering/popstru-cls-align-vis-workflow) for a brief guide on running an end-to-end analysis, including data preparation, population structure analysis, cluster alignment (using *Clumppling*), and visualization.**
+
 ## Feature Highlights
 
 - Flexible input parsing compatible with popular ancestry inference softwares like *STRUCTURE* and *ADMIXTURE*.
