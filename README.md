@@ -178,8 +178,8 @@ python -m clumppling \
 
 ## Example Outputs
 <p align="center">
-<img src="./example_figures/capeverde_alignment_pattern_graph.png" alt="Cape Verde aligned modes" width="600">
-<img src="./example_figures/capeverde_all_modes_graph.png" alt="Cape Verde alignment pattern" width="300">
+<img src="./example_figures/capeverde_alignment_pattern_graph.png" alt="Cape Verde aligned modes" width="400">
+<img src="./example_figures/capeverde_all_modes_graph.png" alt="Cape Verde alignment pattern" width="600">
 </p>
 
 ## Main Function
