@@ -161,7 +161,7 @@ def plot_memberships_list(Q_list: list[np.ndarray], cmap: list[tuple[float, floa
             if i==len(Q_list)-1:
                 ax.set_xticks(uniq_lbs_indices)
                 ax.tick_params(axis='x', which='both', length=0)
-                rot = 45 if np.any([len(lb)>5 for lb in uniq_lbs]) else 0
+                rot = 90
                 fs = 14 if len(uniq_lbs)<10 else 10
                 ax.set_xticklabels(uniq_lbs, rotation=rot, ha='center', fontsize=fs)
     fig.subplots_adjust(hspace=0.3)
@@ -185,8 +185,6 @@ def create_single_cmap(color: str, name: str='custom_cmap', light: float=1.5, da
         color (str): The base color for the colormap.
         name (str): The name of the colormap.
     """
-    rgb = mcolors.to_rgb(color)
-    # Define gradient: white → base color → black
     return mcolors.LinearSegmentedColormap.from_list(
         name, 
         [adjust_lightness(color, light), mcolors.to_rgb(color), adjust_lightness(color, dark)]
@@ -250,9 +248,7 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
                 if i_K==len(K_range)-1:
                     ax.set_xticks(uniq_lbs_indices)
                     ax.tick_params(axis='x', which='both', length=0)
-                    rot = 45 if np.any([len(lb)>5 for lb in uniq_lbs]) else 0
-                    if len(uniq_lbs)>10:
-                        rot = 90 
+                    rot = 90
                     fs = 14 if len(uniq_lbs)<10 else 10
                     ax.set_xticklabels(uniq_lbs, rotation=rot, ha='center', fontsize=fs)
 
@@ -341,8 +337,6 @@ def plot_alignment_list(mode_K: list[int], mode_names: list[str], cmap: list[tup
         mapping = alignment_acrossK[mode_pair]
         reordering_next = all_modes_alignment[mode_names[i_m+1]]
         for kp1 in range(len(mapping)):
-            # ax.plot([reordering_cur[mapping[kp1]],reordering_next[kp1]], [i_m,i_m+1],
-            #         c='k', ls='-', lw=0.8, zorder=5)
             ax.plot([reordering_cur.index(mapping[kp1]),reordering_next.index(kp1)], [i_m,i_m+1],
                     c='k', ls='-', lw=0.8, zorder=5)
     i_m += 1
@@ -478,12 +472,12 @@ def plot_alignment_graph(K_range: list[int], names_list: list[list[str]], cmap: 
     ax.set_xticks(tick_positions)
     if not separate_labels:
         ax.set_xticklabels([f"M{i_m+1}" for i_m in range(n_col)], fontsize=14)
-    ax.set_xlabel("Clusters in Modes", fontsize=14)
+    ax.set_xlabel("Modes", fontsize=14)
     ax.set_xlim(-1, (n_col-1) * int(K_max*wspace_padding) + K_max )  
 
     ax.set_yticks(np.arange(n_row))
     if not separate_labels:
-        ax.set_yticklabels([f"K{K}" for K in K_range], rotation=0, fontsize=14, va='center', ha='right')
+        ax.set_yticklabels([f"K={K}" for K in K_range], rotation=0, fontsize=14, va='center', ha='right')
     ax.set_ylim(-0.5,n_row-0.5)
 
     ax.invert_yaxis() 

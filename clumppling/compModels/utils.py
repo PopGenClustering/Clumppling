@@ -149,7 +149,7 @@ def plot_multi_model_graph_sbs(K_range: list[int], models: list[str],
             # Get the GridSpec cell rectangle in figure coordinates
             bb = gs[row, 0].get_position(fig)
             y_center = (bb.y0 + bb.y1) / 2  # vertical midpoint
-            fig.text(0.11, y_center, f"K{K_range[row]}", 
+            fig.text(0.11, y_center, f"K={K_range[row]}", 
                      fontsize=17, weight='bold', rotation=0, va="center", ha="left")
     # label each column (model)
     if label_model:
@@ -223,8 +223,6 @@ def plot_multi_model_graph_il(K_range: list[int], models: list[str],
         )
         fig.add_artist(rect)
 
-    
-    
     for i_K, K in enumerate(K_range):
         mode_names = Q_names_list[i_K]
         mode_name_labels = Q_names_label_list[i_K]
@@ -242,7 +240,6 @@ def plot_multi_model_graph_il(K_range: list[int], models: list[str],
                     for v in uniq_lbs_sep_idx:
                         ax.axvline(v, ymin=-0.2, ymax=1, color='k', ls='--', lw=0.5, clip_on=False)
                 if n_K_in_model[i_K,i_model]>0 and i_K==len(K_range)-1 and i_model==len(models)-1: #or (n_K_in_model[i_K,i_model]>0 and n_K_in_model[i_K+1,i_model]==0)
-                # if (i_K*n_models + i_model)==last_plotted_row and len(ind_labels)>0:
                     ax.set_xticks(uniq_lbs_indices)
                     ax.tick_params(axis='x', which='both', length=0, pad=2)
                     if len(uniq_lbs)>=10:
@@ -260,7 +257,7 @@ def plot_multi_model_graph_il(K_range: list[int], models: list[str],
             # Get the GridSpec cell rectangle in figure coordinates
             bb = gs[row, 0].get_position(fig)
             y_center = (bb.y0 + bb.y1) / 2  # vertical midpoint
-            fig.text(bb.x0-0.015, y_center, f"{models[i_model]} K{K_range[i_K]}", 
+            fig.text(bb.x0-0.015, y_center, f"{models[i_model]} K={K_range[i_K]}", 
                         fontsize=17, weight='bold', rotation=0, va="center", ha="right")
     # label each column (model)
     if label_model:

@@ -30,9 +30,15 @@ def main(args: argparse.Namespace):
     if args.include_label:
         if args.ind_labels!="":
             ind_labels = parse_strings(args.ind_labels, remove_dup=False)
+            ordered_uniq_labels = parse_strings(args.ordered_uniq_labels, remove_dup=True)
+            if ordered_uniq_labels and set(ordered_uniq_labels) != set(ind_labels):
+                logger.warning("The provided ordered unique labels do not match the labels in ind_labels. Ignoring ordered_uniq_labels.")
+                ordered_uniq_labels = []
+            else:
+                logger.info(f"{len(ordered_uniq_labels)} ordered unique labels loaded: {ordered_uniq_labels}")
             if args.regroup_ind and len(ind_labels)>0:
                 logger.info(f"{len(ind_labels)} individual labels loaded.")
-                ind_labels, reorder_indices = group_labels(ind_labels)
+                ind_labels, reorder_indices = group_labels(ind_labels, ordered_uniq_labels=ordered_uniq_labels)
                 if not reorder_indices == list(range(len(ind_labels))):
                     logger.warning(f"Individual labels reordered by grouping identical labels together.")
                     # Save grouped labels
@@ -220,10 +226,7 @@ def main(args: argparse.Namespace):
                     Q_modes_list = Q_rep_modes_list[i_K] if args.use_rep else Q_avg_modes_list[i_K]
                     mode_names = mode_names_list[i_K]
                     Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
-                    # # if only align within each mode, but not across K, then use the following line:
-                    # Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)
-                    # mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-                    # mode_labels = ["{}({}): sim {:.3f}".format(mode_name.title().replace('_', ' '), mode_sizes[mode_name], mode_sims[mode_name]) for mode_name in mode_names]
+                    # if only align within each mode, but not across K, then use the following line:
                     mode_labels = ["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
                                                         mode_sizes[mode_name], 
                                                         n_runs_per_K[i_K]) for mode_name in mode_names]
@@ -245,8 +248,6 @@ def main(args: argparse.Namespace):
                 Q_modes_list = unnest_list(Q_rep_modes_list) if args.use_rep else unnest_list(Q_avg_modes_list)
                 mode_names = unnest_list(mode_names_list)
                 Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
-                # mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-                # mode_labels = ["{}({}): sim {:.3f}".format(mode_name.title().replace('_', ' '), mode_sizes[mode_name], mode_sims[mode_name]) for mode_name in mode_names]
                 mode_labels = ["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
                                                     mode_sizes[mode_name], 
                                                     n_runs_per_K[i_K]) for mode_name in mode_names]
@@ -297,10 +298,7 @@ def main(args: argparse.Namespace):
             Q_modes_list = Q_rep_modes_list[i_K] if args.use_rep else Q_avg_modes_list[i_K]
             mode_names = mode_names_list[i_K]
             Q_modes_reordered = reorderQ_within_k(Q_modes_list, mode_names, alignment_acrossK)        
-            # Q_modes = cd_res[0]['repQ_modes'] if args.use_rep else cd_res[0]['avgQ_modes']
             suffix = "rep" if args.use_rep else "avg"
-            # mode_labels = [f"{mode_name} ({mode_sizes[mode_name]})" for mode_name in mode_names]
-            # mode_labels = ["{}({}): sim {:.3f}".format(mode_name.title().replace('_', ' '), mode_sizes[mode_name], mode_sims[mode_name]) for mode_name in mode_names]
             mode_labels = ["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
                                                             mode_sizes[mode_name], 
                                                             n_runs_per_K[i_K]) for i_K,mode_name in enumerate(mode_names)]
@@ -348,6 +346,8 @@ def parse_args():
     optional.add_argument("--alt_color", type=str2bool, default=False, required=False, help="Whether to use alternative colors for connection lines: True (default)/False")
     optional.add_argument("--ind_labels", type=str, default="", required=False, 
                         help="A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3] separated by delimiter)")
+    optional.add_argument("--ordered_uniq_labels", type=str, default="", required=False, 
+                        help="A plain text file containing ordered unique individual labels (one per line) to specify the order of grouped labels (default: based on first-seen order from ind_labels)")
     optional.add_argument("--regroup_ind", type=str2bool, default=True, required=False, 
                         help="Whether to regroup individuals so that those with the same labels stay together (if labels are available): True (default)/False")
     optional.add_argument("--reorder_within_group", type=str2bool, default=True, required=False, 

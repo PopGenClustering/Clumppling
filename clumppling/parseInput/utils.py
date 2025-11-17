@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 import logging
 logger = logging.getLogger(__name__)
 
-def group_labels(labels: list) -> Tuple[list, list]:
+def group_labels(labels: list, ordered_uniq_labels: Optional[List[str]] = None) -> Tuple[list, list]:
     """ Group identical labels together while preserving the order they first appear.
         Args:
             labels: List of labels.
@@ -13,10 +13,15 @@ def group_labels(labels: list) -> Tuple[list, list]:
             grouped_labels: List of labels with identical labels grouped together.
             reorder_indices: List of indices to reorder the original labels.
     """
-    # Group labels while preserving first-seen order
-    groups = OrderedDict()
+    # Group labels while preserving first-seen order, and if ordered_uniq_labels provided, use that order
+    if ordered_uniq_labels:
+        # check if ordered_uniq_labels match labels
+        assert set(ordered_uniq_labels) == set(labels), "ordered_uniq_labels does not match labels."
+        assert len(ordered_uniq_labels) == len(set(labels)), "ordered_uniq_labels contains duplicates."
+        groups = OrderedDict((label, []) for label in ordered_uniq_labels)
+    else:
+        groups = OrderedDict()
     for idx, label in enumerate(labels):
-        # print(label)
         groups.setdefault(label, []).append(idx)  # store indices instead of label
 
     # Flatten indices to get the reordering
@@ -35,7 +40,8 @@ def process_files(
     delimiter: str = " ", skip_rows: int = 0,
     tolerance: float = 1e-6, meta_file: str = "input_meta.txt",
     label_cols: list[int]=[0, 1, 3], mat_start_col: int=5,
-    reorder_indices: Optional[List[int]] = None
+    reorder_indices: Optional[List[int]] = None,
+    reorder_uniq_labels: Optional[List[str]] = None
 ) -> Optional[np.ndarray]:
     
     file_paths = [os.path.join(input_dir,f) for f in os.listdir(input_dir) if f.endswith(extension)]
@@ -106,7 +112,7 @@ def process_files(
     if labels is not None:        
         if reorder_indices is None:
             # reorder    
-            labels, reorder_indices = group_labels(list(labels))
+            labels, reorder_indices = group_labels(list(labels), ordered_uniq_labels=reorder_uniq_labels)
             labels = np.array(labels)
             if not reorder_indices == list(range(len(labels))):
                 logger.warning(f"Individual labels reordered by grouping identical labels together.")
