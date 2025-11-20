@@ -477,7 +477,7 @@ def plot_alignment_graph(K_range: list[int], names_list: list[list[str]], cmap: 
 
     ax.set_yticks(np.arange(n_row))
     if not separate_labels:
-        ax.set_yticklabels([f"K={K}" for K in K_range], rotation=0, fontsize=14, va='center', ha='right')
+        ax.set_yticklabels([f"K={K}" for K in K_range], rotation=0, fontsize=14, va='center', ha='right', weight='bold')
     ax.set_ylim(-0.5,n_row-0.5)
 
     ax.invert_yaxis() 

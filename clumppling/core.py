@@ -344,7 +344,7 @@ def detect_communities(cost_mat: np.ndarray, test_comm: bool = True, method: str
         logger.info(f"Largest cost {cost_max} is smaller than threshold {min_threshold}. Returning a single mode.")
         return [0]*n_nodes    
     if cost_min > max_threshold:
-        logger.info(f"Smallest cost {cost_min} is larger than threshold {min_threshold}. Returning all singleton modes.")
+        logger.info(f"Smallest cost {cost_min} is larger than threshold {max_threshold}. Returning all singleton modes.")
         return list(range(n_nodes))
     
     # when n_nodes > 2, we run community detection

@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning mixed-membership clustering results of population structure analysis.
 
-Current version **v 1.5.0** (Last update: Oct 5, 2025)
+Current version **v 1.5.1** (Last update: Nov 20, 2025)
 
 This README provides a quick-start guide for installation and use. See the [software manual](Clumppling_Manual.pdf) for full details.
 
@@ -102,12 +102,17 @@ Run the following command:
    ````
 If the installation was successful, you should see the usage of the program in the command window. The usage tells you the required and optional arguments to the program. It should look like:
 ````bash
-usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [-v VIS] [--custom_cmap CUSTOM_CMAP] [--plot_type {graph,list,withinK,major,all}]
-                   [--include_cost INCLUDE_COST] [--include_label INCLUDE_LABEL] [--alt_color ALT_COLOR] [--ind_labels IND_LABELS] [--regroup_ind REGROUP_IND]
-                   [--reorder_within_group REORDER_WITHIN_GROUP] [--reorder_by_max_k REORDER_BY_MAX_K] [--order_cls_by_label ORDER_CLS_BY_LABEL] [--plot_unaligned PLOT_UNALIGNED]
-                   [--fig_format {png,jpg,jpeg,tif,tiff,svg,pdf,eps,ps,bmp,gif}] [--extension EXTENSION] [--skip_rows SKIP_ROWS] [--remove_missing REMOVE_MISSING]
-                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}] [--cd_res CD_RES] [--test_comm TEST_COMM] [--comm_min COMM_MIN]
-                   [--comm_max COMM_MAX] [--merge MERGE] [--use_rep USE_REP] [--use_best_pair USE_BEST_PAIR]
+usage: __main__.py [-h] -i INPUT -o OUTPUT -f {generalQ,admixture,structure,fastStructure} [-v VIS]
+                   [--custom_cmap CUSTOM_CMAP] [--plot_type {graph,list,withinK,major,all}] [--include_cost INCLUDE_COST]
+                   [--include_label INCLUDE_LABEL] [--alt_color ALT_COLOR] [--ind_labels IND_LABELS]
+                   [--ordered_uniq_labels ORDERED_UNIQ_LABELS] [--regroup_ind REGROUP_IND]
+                   [--reorder_within_group REORDER_WITHIN_GROUP] [--reorder_by_max_k REORDER_BY_MAX_K]
+                   [--order_cls_by_label ORDER_CLS_BY_LABEL] [--plot_unaligned PLOT_UNALIGNED]
+                   [--fig_format {png,jpg,jpeg,tif,tiff,svg,pdf,eps,ps,bmp,gif}] [--extension EXTENSION]
+                   [--skip_rows SKIP_ROWS] [--remove_missing REMOVE_MISSING]
+                   [--cd_method {louvain,leiden,infomap,markov_clustering,label_propagation,walktrap,custom}]
+                   [--cd_res CD_RES] [--test_comm TEST_COMM] [--comm_min COMM_MIN] [--comm_max COMM_MAX] [--merge MERGE]
+                   [--use_rep USE_REP] [--use_best_pair USE_BEST_PAIR]
 
 Clumppling: a tool for cluster matching and permutation program with integer linear programming
 
@@ -122,8 +127,8 @@ required arguments:
 optional arguments:
   -v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
   --custom_cmap CUSTOM_CMAP
-                        A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use the user-
-                        specified colormap
+                        A plain text file containing customized colors (one per line; in hex code): if empty (default),
+                        using the default colormap, otherwise use the user-specified colormap
   --plot_type {graph,list,withinK,major,all}
                         Type of plot to generate: 'graph' (default), 'list', 'withinK', 'major', 'all'
   --include_cost INCLUDE_COST
@@ -133,16 +138,23 @@ optional arguments:
   --alt_color ALT_COLOR
                         Whether to use alternative colors for connection lines: True (default)/False
   --ind_labels IND_LABELS
-                        A plain text file containing individual labels (one per line) (default: last column from labels in input file, which consists of columns [0, 1, 3]
-                        separated by delimiter)
+                        A plain text file containing individual labels (one per line) (default: last column from labels in
+                        input file, which consists of columns [0, 1, 3] separated by delimiter)
+  --ordered_uniq_labels ORDERED_UNIQ_LABELS
+                        A plain text file containing ordered unique individual labels (one per line) to specify the order
+                        of grouped labels (default: based on first-seen order from ind_labels)
   --regroup_ind REGROUP_IND
-                        Whether to regroup individuals so that those with the same labels stay together (if labels are available): True (default)/False
+                        Whether to regroup individuals so that those with the same labels stay together (if labels are
+                        available): True (default)/False
   --reorder_within_group REORDER_WITHIN_GROUP
-                        Whether to reorder individuals within each label group in the plot (if labels are available): True (default)/False
+                        Whether to reorder individuals within each label group in the plot (if labels are available): True
+                        (default)/False
   --reorder_by_max_k REORDER_BY_MAX_K
-                        Whether to reorder individuals based on the major mode with largest K: True (default)/False (based on the major mode with smallest K)
+                        Whether to reorder individuals based on the major mode with largest K: True (default)/False (based
+                        on the major mode with smallest K)
   --order_cls_by_label ORDER_CLS_BY_LABEL
-                        Whether to reorder clusters based on total memberships within each label group in the plot: True (default)/False (by overall total memberships)
+                        Whether to reorder clusters based on total memberships within each label group in the plot: True
+                        (default)/False (by overall total memberships)
   --plot_unaligned PLOT_UNALIGNED
                         Whether to plot unaligned modes (in a list): True/False (default)
   --fig_format {png,jpg,jpeg,tif,tiff,svg,pdf,eps,ps,bmp,gif}
@@ -194,7 +206,7 @@ The optional arguments are
 * for input parsing: ``extension``, ``skip_rows``, ``remove_missing``
 * for community detection: ``cd_method``,  ``cd_res``, ``test_comm``, ``comm_min``, ``comm_max``
 * for alignment across-K: ``merge``, ``use_rep``,``use_best_pair``
-* for figure generation: ``-v`` (``--vis``), ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``, ``reorder_ind``, ``regroup_ind``, ``reorder_by_max_k``, ``order_cls_by_label``, ``plot_unaligned``, ``fig_format``.
+* for figure generation: ``-v`` (``--vis``), ``plot_type``,``include_cost``, ``include_label``, ``ind_labels``, ``custom_cmap``, ``reorder_ind``, ``regroup_ind``, ``ordered_uniq_labels``, ``reorder_by_max_k``, ``order_cls_by_label``, ``plot_unaligned``, ``fig_format``.
 
 See the above helper message from ``clumppling -h'' for usage of each argument. 
 
