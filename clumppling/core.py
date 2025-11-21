@@ -431,17 +431,12 @@ def extract_modes_and_stats(modes: List[List[int]], cost_mat: np.ndarray,
         i_ref = repr_modes[mode_idx]
         repr_name = Q_names[i_ref]
         Q_mode = Q_list[i_ref]
-        # if mode_idx == 0:
-        #     major_mode = Q_mode
-        #     major_mode_rep = repr_name
-        # else:
-        #     aligned_idxQ2P = alignment_withinK[(Q_names[i_ref],Q_names[r])]
-        #     aligned_Q, _ = alignQ_wrtP(major_mode,Q,aligned_idxQ2P,merge=True)
-        
+
         if len(all_indices)==1:
             mode_stats.append([mode_label, repr_name, 1, 0, 1])                    
             repQ_modes.append(Q_mode)
             avgQ_modes.append(Q_mode)
+            align_info.append([mode_label, repr_name, Q_names[i_ref], pattern_to_str(list(np.arange(Q_mode.shape[1])))])        
         else:
             # compute the average cost/similarity
             mode_stats.append([mode_label, repr_name, len(all_indices), avg_tril(comm_cost_mat), avg_tril(Gprime_mat)])
