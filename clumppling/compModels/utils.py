@@ -170,7 +170,7 @@ def plot_multi_model_graph_il(K_range: list[int], models: list[str],
                            Q_names_label_list: list[list[str]] = [],
                            label_K: bool = True,
                            label_model: bool = True, 
-                           bg_colors: list[str] = []):
+                           bg_colors: list = []):
     """
     Plot membership matrices for multiple models across different K values.
     Args:
@@ -200,7 +200,7 @@ def plot_multi_model_graph_il(K_range: list[int], models: list[str],
 
     if len(bg_colors) < n_models:
         gray_cmap = cm.get_cmap('gray')
-        bg_colors = [gray_cmap(point) for point in np.linspace(0.8, 1, n_models)]
+        bg_colors = [gray_cmap(point) for point in np.linspace(0.85, 1, n_models)]
     elif len(bg_colors) >= n_models:
         bg_colors = bg_colors[:n_models]
 

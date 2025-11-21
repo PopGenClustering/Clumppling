@@ -32,7 +32,7 @@ python -m clumppling \
 -i examples/capeverde \
 -o examples/capeverde_output \
 -f admixture \
---use_rep F \
+--use_rep T \
 --use_best_pair F \
 --extension .indivq \
 --plot_type graph \

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "clumppling"
-version = "1.5.1"
+version = "2.0.0"
 description = "Clumppling: cluster matching and permutation program with integer linear programming"
 authors = ["Xiran Liu <xiranliu@stanford.edu>"]
 license = "MIT License"

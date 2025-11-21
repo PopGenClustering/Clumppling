@@ -32,6 +32,7 @@ def parse_args():
                         help="Output file directory")
     parser.add_argument('-v', '--vis', type=str2bool, default=True, required=False, help='Whether to generate figure(s): True (default)/False')
     parser.add_argument('--custom_cmap', type=str, default='', required=False, help='A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use the user-specified colormap')
+    parser.add_argument("--bg_colors", nargs="+", type=str, required=False, help="List of background colors to be used in the interleaving display: if empty (default), using the gray scale colors, otherwise use the user-specified colors")
     parser.add_argument('--include_sim_in_label', type=str2bool, default=True, required=False, help='Whether to include (original) alignment similarity in mode labels (if provided): True (default)/False')
     parser.add_argument("--fig_format", type=str, default="tiff", required=False, choices=["png", "jpg", "jpeg", "tif", "tiff", "svg", "pdf", "eps", "ps", "bmp", "gif"], help="Figure format for output files (default: tiff)")
 
@@ -107,12 +108,19 @@ if __name__ == "__main__":
         else:
             cmap = load_default_cmap(K=K_max)  # Example usage of load_default_cmap
             
-        # plot alignment pattern
+        # get colormap and background colors
         logger.info(f"Generating visualizations".center(50, '-'))
         fig_dir = os.path.join(args.output,"visualization")
         os.makedirs(fig_dir, exist_ok=True)
         logger.info(f"Plot colorbar")
         plot_colorbar(cmap,K_max,fig_dir)
+        if args.bg_colors:
+            assert len(args.bg_colors)>=len(args.models), "At least as many background colors as models are required."
+            bg_colors = parse_strings(strs=args.bg_colors, remove_dup=True)
+            bg_colors = parse_custom_cmap(bg_colors, K=len(args.models))
+        else:
+            bg_colors = []
+        logger.info(f"Background colors for different models: {bg_colors}")
 
         # plot alignment pattern
         logger.info(f"Plot alignment patterns")
@@ -165,7 +173,8 @@ if __name__ == "__main__":
                                      mode_names_list, Q_names_reordered, 
                                      Q_aligned_list, cmap, ind_labels=ind_labels,
                                      Q_names_label_list=mode_labels_list,
-                                     label_K=True, label_model=True)
+                                     label_K=True, label_model=True,
+                                     bg_colors=bg_colors)
         fig.savefig(os.path.join(fig_dir,"comparison_aligned_models_graph_il.{}".format(args.fig_format)), bbox_inches='tight', dpi=150, transparent=False)
         plt.close(fig) 
 

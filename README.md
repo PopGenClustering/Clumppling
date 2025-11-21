@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning mixed-membership clustering results of population structure analysis.
 
-Current version **v 1.5.1** (Last update: Nov 20, 2025)
+Current version **v 2.0** (Last update: Nov 2025)
 
 This README provides a quick-start guide for installation and use. See the [software manual](Clumppling_Manual.pdf) for full details.
 
@@ -508,8 +508,11 @@ All commands are also provided in [examples/run_submodules.sh](examples/run_subm
 
 **Usage:**
 ````bash
-usage: __main__.py [-h] --models MODELS [MODELS ...] --qfilelists QFILELISTS [QFILELISTS ...] [--qnamelists QNAMELISTS [QNAMELISTS ...]]
-                   [--mode_stats_files MODE_STATS_FILES [MODE_STATS_FILES ...]] -o OUTPUT [-v VIS] [--custom_cmap CUSTOM_CMAP]
+usage: __main__.py [-h] --models MODELS [MODELS ...] --qfilelists QFILELISTS [QFILELISTS ...]
+                   [--qnamelists QNAMELISTS [QNAMELISTS ...]] [--mode_stats_files MODE_STATS_FILES [MODE_STATS_FILES ...]]
+                   [--ind_labels IND_LABELS] -o OUTPUT [-v VIS] [--custom_cmap CUSTOM_CMAP]
+                   [--bg_colors BG_COLORS [BG_COLORS ...]] [--include_sim_in_label INCLUDE_SIM_IN_LABEL]
+                   [--fig_format {png,jpg,jpeg,tif,tiff,svg,pdf,eps,ps,bmp,gif}]
 
 clumppling.compModels
 
@@ -523,12 +526,21 @@ options:
                         List of files containing replicate names from each model.
   --mode_stats_files MODE_STATS_FILES [MODE_STATS_FILES ...]
                         List of files containing mode statistics from each model.
+  --ind_labels IND_LABELS
+                        A plain text file containing individual labels (one per line)
   -o OUTPUT, --output OUTPUT
                         Output file directory
   -v VIS, --vis VIS     Whether to generate figure(s): True (default)/False
   --custom_cmap CUSTOM_CMAP
-                        A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use
-                        the user-specified colormap
+                        A plain text file containing customized colors (one per line; in hex code): if empty (default), using
+                        the default colormap, otherwise use the user-specified colormap
+  --bg_colors BG_COLORS [BG_COLORS ...]
+                        List of background colors to be used in the interleaving display: if empty (default), using the gray
+                        scale colors, otherwise use the user-specified colors
+  --include_sim_in_label INCLUDE_SIM_IN_LABEL
+                        Whether to include (original) alignment similarity in mode labels (if provided): True (default)/False
+  --fig_format {png,jpg,jpeg,tif,tiff,svg,pdf,eps,ps,bmp,gif}
+                        Figure format for output files (default: tiff)
 ````
 
 **Example:**
@@ -591,4 +603,5 @@ We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteba
 - Enable regrouping of individuals. If `regroup_ind` is set to True (default) and population labels are available (either extracted from the input files or provided separately), then individuals with the same population labels will be reordered to stay together. If individuals are not grouped by populations, ``include_label'' must be be set to False to ensure the generation of plots without errors. 
 
 > Questions and feedback are welcome.
-> Contact the author at ``xiranliu at stanford dot edu``.
+> Contact the author at
+[xiran_liu1[at]brown[dot]edu](mailto:xiran_liu1@brown.edu?subject=Clumppling%20feedback).

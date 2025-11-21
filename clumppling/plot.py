@@ -42,6 +42,9 @@ def parse_custom_cmap(colors: list, K: int) -> list[tuple[float, float, float]]:
     # colors = [color.strip() for color in cmap_str.split(',') if color.strip()]
     if len(colors) < K:
         raise ValueError(f"WARNING: Custom color map has only {len(colors)} colors, but K={K} is requested. Recycling colors.")
+    all_valid = all(mcolors.is_color_like(c) for c in colors)
+    if not all_valid:
+        raise ValueError("ERROR: Invalid color code(s) found in the custom colors provided.")
     cmap = mcolors.ListedColormap(colors, N=K)
     rgb_list = [mcolors.to_rgb(c) for c in np.array(cmap.colors)]
     return rgb_list
