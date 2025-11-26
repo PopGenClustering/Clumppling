@@ -44,9 +44,18 @@ if __name__ == "__main__":
     setup_logger(os.path.join(args.output, "compModels.log"))
     disp_params(args, title="Comparison of Models")
 
-    if os.path.exists(args.output) and os.listdir(args.output):
-        shutil.rmtree(args.output)
-        logger.info(f"Output directory '{args.output}' already exists and is not empty. Removed existing directory.")
+    try:
+        # Only attempt to delete if non-empty
+        if os.listdir(args.output):
+            logger.info("Output directory '%s' exists and is not empty. Attempting to remove it.", args.output)
+            shutil.rmtree(args.output)
+            logger.info("Removed existing output directory '%s'.", args.output)
+    except OSError as e:
+        logger.warning(
+            "Could not fully remove output directory '%s': %s. "
+            "Will reuse it and may overwrite files.",
+            args.output, e
+        )
     os.makedirs(args.output, exist_ok=True)
     logger.info(f"Created output directory '{args.output}'.")
 
