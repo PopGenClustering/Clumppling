@@ -71,7 +71,10 @@ if __name__ == "__main__":
     if args.ind_labels!="":
         ind_labels = parse_strings(args.ind_labels, remove_dup=False)
         disp_msg(f"Loaded individual labels for {len(ind_labels)} individuals from {args.ind_labels}")
-    
+    else:
+        ind_labels = []
+        disp_msg(f"No individual labels provided.")
+
     for i_model, model in enumerate(args.models):
         if "_" in model or "-" in model:
             raise ValueError(f"Model name '{model}' should not contain underscore or dash.")
