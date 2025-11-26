@@ -26,7 +26,7 @@ def load_mode_stats(mode_stats_file: str) -> pd.DataFrame:
             size_K[K] += row['Size']
         else:
             size_K[K] = row['Size']
-    mode_stats['SizeFrac'] = mode_stats.apply(lambda row: f"{row['Size']}/{size_K[int(row['Mode'].split("M")[0].strip("K"))]}", axis=1)
+    mode_stats['SizeFrac'] = mode_stats.apply(lambda row: f"{row['Size']}/{size_K[int(row['Mode'].split('M')[0].strip('K'))]}", axis=1)
 
     return mode_stats
 
