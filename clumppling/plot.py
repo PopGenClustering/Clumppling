@@ -76,7 +76,7 @@ def plot_membership(Q:np.ndarray, cmap: list[tuple[float, float, float]],
     for k in range(K):
         ax.bar(range(N), Q_aug[:,(k+1)], bottom=np.sum(Q_aug[:,0:(k+1)],axis=1), 
                width=1.0, edgecolor='w', linewidth=0, facecolor=cmap[k])
-    ax.set_xlim(0,N)
+    ax.set_xlim(-0.5,N-0.5)
     ax.set_xticks([])
     ax.set_ylim(0,1)
     ax.set_yticks([])
@@ -109,7 +109,7 @@ def plot_membership_reordered(Q:np.ndarray, lbs: list,
         for k in range(K):
             ax.bar(lb_indices, lb_P_aug[:,(k+1)], bottom=np.sum(lb_P_aug[:,0:(k+1)],axis=1), 
                     width=1.0, edgecolor='w', linewidth=0, facecolor=cmap[mbsp_sortidx[k]])
-    ax.set_xlim(0,N)
+    ax.set_xlim(-0.5,N-0.5)
     ax.set_xticks([])
     ax.set_ylim(0,1)
     ax.set_yticks([])
@@ -142,7 +142,11 @@ def plot_memberships_list(Q_list: list[np.ndarray], cmap: list[tuple[float, floa
         ax = axes[i] if len(Q_list)>1 else axes
 
         if order_refQ is None or len(ind_labels)==0:
-            plot_membership(Q, cmap, ax=ax, ylab=lb)
+            if order_cls_by_label:
+                _, mbsp_sort_indices = reorder_ind_within_group(Q, ind_labels)
+                plot_membership_reordered(Q, ind_labels, mbsp_sort_indices, cmap, ax=ax, ylab=lb)
+            else:
+                plot_membership(Q, cmap, ax=ax, ylab=lb)
         else:
             if order_cls_by_label:
                 _, mbsp_sort_indices = reorder_ind_within_group(Q, ind_labels)
@@ -228,7 +232,11 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
             right_label = right_labels_list[i_K][i_mode] if right_labels_list is not None else ""
             Q = Q_list_list[i_K][i_mode]
             if order_refQ is None or len(ind_labels)==0:
-                plot_membership(Q, cmap, ax=ax, title=Q_label, fontsize=fontsize)
+                if order_cls_by_label:
+                    _, mbsp_sort_indices = reorder_ind_within_group(Q, ind_labels)
+                    plot_membership_reordered(Q, ind_labels, mbsp_sort_indices, cmap, ax=ax, title=Q_label, fontsize=fontsize)
+                else:
+                    plot_membership(Q, cmap, ax=ax, title=Q_label, fontsize=fontsize)
             else:
                 if order_cls_by_label:
                     _, mbsp_sort_indices = reorder_ind_within_group(Q, ind_labels)
@@ -370,7 +378,7 @@ def plot_alignment_graph(K_range: list[int], names_list: list[list[str]], cmap: 
                    wspace_padding: float=1.3, y_aspect: float=3, 
                    alt_color: bool=True,
                    color_alt: list[str]=['rosybrown', 'steelblue','goldenrod', 'darkseagreen'], 
-                   ls_alt: list[str]=['-', '--'], 
+                   ls_alt: list[str]=['-', '--'],  
                    marker_size: float=200, separate_labels: bool=False):
     """Plot alignment pattern (as a graph), with modes in each K arranged in a row, and space between modes.
 

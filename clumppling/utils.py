@@ -277,12 +277,12 @@ def get_uniq_lb_sep(labels: list) -> Tuple[list, list, list]:
     assert labels_are_grouped(labels, uniq_lbs), "Labels are not grouped together."
     uniq_lbs_indices = list()
     uniq_lbs_sep_idx = list()
-    uniq_lbs_sep_idx.append(0)
+    uniq_lbs_sep_idx.append(-0.5)
     for lb in uniq_lbs:
         indices = [i for i, val in enumerate(labels) if val == lb]
         mean_idx = np.mean(indices)
-        uniq_lbs_indices.append(mean_idx)
-        uniq_lbs_sep_idx.append(indices[-1])
+        uniq_lbs_indices.append(mean_idx+0.5)
+        uniq_lbs_sep_idx.append(indices[-1]+0.5)
     return uniq_lbs, uniq_lbs_indices, uniq_lbs_sep_idx
 
 

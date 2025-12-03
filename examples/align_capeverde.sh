@@ -63,6 +63,32 @@ python -m clumppling \
 --plot_unaligned T \
 --ind_labels examples/capeverde_ind_labels.txt
 
+# run without any reordering
+python -m clumppling \
+-i examples/capeverde \
+-o examples/capeverde_output_unordered \
+-f admixture \
+--use_rep F \
+--use_best_pair F \
+--extension .indivq \
+--regroup_ind F \
+--reorder_within_group F \
+--order_cls_by_label F \
+--plot_type graph \
+--ind_labels examples/capeverde_ind_labels.txt
 
+# run without any individual reordering, but with cluster ordering by label
+python -m clumppling \
+-i examples/capeverde \
+-o examples/capeverde_output_unordered_cls_order \
+-f admixture \
+--use_rep F \
+--use_best_pair F \
+--extension .indivq \
+--regroup_ind F \
+--reorder_within_group F \
+--order_cls_by_label T \
+--plot_type list \
+--ind_labels examples/capeverde_ind_labels.txt
 
 

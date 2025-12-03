@@ -8,6 +8,7 @@ logs/*
 latex/*
 examples/*/
 examples/*_output.zip
+examples/capeverde_output_*
 examples/capeverde_output_unordered_w_unaligned.zip
 visualization.html
 __pycache__

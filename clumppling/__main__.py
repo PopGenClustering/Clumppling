@@ -248,9 +248,10 @@ def main(args: argparse.Namespace):
                 Q_modes_list = unnest_list(Q_rep_modes_list) if args.use_rep else unnest_list(Q_avg_modes_list)
                 mode_names = unnest_list(mode_names_list)
                 Q_modes_reordered = [aligned_Qs_allK[mode_name] for mode_name in mode_names]
+                K = Q_modes_list[0].shape[1]
                 mode_labels = ["{} ({}/{})".format(mode_name.title().replace('_', ' '), 
                                                     mode_sizes[mode_name], 
-                                                    n_runs_per_K[i_K]) for mode_name in mode_names]
+                                                    len(K2IDs[K])) for mode_name in mode_names]
                 right_labels = ["sim {:.3f}".format(mode_sims[mode_name]) for mode_name in mode_names]
                 if args.reorder_within_group:
                     if args.reorder_by_max_k:
