@@ -213,9 +213,9 @@ def plot_multi_model_graph_il(K_range: list[int], models: list[str],
         color = bg_colors[row % n_models]
 
         rect = Rectangle(
-            (pos.x0-0.01, pos.y0-0.01),
-            pos.width + 0.02,
-            pos.height + 0.02,
+            (pos.x0-0.001, pos.y0-0.001),
+            pos.width + 0.002,
+            pos.height + 0.002,
             transform=fig.transFigure,
             color=color,
             zorder=0,
@@ -239,16 +239,16 @@ def plot_multi_model_graph_il(K_range: list[int], models: list[str],
                 if len(ind_labels)>0:
                     for v in uniq_lbs_sep_idx:
                         ax.axvline(v, ymin=-0.2, ymax=1, color='k', ls='--', lw=0.5, clip_on=False)
-                if n_K_in_model[i_K,i_model]>0 and i_K==len(K_range)-1 and i_model==len(models)-1: #or (n_K_in_model[i_K,i_model]>0 and n_K_in_model[i_K+1,i_model]==0)
-                    ax.set_xticks(uniq_lbs_indices)
-                    ax.tick_params(axis='x', which='both', length=0, pad=2)
-                    if len(uniq_lbs)>=10:
-                        rot = 90
-                    else:
-                        rot = 45 if np.any([len(lb)>5 for lb in uniq_lbs]) else 0
-                    fs = 14 if len(uniq_lbs)<10 else 10
-                    ax.set_xticklabels(uniq_lbs, rotation=rot, ha='center', fontsize=fs)
-                    # ax.tick_params(axis="x", pad=2)
+                    if n_K_in_model[i_K,i_model]>0 and i_K==len(K_range)-1 and i_model==len(models)-1: #or (n_K_in_model[i_K,i_model]>0 and n_K_in_model[i_K+1,i_model]==0)
+                        ax.set_xticks(uniq_lbs_indices)
+                        ax.tick_params(axis='x', which='both', length=0, pad=2)
+                        if len(uniq_lbs)>=10:
+                            rot = 90
+                        else:
+                            rot = 45 if np.any([len(lb)>5 for lb in uniq_lbs]) else 0
+                        fs = 14 if len(uniq_lbs)<10 else 10
+                        ax.set_xticklabels(uniq_lbs, rotation=rot, ha='center', fontsize=fs)
+
     # label each K
     if label_K:
         for row in range(gs.nrows):

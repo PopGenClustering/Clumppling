@@ -88,7 +88,7 @@ python -m clumppling \
 --regroup_ind F \
 --reorder_within_group F \
 --order_cls_by_label T \
---plot_type list \
+--plot_type graph \
 --ind_labels examples/capeverde_ind_labels.txt
 
 

@@ -15,35 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="clumppling.compModels")
-
-    parser.add_argument("--models", nargs="+", type=str, required=True,
-                        help="List of model names.")
-    parser.add_argument("--qfilelists", nargs="+", type=str, required=True,
-                        help="List of files containing Q file names from each model.")
-    parser.add_argument("--qnamelists", nargs="+", type=str, default="",
-                        help="List of files containing replicate names from each model.")
-    parser.add_argument("--mode_stats_files", nargs="+", type=str, default="",
-                        help="List of files containing mode statistics from each model.")
-    parser.add_argument("--ind_labels", type=str, default="", required=False, 
-                        help="A plain text file containing individual labels (one per line)")
-    parser.add_argument("-o", "--output", type=str, required=True, 
-                        help="Output file directory")
-    parser.add_argument('-v', '--vis', type=str2bool, default=True, required=False, help='Whether to generate figure(s): True (default)/False')
-    parser.add_argument('--custom_cmap', type=str, default='', required=False, help='A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use the user-specified colormap')
-    parser.add_argument("--bg_colors", nargs="+", type=str, required=False, help="List of background colors to be used in the interleaving display: if empty (default), using the gray scale colors, otherwise use the user-specified colors")
-    parser.add_argument('--include_sim_in_label', type=str2bool, default=True, required=False, help='Whether to include (original) alignment similarity in mode labels (if provided): True (default)/False')
-    parser.add_argument("--fig_format", type=str, default="tiff", required=False, choices=["png", "jpg", "jpeg", "tif", "tiff", "svg", "pdf", "eps", "ps", "bmp", "gif"], help="Figure format for output files (default: tiff)")
-
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = parse_args()
-    setup_logger(os.path.join(args.output, "compModels.log"))
-    disp_params(args, title="Comparison of Models")
-
+def main(args: argparse.Namespace):
     try:
         # Only attempt to delete if non-empty
         if os.listdir(args.output):
@@ -215,3 +187,33 @@ if __name__ == "__main__":
     # complete
     logger.info(f"Completed".center(50, '-'))
     logger.info(f"".center(50, '=')) 
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="clumppling.compModels")
+
+    parser.add_argument("--models", nargs="+", type=str, required=True,
+                        help="List of model names.")
+    parser.add_argument("--qfilelists", nargs="+", type=str, required=True,
+                        help="List of files containing Q file names from each model.")
+    parser.add_argument("--qnamelists", nargs="+", type=str, default="",
+                        help="List of files containing replicate names from each model.")
+    parser.add_argument("--mode_stats_files", nargs="+", type=str, default="",
+                        help="List of files containing mode statistics from each model.")
+    parser.add_argument("--ind_labels", type=str, default="", required=False, 
+                        help="A plain text file containing individual labels (one per line)")
+    parser.add_argument("-o", "--output", type=str, required=True, 
+                        help="Output file directory")
+    parser.add_argument('-v', '--vis', type=str2bool, default=True, required=False, help='Whether to generate figure(s): True (default)/False')
+    parser.add_argument('--custom_cmap', type=str, default='', required=False, help='A plain text file containing customized colors (one per line; in hex code): if empty (default), using the default colormap, otherwise use the user-specified colormap')
+    parser.add_argument("--bg_colors", nargs="+", type=str, required=False, help="List of background colors to be used in the interleaving display: if empty (default), using the gray scale colors, otherwise use the user-specified colors")
+    parser.add_argument('--include_sim_in_label', type=str2bool, default=True, required=False, help='Whether to include (original) alignment similarity in mode labels (if provided): True (default)/False')
+    parser.add_argument("--fig_format", type=str, default="tiff", required=False, choices=["png", "jpg", "jpeg", "tif", "tiff", "svg", "pdf", "eps", "ps", "bmp", "gif"], help="Figure format for output files (default: tiff)")
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    setup_logger(os.path.join(args.output, "compModels.log"))
+    disp_params(args, title="Comparison of Models")
+    main(args)
