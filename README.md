@@ -569,12 +569,13 @@ The chicken data used as the example comes from: \
 *Rosenberg, N. A., Burke, T., Elo, K., Feldman, M. W., Freidlin, P. J., Groenen, M. A., ... & Weigend, S. (2001). Empirical evaluation of genetic clustering methods using multilocus genotypes from 20 chicken breeds. Genetics, 159(2), 699-713. [https://doi.org/10.1093/genetics/159.2.699.](https://doi.org/10.1093/genetics/159.2.699)*
 
 ## Acknowledgements
-We thank Egor Lappo for helping with the packaging of the program. 
-We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteban Rodriguez Rodriguez for helping with the testing of the program.
+* We thank Egor Lappo for assisting with packaging. 
+* We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteban Rodriguez Rodriguez for helping with the testing of the program.
+* Special thanks to GW and AS for reporting issues and helping us improve the tool.
 
 ## Version Update History
 
-**Version 1.0** 
+**Version 0.0 -> 1.0** 
 - Modularize each step.
 - Add input parsing features:
     * use `extension` to specify the file extension of the input files.
@@ -592,7 +593,7 @@ We thank Egor Lappo, Daniel Cotter, Maike Morrison, Chloe Shiff, and Juan Esteba
     * `ind_labels`: accept user-specified individual labels from a file.
 - Add visualization of alignment patterns.
 
-**Version 2.0** (coming)  
+**Version 1.0 -> 2.0**
 - Add the model comparison module to keep modes from different clustering models separate while aligning them.
 
 - Add flexibility in plotting:
