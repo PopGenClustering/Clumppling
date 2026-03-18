@@ -197,8 +197,16 @@ def extract_labels_and_matrix_from_lines(lines: List[str], skip_missing: bool = 
         # ['1', 'HGDP00904', '(0)', '1', ':', '0.000010', '0.999990']
         parts = line.split() if delimiter == " " else line.split(delimiter)
         try:
-            # Extract float values in matrix part
-            entries = list(map(float, parts[mat_start_col:]))
+            # Detect the ':' separator dynamically to support STRUCTURE files
+            # produced with or without POPDATA (which shifts all column positions)
+            if ':' in parts:
+                colon_idx = parts.index(':')
+                entries = list(map(float, parts[colon_idx + 1:]))
+                label_parts = parts[:colon_idx]
+            else:
+                entries = list(map(float, parts[mat_start_col:]))
+                label_parts = parts[:mat_start_col]
+
             if expected_ncols is None:
                 expected_ncols = len(entries)
             elif (len(entries) != expected_ncols):
