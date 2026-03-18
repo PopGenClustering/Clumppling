@@ -76,7 +76,11 @@ def process_files(
                     label_cols=label_cols, mat_start_col=mat_start_col
                 )
                 if labels is not None:
-                    labels = [label[-1] for label in labels]  # Use the last column as label
+                    # Use individual name (index 1) as label.
+                    # label[-1] would be the population index when POPDATA is present, but
+                    # falls back to ':' when POPDATA is absent. Index 1 is always the
+                    # individual name regardless of POPDATA setting.
+                    labels = [label[1] for label in labels]
                 if labels is None or matrix is None:
                     logger.error(f"Failed to extract labels or matrix from {file_path}.")
                     continue
@@ -197,8 +201,16 @@ def extract_labels_and_matrix_from_lines(lines: List[str], skip_missing: bool = 
         # ['1', 'HGDP00904', '(0)', '1', ':', '0.000010', '0.999990']
         parts = line.split() if delimiter == " " else line.split(delimiter)
         try:
-            # Extract float values in matrix part
-            entries = list(map(float, parts[mat_start_col:]))
+            # Detect the ':' separator dynamically to support STRUCTURE files
+            # produced with or without POPDATA (which shifts all column positions)
+            if ':' in parts:
+                colon_idx = parts.index(':')
+                entries = list(map(float, parts[colon_idx + 1:]))
+                label_parts = parts[:colon_idx]
+            else:
+                entries = list(map(float, parts[mat_start_col:]))
+                label_parts = parts[:mat_start_col]
+
             if expected_ncols is None:
                 expected_ncols = len(entries)
             elif (len(entries) != expected_ncols):
