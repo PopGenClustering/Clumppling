@@ -76,7 +76,11 @@ def process_files(
                     label_cols=label_cols, mat_start_col=mat_start_col
                 )
                 if labels is not None:
-                    labels = [label[-1] for label in labels]  # Use the last column as label
+                    # Use individual name (index 1) as label.
+                    # label[-1] would be the population index when POPDATA is present, but
+                    # falls back to ':' when POPDATA is absent. Index 1 is always the
+                    # individual name regardless of POPDATA setting.
+                    labels = [label[1] for label in labels]
                 if labels is None or matrix is None:
                     logger.error(f"Failed to extract labels or matrix from {file_path}.")
                     continue
