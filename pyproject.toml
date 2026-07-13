@@ -16,7 +16,7 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
 matplotlib = "^3.7"
-numpy = "^1.24"
+numpy = ">=2.0,<2.1"
 TracyWidom = "0.4.0"
 scipy = "^1.10"
 cvxpy = { version = ">=1.6.1,<1.7", extras = ["GLPK"] }
