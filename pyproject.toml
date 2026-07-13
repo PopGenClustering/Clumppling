@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "clumppling"
-version = "2.0.7"
+version = "2.0.8"
 description = "Clumppling: cluster matching and permutation program with integer linear programming"
 authors = ["Xiran Liu <xiranliu@stanford.edu>"]
 license = "MIT License"
@@ -15,19 +15,30 @@ include = [
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
-matplotlib = "^3.7"
-numpy = "^1.24"
+
+numpy = ">=1.24,<3"
+scipy = ">=1.13,<2"
+matplotlib = ">=3.9,<4"
+
 TracyWidom = "0.4.0"
-scipy = "^1.10"
-cvxpy = { version = "1.5", extras = ["GLPK"] }
+cvxpy = { version = ">=1.6.1,<1.7", extras = ["GLPK"] }
 cdlib = "^0.3"
 networkx = "^3.0"
+
 
 [tool.poetry.scripts]
 parseInput = "clumppling.parseInput.__main__:main"
 alignWithinK = "clumppling.alignWithinK.__main__:main"
 detectMode = "clumppling.detectMode.__main__:main"
 alignAcrossK = "clumppling.alignAcrossK.__main__:main"
+
+[tool.poetry.group.test.dependencies]
+pytest = ">=8,<9"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: end-to-end tests using bundled example datasets",
+]
 
 [build-system]
 requires = ["poetry-core"]
