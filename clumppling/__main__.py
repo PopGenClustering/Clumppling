@@ -3,6 +3,7 @@ import os
 import shutil
 import time
 import matplotlib.pyplot as plt
+import numpy as np
 
 from .log_config import setup_logger
 from .core import align_within_k_all_K, detect_modes_all_K, extract_modes_all_K, align_across_k, write_alignment_across_k, reorderQ_within_k, reorderQ_across_k
@@ -15,6 +16,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 def main(args: argparse.Namespace):
+    if args.random_seed is not None:
+        np.random.seed(args.random_seed)
+        logger.info("NumPy random seed set to %d.", args.random_seed)
+
     tot_tic = time.time()
 
     # load and process input files
@@ -369,6 +374,8 @@ def parse_args():
                           help="Community detection method to use (default: louvain)")
     optional.add_argument("--cd_res", type=float, default=1.0, required=False,
                           help="Resolution parameter for the default Louvain community detection (default: 1.0)")
+    optional.add_argument("--random_seed", type=int, default=None, required=False, 
+                          help="Random seed for reproducible stochastic operations, including Louvain community detection (default: unset)")
     optional.add_argument("--test_comm", type=str2bool, default=True, required=False,
                           help="Whether to test community structure (default: True)")
     optional.add_argument("--comm_min", type=float, default=1e-6, required=False,

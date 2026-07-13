@@ -29,6 +29,14 @@ alignWithinK = "clumppling.alignWithinK.__main__:main"
 detectMode = "clumppling.detectMode.__main__:main"
 alignAcrossK = "clumppling.alignAcrossK.__main__:main"
 
+[tool.poetry.group.test.dependencies]
+pytest = ">=8,<9"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: end-to-end tests using bundled example datasets",
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
