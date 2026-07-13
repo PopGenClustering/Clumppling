@@ -19,7 +19,7 @@ matplotlib = "^3.7"
 numpy = "^1.24"
 TracyWidom = "0.4.0"
 scipy = "^1.10"
-cvxpy = { version = "1.5", extras = ["GLPK"] }
+cvxpy = { version = ">=1.6.1,<1.7", extras = ["GLPK"] }
 cdlib = "^0.3"
 networkx = "^3.0"
 
