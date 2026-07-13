@@ -3,7 +3,6 @@ dist/*
 build/*
 output/*
 input/*
-tests/*
 logs/*
 latex/*
 examples/*/
@@ -22,3 +21,5 @@ __pycache__
 # for Google Drive
 desktop.ini
 **/desktop.ini
+
+.pytest_cache/
