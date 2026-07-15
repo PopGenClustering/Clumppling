@@ -1,11 +1,12 @@
 import os
 import numpy as np
+import matplotlib as mpl  
 import matplotlib.pyplot as plt
 import matplotlib.axes as maxes
 import matplotlib.colors as mcolors
 import colorsys
 import importlib.resources
-from matplotlib import cm
+# from matplotlib import cm
 from matplotlib.patches import ConnectionPatch, Rectangle
 from typing import Optional, cast
 from clumppling.utils import get_uniq_lb_sep, reorder_ind_within_group
@@ -280,7 +281,7 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
         if not alt_color:
             if line_cmap is None:
                 logger.info(f"Using default Greys colormap for cost lines")
-                line_cmap = cm.get_cmap("Greys")
+                line_cmap = mpl.colormaps["Greys"]
         else:
             cmaps_alt = [create_single_cmap(c, c) for c in color_alt]
         
@@ -295,7 +296,7 @@ def plot_graph(K_range: list[int], Q_list_list: list[list[np.ndarray]], cmap: li
                     if alt_color:
                         line_cmap = cmaps_alt[(i_mode+i_mode2+i_K+i_K+1) % len(cmaps_alt)]
                     elif line_cmap is None:
-                        line_cmap = cm.get_cmap("Greys")
+                        line_cmap = mpl.colormaps["Greys"]
 
                     if pair_label in cost_acrossK:
                         ax = axes_handles[(K, i_mode)]

@@ -2,7 +2,7 @@
 
 This is the GitHub repository for the program ***Clumppling*** (CLUster Matching and Permutation Program that uses integer Linear programmING), a framework for aligning mixed-membership clustering results of population structure analysis.
 
-Current version **v 2.0** (Last update: Jul 2026)
+Current version **v2.0** (Last update: Jul 2026)
 
 This README provides a quick-start guide for installation and use. See the [software manual](Clumppling_Manual.pdf) for full details.
 
@@ -661,6 +661,9 @@ The chicken data used as the example comes from: \
   - Relax dependency version constraints to support both NumPy 1.x and 2.x. Update the compatible SciPy, Matplotlib, and CVXPY version ranges.
   - Add the optional ``--random_seed`` argument for reproducible Louvain community detection.
   - Add regression and integration tests for CVXPY alignment, Louvain reproducibility, and the Cape Verde example.
+
+- **v2.0.9**
+  - Fix colormap plotting compatibility with Matplotlib 3.9.
 
 > Questions and feedback are welcome.
 > Contact the author at
