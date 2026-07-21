@@ -665,6 +665,9 @@ The chicken data used as the example comes from: \
 - **v2.0.9**
   - Fix colormap plotting compatibility with Matplotlib 3.9.
 
+- **v2.0.10**
+  - Support Python 3.13.
+
 > Questions and feedback are welcome.
 > Contact the author at
 [xiran_liu1[at]brown[dot]edu](mailto:xiran_liu1@brown.edu?subject=Clumppling%20feedback).
