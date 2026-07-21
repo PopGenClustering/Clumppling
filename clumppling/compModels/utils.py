@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib as mpl  
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+# import matplotlib.cm as cm
 from matplotlib.patches import Rectangle
 from clumppling.plot import plot_membership
 from clumppling.utils import get_uniq_lb_sep
@@ -199,7 +200,7 @@ def plot_multi_model_graph_il(K_range: list[int], models: list[str],
     n_col = np.max(n_K_in_model)
 
     if len(bg_colors) < n_models:
-        gray_cmap = cm.get_cmap('gray')
+        gray_cmap = mpl.colormaps["Greys"]
         bg_colors = [gray_cmap(point) for point in np.linspace(0.85, 1, n_models)]
     elif len(bg_colors) >= n_models:
         bg_colors = bg_colors[:n_models]
